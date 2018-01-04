@@ -18,7 +18,8 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} clean test package
+  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} clean test
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} package; fi
 
 # Cached dependencies cleanup.
 before_cache:
