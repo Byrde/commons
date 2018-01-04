@@ -7,7 +7,9 @@ version :=
 		System.getProperty("version"))
 		.getOrElse("1.0")
 scalaVersion :=
-	"2.11.11"
+	Option(
+		System.getProperty("scalaVersion"))
+		.getOrElse("2.11.11")
 
 lazy val root = project in file(".")
 
