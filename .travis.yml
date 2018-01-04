@@ -2,19 +2,19 @@ sudo: required
 
 # Defacto version and lang used in most Byrde projects.
 language: scala
-scala: 2.11.11
+scala: $SCALA_VER
 
 # Install Python 3, required for cloudsmith dependencies.
 addons:
   apt:
     sources:
-      - deadsnakes
+      -  if [[ $TRAVIS_BRANCH == 'master' ]]; deadsnakes; fi
     packages:
-      - python3.6
+      -  if [[ $TRAVIS_BRANCH == 'master' ]]; python3.6; fi
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
-  - sudo pip install cloudsmith-cli
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then sudo pip install cloudsmith-cli; fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
@@ -34,6 +34,5 @@ cache:
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
-  - echo "Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
-  - export ARTIFACT=/
-  - cloudsmith push maven byrde/libraries $ARTIFACT.jar
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then cd $COMPILE_DIRECTORY; fi 
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then cloudsmith push maven byrde/libraries ${PROJECT_NAME}_${SCALA_VERSION}.${PROJECT_VERSION}.jar; fi 
