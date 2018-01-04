@@ -8,7 +8,7 @@ scala: $SCALA_VER
 addons:
   apt:
     sources:
-      - deadsnakes; 
+      - deadsnakes
     packages:
       - python3.6
 
