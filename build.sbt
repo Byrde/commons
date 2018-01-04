@@ -1,5 +1,7 @@
 name :=
-	"commons"
+	Option(
+		System.getProperty("name"))
+		.getOrElse("commons")
 version :=
 	Option(
 		System.getProperty("version"))
