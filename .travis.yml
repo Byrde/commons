@@ -5,9 +5,12 @@ language: scala
 scala: 2.11.11
 
 # Install Python 3, required for cloudsmith dependencies.
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install python3.6
+addons:
+  apt:
+    sources:
+      - deadsnakes
+    packages:
+      - python3.6
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
