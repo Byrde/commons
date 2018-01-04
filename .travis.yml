@@ -1,3 +1,38 @@
+sudo: required
+
+# Defacto version and lang used in most Byrde projects.
 language: scala
-scala:
-   - 2.11.11
+scala: $SCALA_VER
+
+# Install Python 3, required for cloudsmith dependencies.
+addons:
+  apt:
+    sources:
+      -  if [[ $TRAVIS_BRANCH == 'master' ]]; deadsnakes; fi
+    packages:
+      -  if [[ $TRAVIS_BRANCH == 'master' ]]; python3.6; fi
+
+# Install cloudsmit cli, required for publishing artifact.
+install:
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then sudo pip install cloudsmith-cli; fi
+
+# Clean tracked binaries, run unit tests, and package artifact.
+script:
+  - sbt -Dversion=${PROJECT_VERSION} clean test package
+
+# Cached dependencies cleanup.
+before_cache:
+  # Cleanup the cached directories to avoid unnecessary cache updates
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+
+# Cache dependencies.
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+
+# On script complete, publish artifact to cloudsmith.
+after_success:
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then cd $COMPILE_DIRECTORY; fi 
+  - if [[ $TRAVIS_BRANCH == 'master' ]]; then cloudsmith push maven byrde/libraries ${PROJECT_NAME}_${SCALA_VERSION}.${PROJECT_VERSION}.jar; fi 
