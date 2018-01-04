@@ -13,6 +13,18 @@ before_install:
 install:
   - sudo pip install cloudsmith-cli
 
+# Cache dependencies.
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+
+# Cached dependencies cleanup.
+before_cache:
+  # Cleanup the cached directories to avoid unnecessary cache updates
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
   - sbt clean test package
