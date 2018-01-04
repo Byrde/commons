@@ -14,9 +14,9 @@ addons:
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
-  - echo "alias python='/usr/bin/python3'" >> ~/.bashrc
-  - echo "alias python='/usr/bin/python3'" >> ~/.bash_profile
-  - echo "alias python='/usr/bin/python3'" >> ~/.bash_aliases
+  - echo "alias python=python3" >> ~/.bashrc
+  - echo "alias python=python3" >> ~/.bash_profile
+  - echo "alias python=python3" >> ~/.bash_aliases
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
       python -V;
