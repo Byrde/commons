@@ -6,6 +6,8 @@ scala:
    - 2.11.11
 
 install:
+   - echo "Python Version:"
+   - python -V
    - pip install cloudsmith-cli
 
 script:
