@@ -33,9 +33,18 @@ object EmailConfig{
 		apply("email", "password", "port")(config)
 
 	def apply(_email: String, _password: String, _port: String)(config: Configuration): EmailConfig = {
-		val email = config.get[String](_email)
-		val password = config.get[String](_password)
-		val port = config.getOptional[Int](_port).getOrElse(587)
+		val email =
+			config
+				.getString(_email)
+				.getOrElse (
+					throw new Exception(s"Missing configuration value: ${_email}"))
+		val password =
+			config
+				.getString(_password)
+				.getOrElse (
+					throw new Exception(s"Missing configuration value: ${_password}"))
+		val port =
+			config.getInt(_port).getOrElse(587)
 
 		EmailConfig(email, password, port)
 	}

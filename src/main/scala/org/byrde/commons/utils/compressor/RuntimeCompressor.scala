@@ -29,7 +29,7 @@ case class RuntimeCompressor(
     }
   }
 
-  def compress(s3: S3Object, fileName: String)(implicit lc: LogContext): File = {
+  def compress(s3: S3Object, fileName: String): File = {
     val stream = s3.getObjectContent
     val file = new File(s"$fileName")
 

@@ -18,7 +18,7 @@ abstract class RestService {
     wrapRequest[A](None)(requestHolder.withRequestTimeout(timeout).get())
   }
 
-  def post[A: ClassTag, T](body: T)(implicit ec: ExecutionContext, ct: ContentTypeOf[T], reads: Reads[A]): Future[A] = {
+  def post[A: ClassTag, T](body: T)(implicit ec: ExecutionContext, wr: Writeable[T], reads: Reads[A]): Future[A] = {
     wrapRequest[A](Some(body.toString))(requestHolder.withRequestTimeout(timeout).post(body))
   }
 }
