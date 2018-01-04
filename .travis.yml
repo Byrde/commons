@@ -1,3 +1,12 @@
 language: scala
+
 scala:
    - 2.11.11
+
+install:
+   - pip install cloudsmith-cli
+
+after_success:
+   - echo "Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
+   - export ARTIFACT=/
+   - cloudsmith push maven byrde/libraries $ARTIFACT.jar
