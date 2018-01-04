@@ -16,6 +16,7 @@ addons:
 install:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
+      python -V;
       sudo pip install pyOpenSSL ndg-httpsclient pyasn1;
       sudo pip install cloudsmith-cli; 
     fi
