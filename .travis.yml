@@ -18,7 +18,7 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt clean test package
+  - sbt -Dversion=${PROJECT_VERSION} clean test package
 
 # Cached dependencies cleanup.
 before_cache:
