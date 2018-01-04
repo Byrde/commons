@@ -8,6 +8,9 @@ scala:
 install:
    - pip install cloudsmith-cli
 
+script:
+   - sbt clean test package
+
 after_success:
    - echo "Success - Branch($TRAVIS_BRANCH) Pull Request($TRAVIS_PULL_REQUEST) Tag($TRAVIS_TAG)"
    - export ARTIFACT=/
