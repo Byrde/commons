@@ -1,6 +1,11 @@
-name := "commons"
-version := "1.0"
-scalaVersion := "2.11.11"
+name :=
+	"commons"
+version :=
+	Option(
+		System.getProperty("version"))
+		.getOrElse("1.0")
+scalaVersion :=
+	"2.11.11"
 
 lazy val root = project in file(".")
 
