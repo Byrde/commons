@@ -6,16 +6,18 @@ scala: $SCALA_VER
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
-  -  if [ ${TRAVIS_BRANCH} == 'master' ]; then
-     sudo pip install requests[security];
-     sudo pip install cloudsmith-cli; 
-     fi
+  - |
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then
+      sudo pip install requests[security];
+      sudo pip install cloudsmith-cli; 
+    fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
   - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} clean test
-  - if [ ${TRAVIS_BRANCH} == 'master' ]; 
-    then sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} package; 
+  - |
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then 
+      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} package; 
     fi
 
 # Cached dependencies cleanup.
@@ -32,7 +34,8 @@ cache:
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
-  - if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-    cd $COMPILE_DIRECTORY;
-    cloudsmith push maven byrde/libraries ${PROJECT_NAME}_${SCALA_VERSION}.${PROJECT_VERSION}.jar; 
+  - |
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then 
+      cd ${COMPILE_DIRECTORY};
+      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.11-${PROJECT_VERSION}.jar; 
     fi
