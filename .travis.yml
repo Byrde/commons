@@ -8,13 +8,9 @@ scala: $SCALA_VER
 addons:
   apt:
     sources:
-      -  if [ ${TRAVIS_BRANCH} == 'master' ]; 
-         then deadsnakes; 
-         fi
+      - deadsnakes; 
     packages:
-      -  if [ ${TRAVIS_BRANCH} == 'master' ]; 
-         then python3.6; 
-         fi
+      - python3.6
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
