@@ -4,18 +4,11 @@ sudo: required
 language: scala
 scala: $SCALA_VER
 
-# Install Python 3, required for cloudsmith dependencies.
-addons:
-  apt:
-    sources:
-      - deadsnakes
-    packages:
-      - python3.6
-
 # Install cloudsmit cli, required for publishing artifact.
 install:
-  -  if [ ${TRAVIS_BRANCH} == 'master' ]; 
-     then sudo pip install cloudsmith-cli; 
+  -  if [ ${TRAVIS_BRANCH} == 'master' ]; then
+     sudo pip install requests[security];
+     sudo pip install cloudsmith-cli; 
      fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
