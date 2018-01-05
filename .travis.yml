@@ -9,8 +9,8 @@ install:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
       python -V;
-      sudo pip3 install pyOpenSSL ndg-httpsclient pyasn1;
-      sudo pip3 install cloudsmith-cli; 
+      sudo python3 -m pip install pyOpenSSL ndg-httpsclient pyasn1;
+      sudo python3 -m pip install cloudsmith-cli; 
     fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
