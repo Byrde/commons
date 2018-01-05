@@ -21,10 +21,10 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} clean test
+  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} -DmavenGroupId=${MAVEN_GROUP_ID} package make-pom; 
+      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} -DmavenGroupId=${MAVEN_GROUP_ID} package make-pom; 
     fi
 
 # Cached dependencies cleanup.
@@ -44,7 +44,7 @@ after_success:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
       cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
-      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.jar --pom-file=${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.pom; 
+      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER}.jar --pom-file=${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER}.pom; 
     fi
 
 # Configure notifications
