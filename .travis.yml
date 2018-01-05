@@ -2,7 +2,7 @@ sudo: required
 
 # Defacto version and lang used in most Byrde projects.
 language: scala
-scala: $SCALA_VER
+scala: 2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION}
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
@@ -17,7 +17,7 @@ script:
   - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} package; 
+      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} package; 
     fi
 
 # Cached dependencies cleanup.
@@ -37,5 +37,13 @@ after_success:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
       cd ${COMPILE_DIRECTORY};
-      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.11-${PROJECT_VERSION}.jar; 
+      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.jar; 
     fi
+
+# Configure notifications
+notifications:
+  email:
+    recipients:
+      - ${ADMINISTRATIVE_EMAIL}
+    on_success: never
+    on_failure: always
