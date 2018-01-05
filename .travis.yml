@@ -5,12 +5,9 @@ language: scala
 scala: $SCALA_VER
 
 # Python 3.6 as dependency for cloudsmith installation.
-addons:
-  apt:
-    sources:
-      - deadsnakes # source required so it finds the package definition below
-    packages:
-      - python3.6
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install python3
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
