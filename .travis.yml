@@ -8,7 +8,7 @@ scala: $SCALA_VER
 install:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
-      python -V;
+      sudo apt-get install python3-pip;
       sudo python3 -m pip install pyOpenSSL ndg-httpsclient pyasn1;
       sudo python3 -m pip install cloudsmith-cli; 
     fi
