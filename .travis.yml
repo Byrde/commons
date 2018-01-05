@@ -11,7 +11,7 @@ install:
       sudo apt-get install python3-pip;
       sudo python3 -m pip install --upgrade cloudsmith-cli;
       sudo mkdir -p ~/.config/cloudsmith/;
-      sudo echo "[default]\napi_key=${CLOUDSMITH_API_KEY}" > ~/.config/cloudsmith/config.ini;
+      sudo echo "[default] api_key=${CLOUDSMITH_API_KEY}" > ~/.config/cloudsmith/config.ini;
     fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
