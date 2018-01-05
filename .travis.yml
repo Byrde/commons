@@ -10,8 +10,8 @@ install:
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
       sudo apt-get install python3-pip;
       sudo python3 -m pip install --upgrade cloudsmith-cli;
-      sudo touch ~/.config/cloudsmith/config.ini
-      sudo echo "[default]\napi_key=${CLOUDSMITH_API_KEY}" >> ~/.config/cloudsmith/config.ini
+      sudo touch ~/.config/cloudsmith/config.ini;
+      sudo echo "[default]\napi_key=${CLOUDSMITH_API_KEY}" >> ~/.config/cloudsmith/config.ini;
     fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
