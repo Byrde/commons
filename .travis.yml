@@ -8,8 +8,8 @@ scala: $SCALA_VER
 install:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
-      sudo pip install pyOpenSSL ndg-httpsclient pyasn1;
       sudo pip install --upgrade cloudsmith-cli; 
+      sudo pip install pyOpenSSL ndg-httpsclient pyasn1;
     fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
