@@ -21,6 +21,10 @@ install:
   - touch ~/.bash_aliases
   - echo "alias python=python3" >> ~/.bash_aliases
   - |
+    cat ~/.bash_aliases
+  - |
+    alias python=python3
+  - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
       python -V;
       sudo pip install pyOpenSSL ndg-httpsclient pyasn1;
