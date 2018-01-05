@@ -2,23 +2,27 @@ sudo: required
 
 # Defacto version and lang used in most Byrde projects.
 language: scala
-scala: $SCALA_VER
-
-# Install Python 3, required for cloudsmith dependencies.
-addons:
-  apt:
-    sources:
-      -  if [[ $TRAVIS_BRANCH == 'master' ]]; deadsnakes; fi
-    packages:
-      -  if [[ $TRAVIS_BRANCH == 'master' ]]; python3.6; fi
+scala: 2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION}
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
-  - if [[ $TRAVIS_BRANCH == 'master' ]]; then sudo pip install cloudsmith-cli; fi
+  - |
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then
+      sudo apt-get install python3-pip;
+      sudo python3 -m pip install --upgrade cloudsmith-cli;
+      sudo mkdir -p ~/.config/cloudsmith/;
+      sudo touch  ~/.config/cloudsmith/config.ini;
+      sudo chmod 777  ~/.config/cloudsmith/config.ini;
+      sudo echo "[default] api_key=${CLOUDSMITH_API_KEY}" >> ~/.config/cloudsmith/config.ini;
+    fi
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=${SCALA_VERSION} clean test package
+  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} clean test
+  - |
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then 
+      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} package; 
+    fi
 
 # Cached dependencies cleanup.
 before_cache:
@@ -34,5 +38,16 @@ cache:
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
-  - if [[ $TRAVIS_BRANCH == 'master' ]]; then cd $COMPILE_DIRECTORY; fi 
-  - if [[ $TRAVIS_BRANCH == 'master' ]]; then cloudsmith push maven byrde/libraries ${PROJECT_NAME}_${SCALA_VERSION}.${PROJECT_VERSION}.jar; fi 
+  - |
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then 
+      cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
+      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.jar; 
+    fi
+
+# Configure notifications
+notifications:
+  email:
+    recipients:
+      - ${ADMINISTRATIVE_EMAIL}
+    on_success: never
+    on_failure: always
