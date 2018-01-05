@@ -1,3 +1,4 @@
+os: osx
 sudo: required
 
 # Defacto version and lang used in most Byrde projects.
