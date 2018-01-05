@@ -36,7 +36,7 @@ cache:
 after_success:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      cd ${COMPILE_DIRECTORY}/scala-${SCALA_MAJOR_VERSION};
+      cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
       cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.jar; 
     fi
 
