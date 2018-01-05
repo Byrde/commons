@@ -1,13 +1,8 @@
-os: osx
 sudo: required
 
 # Defacto version and lang used in most Byrde projects.
 language: scala
 scala: $SCALA_VER
-
-# Setting jdk default version.
-jdk:
-  - openjdk8
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
