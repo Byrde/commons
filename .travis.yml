@@ -36,8 +36,10 @@ before_cache:
 # Cache dependencies.
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt
+    - $HOME/.m2
+    - $HOME/.ivy2
+    - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
+    - $HOME/.sbt/launchers
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
