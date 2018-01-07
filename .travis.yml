@@ -8,8 +8,11 @@ scala: 2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION}
 install:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
+      # Install cloudsmith.
       sudo apt-get install python3-pip;
       sudo python3 -m pip install --upgrade cloudsmith-cli;
+
+      # Configure cloudsmith.
       sudo mkdir -p ~/.config/cloudsmith/;
       sudo touch  ~/.config/cloudsmith/config.ini;
       sudo chmod 777  ~/.config/cloudsmith/config.ini;
@@ -18,10 +21,10 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} clean test
+  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} package; 
+      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} -DmavenGroupId=${MAVEN_GROUP_ID} package make-pom; 
     fi
 
 # Cached dependencies cleanup.
@@ -33,15 +36,17 @@ before_cache:
 # Cache dependencies.
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt
+    - $HOME/.m2
+    - $HOME/.ivy2
+    - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
+    - $HOME/.sbt/launchers
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
       cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
-      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.jar; 
+      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER}.jar --pom-file=${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER}.pom; 
     fi
 
 # Configure notifications
