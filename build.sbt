@@ -6,15 +6,14 @@ version :=
 	Option(
 		System.getProperty("version"))
 		.getOrElse("1.0")
+organization :=
+	Option(
+		System.getProperty("version"))
+		.getOrElse("org.byrde")
 scalaVersion :=
 	Option(
 		System.getProperty("scalaVersion"))
 		.getOrElse("2.11.11")
-
-val mavenGroupId =
-	Option(
-		System.getProperty("groupId"))
-		.getOrElse("org.byrde")
 
 lazy val root =
 	project in file(".")
@@ -68,18 +67,3 @@ scalacOptions ++=
 		"-language:_",
 		"-target:jvm-1.8",
 		"-encoding", "UTF-8")
-
-credentials +=
-	Credentials(Path.userHome / ".ivy2" / ".credentials")
-
-publishTo :=
-	Some("byrdelibraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/")
-
-pomExtra :=
-	<project>
-		<groupId>${mavenGroupId}</groupId>
-		<artifactId>${name}</artifactId>
-		<description>Byrde commons Scala utilities and functions.</description>
-		<version>${version}</version>
-		<name>${name}</name>
-	</project>
