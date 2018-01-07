@@ -8,7 +8,7 @@ version :=
 		.getOrElse("1.0")
 organization :=
 	Option(
-		System.getProperty("version"))
+		System.getProperty("organization"))
 		.getOrElse("org.byrde")
 scalaVersion :=
 	Option(
