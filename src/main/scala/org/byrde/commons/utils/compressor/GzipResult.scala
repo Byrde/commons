@@ -18,13 +18,17 @@ case class GzipResult(implicit ec: ExecutionContext, mat: Materializer) {
 
   def handleResult(request: RequestHeader, result: Result): Future[Result] = {
     if (shouldCompress(result)) {
-      val header = result.header.copy(headers = setupHeader(result.header.headers))
+      val header =
+        result.header.copy(headers = setupHeader(result.header.headers))
 
       result.body match {
         case HttpEntity.Strict(data, contentType) =>
-          Future.successful(Result(header, compressStrictEntity(data, contentType)))
+          Future.successful(
+            Result(header, compressStrictEntity(data, contentType)))
 
-        case entity @ HttpEntity.Streamed(_, Some(contentLength), contentType) =>
+        case entity @ HttpEntity.Streamed(_,
+                                          Some(contentLength),
+                                          contentType) =>
           // It's below the chunked threshold, so buffer then compress and send
           entity.consumeData.map { data =>
             Result(header, compressStrictEntity(data, contentType))
@@ -32,8 +36,10 @@ case class GzipResult(implicit ec: ExecutionContext, mat: Materializer) {
 
         case HttpEntity.Streamed(data, _, contentType) =>
           // It's above the chunked threshold, compress through the gzip flow, and send as chunked
-          val gzipped = data via GzipFlow.gzip(1024) map (d => HttpChunk.Chunk(d))
-          Future.successful(Result(header, HttpEntity.Chunked(gzipped, contentType)))
+          val gzipped = data via GzipFlow.gzip(1024) map (d =>
+            HttpChunk.Chunk(d))
+          Future.successful(
+            Result(header, HttpEntity.Chunked(gzipped, contentType)))
 
         case HttpEntity.Chunked(chunks, contentType) =>
           Future.successful(result)
@@ -43,9 +49,10 @@ case class GzipResult(implicit ec: ExecutionContext, mat: Materializer) {
     }
   }
 
-  private def compressStrictEntity(data: ByteString, contentType: Option[String]) = {
+  private def compressStrictEntity(data: ByteString,
+                                   contentType: Option[String]) = {
     val builder = ByteString.newBuilder
-    val gzipOs = new GZIPOutputStream(builder.asOutputStream, 1024, true)
+    val gzipOs  = new GZIPOutputStream(builder.asOutputStream, 1024, true)
 
     gzipOs.write(data.toArray)
     gzipOs.close()
@@ -70,7 +77,8 @@ case class GzipResult(implicit ec: ExecutionContext, mat: Materializer) {
         0d
 
     def qvalue(coding: String) =
-      explicitQValue(coding) orElse explicitQValue("*") getOrElse defaultQValue(coding)
+      explicitQValue(coding) orElse explicitQValue("*") getOrElse defaultQValue(
+        coding)
 
     qvalue("gzip") > 0d && qvalue("gzip") >= qvalue("identity")
   }
@@ -99,20 +107,27 @@ case class GzipResult(implicit ec: ExecutionContext, mat: Materializer) {
     header.headers.get(CONTENT_ENCODING).isEmpty
 
   private def setupHeader(header: Map[String, String]): Map[String, String] =
-    header + (CONTENT_ENCODING -> "gzip") + addToVaryHeader(header, VARY, ACCEPT_ENCODING)
+    header + (CONTENT_ENCODING -> "gzip") + addToVaryHeader(header,
+                                                            VARY,
+                                                            ACCEPT_ENCODING)
 
   /**
     * There may be an existing Vary value, which we must add to (comma separated)
     */
-  private def addToVaryHeader(existingHeaders: Map[String, String], headerName: String, headerValue: String): (String, String) = {
+  private def addToVaryHeader(existingHeaders: Map[String, String],
+                              headerName: String,
+                              headerValue: String): (String, String) = {
     existingHeaders.get(headerName) match {
       case None => (headerName, headerValue)
-      case Some(existing) if existing.split(",").exists(_.trim.equalsIgnoreCase(headerValue)) => (headerName, existing)
+      case Some(existing)
+          if existing.split(",").exists(_.trim.equalsIgnoreCase(headerValue)) =>
+        (headerName, existing)
       case Some(existing) => (headerName, s"$existing,$headerValue")
     }
   }
 
-  private def acceptHeader(headers: Headers, headerName: String): Seq[(Double, String)] = {
+  private def acceptHeader(headers: Headers,
+                           headerName: String): Seq[(Double, String)] = {
     for {
       header <- headers.get(headerName).toList
       value0 <- header.split(',')
@@ -120,7 +135,7 @@ case class GzipResult(implicit ec: ExecutionContext, mat: Materializer) {
     } yield {
       RequestHeader.qPattern.findFirstMatchIn(value) match {
         case Some(m) => (m.group(1).toDouble, m.before.toString)
-        case None => (1.0, value) // “The default value is q=1.”
+        case None    => (1.0, value) // “The default value is q=1.”
       }
     }
   }

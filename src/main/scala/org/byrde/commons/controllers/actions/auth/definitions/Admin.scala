@@ -18,6 +18,3 @@ object Admin extends ClaimField {
   override def attemptApply(value: JsValue): Option[ClaimValue] =
     value.asOpt[String].map(apply)
 }
-
-
-

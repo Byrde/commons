@@ -12,13 +12,19 @@ abstract class RestService {
   protected val requestHolder: WSRequest
   protected val timeout: Duration
 
-  protected def wrapRequest[A: ClassTag](body: Option[String])(req: => Future[WSResponse])(implicit ec: ExecutionContext, reads: Reads[A]): Future[A]
+  protected def wrapRequest[A: ClassTag](body: Option[String])(
+      req: => Future[WSResponse])(implicit ec: ExecutionContext,
+                                  reads: Reads[A]): Future[A]
 
-  def get[A: ClassTag](implicit ec: ExecutionContext, reads: Reads[A]): Future[A] = {
+  def get[A: ClassTag](implicit ec: ExecutionContext,
+                       reads: Reads[A]): Future[A] = {
     wrapRequest[A](None)(requestHolder.withRequestTimeout(timeout).get())
   }
 
-  def post[A: ClassTag, T](body: T)(implicit ec: ExecutionContext, wr: Writeable[T], reads: Reads[A]): Future[A] = {
-    wrapRequest[A](Some(body.toString))(requestHolder.withRequestTimeout(timeout).post(body))
+  def post[A: ClassTag, T](body: T)(implicit ec: ExecutionContext,
+                                    wr: Writeable[T],
+                                    reads: Reads[A]): Future[A] = {
+    wrapRequest[A](Some(body.toString))(
+      requestHolder.withRequestTimeout(timeout).post(body))
   }
 }

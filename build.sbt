@@ -20,18 +20,18 @@ lazy val root =
 
 val utils =
 	Seq (
-		"io.igl" 												%% "jwt" 						% "1.2.0",
-		"org.scalaz" 										%% "scalaz-core" 		% "7.2.8",
-		"org.joda" 											%  "joda-convert" 	% "1.8.1",
-		"commons-io" 										%  "commons-io" 		% "2.5",
-		"com.googlecode.htmlcompressor" %  "htmlcompressor" % "1.5.2",
-		"org.mozilla" 									%  "rhino" 					% "1.7.7.1")
+		"io.igl" %% "jwt" % "1.2.0",
+		"org.scalaz" %% "scalaz-core" % "7.2.8",
+		"org.joda" % "joda-convert" % "1.8.1",
+		"commons-io" % "commons-io" % "2.5",
+		"com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2",
+		"org.mozilla" %  "rhino" % "1.7.7.1")
 
 val play =
 	Seq (
-		"com.typesafe.play" % "play_2.11" 		% "2.5.18",
-		"com.typesafe.play" % "play-ws_2.11" 	% "2.5.18",
-		"com.google.inject" % "guice" 				% "4.1.0")
+		"com.typesafe.play" % "play_2.11" % "2.5.18",
+		"com.typesafe.play" % "play-ws_2.11" % "2.5.18",
+		"com.google.inject" % "guice" % "4.1.0")
 
 val amazon =
 	Seq (
@@ -39,8 +39,8 @@ val amazon =
 
 val mail =
 	Seq (
-		"javax" 			% "javaee-api" 	% "7.0",
-		"javax.mail" 	% "mail" 				% "1.4")
+		"javax" % "javaee-api" % "7.0",
+		"javax.mail" % "mail" % "1.4")
 
 libraryDependencies ++=
 	utils ++

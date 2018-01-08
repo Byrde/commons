@@ -11,11 +11,10 @@ object JsCompressorConfig {
   def apply(config: Configuration): JsCompressorConfig =
     apply("optimize", "munge", "semi-colons", config)
 
-  def apply(
-     _optimize: String,
-    _munge: String,
-    _semiColons: String,
-    config: Configuration): JsCompressorConfig = {
+  def apply(_optimize: String,
+            _munge: String,
+            _semiColons: String,
+            config: Configuration): JsCompressorConfig = {
     val optimize =
       config.getBoolean(_optimize).getOrElse(true)
     val munge =
@@ -27,10 +26,9 @@ object JsCompressorConfig {
   }
 }
 
-case class JsCompressorConfig(
-  _optimize: Boolean,
-  _munge: Boolean,
-  _semiColons: Boolean){
+case class JsCompressorConfig(_optimize: Boolean,
+                              _munge: Boolean,
+                              _semiColons: Boolean) {
   lazy val compressor: YuiJavaScriptCompressor = {
     val c = new YuiJavaScriptCompressor
     c.setDisableOptimizations(_optimize)

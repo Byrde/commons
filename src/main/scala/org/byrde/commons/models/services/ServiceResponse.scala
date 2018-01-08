@@ -11,43 +11,44 @@ trait ServiceResponse[T] {
   def response: T
 
   def withMessage(_msg: String): ServiceResponse[T] = {
-    val _writes = writes
-    val _code = code
-    val _status = status
+    val _writes   = writes
+    val _code     = code
+    val _status   = status
     val _response = response
     new ServiceResponse[T] {
       override implicit def writes: Writes[T] = _writes
-      override def msg: String = _msg
-      override def status: Int = _status
-      override def code: Int = _code
-      override def response: T = _response
+      override def msg: String                = _msg
+      override def status: Int                = _status
+      override def code: Int                  = _code
+      override def response: T                = _response
     }
   }
 
   def withCode(_code: Int): ServiceResponse[T] = {
-    val _writes = writes
-    val _msg = msg
-    val _status = status
+    val _writes   = writes
+    val _msg      = msg
+    val _status   = status
     val _response = response
     new ServiceResponse[T] {
       override implicit def writes: Writes[T] = _writes
-      override def msg: String = _msg
-      override def status: Int = _status
-      override def code: Int = _code
-      override def response: T = _response
+      override def msg: String                = _msg
+      override def status: Int                = _status
+      override def code: Int                  = _code
+      override def response: T                = _response
     }
   }
 
-  def withResponse[A](_response: A)(implicit _writes: Writes[A]): ServiceResponse[A] = {
-    val _msg = msg
-    val _code = code
+  def withResponse[A](_response: A)(
+      implicit _writes: Writes[A]): ServiceResponse[A] = {
+    val _msg    = msg
+    val _code   = code
     val _status = status
     new ServiceResponse[A] {
       override val writes: Writes[A] = _writes
-      override val msg: String = _msg
-      override val code: Int = _code
-      override val status: Int = _status
-      override val response: A = _response
+      override val msg: String       = _msg
+      override val code: Int         = _code
+      override val status: Int       = _status
+      override val response: A       = _response
     }
   }
 
@@ -62,19 +63,21 @@ trait ServiceResponse[T] {
 }
 
 object ServiceResponse {
-  implicit val writes: Writes[ServiceResponse[_]] = new Writes[ServiceResponse[_]] {
-    def writes(o: ServiceResponse[_]): JsObject = o.toJson
-  }
+  implicit val writes: Writes[ServiceResponse[_]] =
+    new Writes[ServiceResponse[_]] {
+      def writes(o: ServiceResponse[_]): JsObject = o.toJson
+    }
 
-  def apply[T](
-    _status: Int,
-    _code: Int,
-    _response: T,
-    _msg: String = "response")(implicit _writes: Writes[T]): ServiceResponse[T] = new ServiceResponse[T] {
-    override val writes: Writes[T] = _writes
-    override val msg: String = _msg
-    override val code: Int = _code
-    override val status: Int = _status
-    override val response: T = _response
-  }
+  def apply[T](_status: Int,
+               _code: Int,
+               _response: T,
+               _msg: String = "response")(
+      implicit _writes: Writes[T]): ServiceResponse[T] =
+    new ServiceResponse[T] {
+      override val writes: Writes[T] = _writes
+      override val msg: String       = _msg
+      override val code: Int         = _code
+      override val status: Int       = _status
+      override val response: T       = _response
+    }
 }

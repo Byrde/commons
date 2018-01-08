@@ -13,7 +13,9 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-abstract class ResultCompressor[C <: Compressor](implicit ec: ExecutionContext, mat: Materializer) {
+abstract class ResultCompressor[C <: Compressor](implicit ec: ExecutionContext,
+                                                 mat: Materializer) {
+
   /**
     * The compressor instance.
     */
@@ -26,9 +28,11 @@ abstract class ResultCompressor[C <: Compressor](implicit ec: ExecutionContext, 
     * @return True if the result is a compressible result, false otherwise.
     */
   def isCompressible(result: Result): Boolean = {
-    val isChunked = result.header.headers.get(TRANSFER_ENCODING).contains(HttpProtocol.CHUNKED)
+    val isChunked = result.header.headers
+      .get(TRANSFER_ENCODING)
+      .contains(HttpProtocol.CHUNKED)
     val isGzipped = result.header.headers.get(CONTENT_ENCODING).contains("gzip")
-    val ret = !isChunked && !isGzipped
+    val ret       = !isChunked && !isGzipped
 
     ret
   }
@@ -46,15 +50,20 @@ abstract class ResultCompressor[C <: Compressor](implicit ec: ExecutionContext, 
     if (isCompressible(result)) {
       result.body match {
         case HttpEntity.Strict(data, contentType) =>
-          Future.successful(Result(result.header, HttpEntity.Strict(ByteString(compress(data)), contentType)))
+          Future.successful(
+            Result(result.header,
+                   HttpEntity.Strict(ByteString(compress(data)), contentType)))
         case HttpEntity.Streamed(data, _, _) =>
-          data.toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right).run() map { bytes =>
-            val compressed = compress(bytes)
-            val length = compressed.length
-            Result(
-              result.header.copy(headers = result.header.headers),
-              HttpEntity.Streamed(Source.single(ByteString(compressed)), Some(length.toLong), result.body.contentType)
-            )
+          data.toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right).run() map {
+            bytes =>
+              val compressed = compress(bytes)
+              val length     = compressed.length
+              Result(
+                result.header.copy(headers = result.header.headers),
+                HttpEntity.Streamed(Source.single(ByteString(compressed)),
+                                    Some(length.toLong),
+                                    result.body.contentType)
+              )
           }
         case _ =>
           Future.successful(result)
@@ -64,4 +73,3 @@ abstract class ResultCompressor[C <: Compressor](implicit ec: ExecutionContext, 
     }
   }
 }
-

@@ -2,7 +2,12 @@ package org.byrde.commons.services.email
 
 import java.sql.Timestamp
 
-import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
+import javax.mail.internet.{
+  InternetAddress,
+  MimeBodyPart,
+  MimeMessage,
+  MimeMultipart
+}
 import javax.mail.{Message, Transport}
 
 import org.byrde.commons.models.email.EmailResponse
@@ -12,7 +17,9 @@ import org.byrde.commons.utils.email.conf.EmailConfig
 import play.twirl.api.Html
 
 case class EmailServiceWrapper(emailConfig: EmailConfig) {
-  def sendMessage(recipient: String, subject: String, content: Html): ServiceResponse[EmailResponse] = {
+  def sendMessage(recipient: String,
+                  subject: String,
+                  content: Html): ServiceResponse[EmailResponse] = {
     val message =
       new MimeMessage(emailConfig.sessionFromConfig)
     val multipart =
@@ -32,6 +39,9 @@ case class EmailServiceWrapper(emailConfig: EmailConfig) {
 
     Transport.send(message)
 
-    EmailResponse.apply(subject, recipient, content, new Timestamp(System.currentTimeMillis))
+    EmailResponse.apply(subject,
+                        recipient,
+                        content,
+                        new Timestamp(System.currentTimeMillis))
   }
 }
