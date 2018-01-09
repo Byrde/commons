@@ -1,4 +1,4 @@
-package org.byrde.commons.persistence.dao
+package org.byrde.commons.persistence.sql.slick.dao
 
 import scala.concurrent.{ExecutionContext, Future}
 

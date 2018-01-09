@@ -1,6 +1,6 @@
-package org.byrde.commons.persistence.table
+package org.byrde.commons.persistence.sql.slick.table
 
-import org.byrde.commons.persistence.sqlbase.db.Db
+import org.byrde.commons.persistence.sql.slick.sqlbase.db.Db
 
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile

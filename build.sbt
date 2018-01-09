@@ -27,7 +27,12 @@ val utils =
 		"com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2",
 		"org.mozilla" %  "rhino" % "1.7.7.1")
 
-val persistence =
+val nosqlPersistence =
+	Seq (
+		// Couch
+		"com.ibm" %% "couchdb-scala" % "0.7.2")
+
+val sqlPersistence =
 	Seq (
 		"com.typesafe.slick" % "slick-hikaricp_2.11" % "3.2.0",
 		"com.typesafe.slick" % "slick_2.11" % "3.2.0")
@@ -52,7 +57,8 @@ libraryDependencies ++=
 	play ++
 	amazon ++
 	mail ++
-	persistence
+	sqlPersistence ++
+	nosqlPersistence
 
 unmanagedJars in Compile ++=
 	((baseDirectory.value / "lib") ** "*.jar").classpath

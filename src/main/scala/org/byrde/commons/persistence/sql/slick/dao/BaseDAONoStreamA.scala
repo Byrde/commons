@@ -1,7 +1,7 @@
-package org.byrde.commons.persistence.dao
+package org.byrde.commons.persistence.sql.slick.dao
 
-import org.byrde.commons.persistence.sqlbase.BaseEntity
-import org.byrde.commons.persistence.table.TablesA
+import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
+import org.byrde.commons.persistence.sql.slick.table.TablesA
 import slick.jdbc.JdbcBackend
 import slick.lifted.{CanBeQueryCondition, TableQuery}
 

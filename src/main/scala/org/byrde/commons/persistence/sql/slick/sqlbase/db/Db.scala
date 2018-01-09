@@ -1,4 +1,4 @@
-package org.byrde.commons.persistence.sqlbase.db
+package org.byrde.commons.persistence.sql.slick.sqlbase.db
 
 import slick.jdbc.JdbcProfile
 
