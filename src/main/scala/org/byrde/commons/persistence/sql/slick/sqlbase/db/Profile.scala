@@ -4,6 +4,6 @@ import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 trait Profile {
-	val dbConfig: DatabaseConfig[JdbcProfile]
-	implicit val profile: JdbcProfile = dbConfig.profile
+	val jdbcConfiguration: DatabaseConfig[JdbcProfile]
+	implicit val profile: JdbcProfile = jdbcConfiguration.profile
 }
