@@ -20,19 +20,13 @@ object S3Config {
             config: Configuration): S3Config = {
     val bucket =
       config
-        .getString(_bucket)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_bucket}"))
+        .get[String](_bucket)
     val key =
       config
-        .getString(_accessKey)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_accessKey}"))
+        .get[String](_accessKey)
     val secretKey =
       config
-        .getString(_secretKey)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_secretKey}"))
+        .get[String](_secretKey)
 
     new S3Config(bucket, key, secretKey)
   }

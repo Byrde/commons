@@ -10,26 +10,24 @@ import play.api.mvc._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
-case class AuthorizedAction(jwtConfig: JwtConfig,
+case class AuthorizedAction(parser: BodyParsers.Default,
+                            jwtConfig: JwtConfig,
                             _failSafe: Option[Call] = None,
-                            saltInstructions: Option[Request[_] => String] = {
-                              Some(
-                                request =>
-                                  request.headers
-                                    .get("Client-IP")
-                                    .orElse(
-                                      request.headers.get("X-Forwarded-For"))
-                                    .getOrElse(request.remoteAddress))
-                            })(
-    override implicit val executionContext: ExecutionContext)
-    extends ActionBuilder[AuthenticatedRequest] {
+                            saltInstructions: Request[_] => String = {
+                              request =>
+                                request.headers
+                                  .get("Client-IP")
+                                  .orElse(
+                                    request.headers.get("X-Forwarded-For"))
+                                  .getOrElse(request.remoteAddress)
+                            })(override implicit val executionContext: ExecutionContext)
+  extends ActionBuilder[AuthenticatedRequest, AnyContent] {
   lazy val failsafe: Future[Result] =
     Future.successful(
       _failSafe.fold(throw E0401)(Results.Redirect(_).withNewSession))
 
-  override def invokeBlock[A](
-      request: Request[A],
-      block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](request: Request[A],
+                              block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] = {
     val tokenOpt =
       request.headers
         .get(jwtConfig.tokenName)
@@ -42,9 +40,7 @@ case class AuthorizedAction(jwtConfig: JwtConfig,
 
     tokenOpt.fold(failsafe) { token =>
       val configWSalt =
-        saltInstructions.fold(jwtConfig) { instructions =>
-          jwtConfig.copy(saltOpt = Some(instructions(request)))
-        }
+        jwtConfig.copy(saltOpt = Some(saltInstructions(request)))
 
       JsonWebTokenWrapper(configWSalt).decode(token) match {
         case Success(jwt) =>
@@ -55,3 +51,5 @@ case class AuthorizedAction(jwtConfig: JwtConfig,
     }
   }
 }
+
+

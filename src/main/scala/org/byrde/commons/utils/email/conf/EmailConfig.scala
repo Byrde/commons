@@ -32,16 +32,13 @@ object EmailConfig {
       config: Configuration): EmailConfig = {
     val email =
       config
-        .getString(_email)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_email}"))
+        .get[String](_email)
     val password =
       config
-        .getString(_password)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_password}"))
+        .get[String](_password)
     val port =
-      config.getInt(_port).getOrElse(587)
+      config
+        .get[Int](_port)
 
     EmailConfig(email, password, port)
   }

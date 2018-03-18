@@ -32,22 +32,16 @@ object JwtConfig {
             config: Configuration): JwtConfig = {
     val token =
       config
-        .getString(_token)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_token}"))
+        .get[String](_token)
     val signature =
       config
-        .getString(_signature)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_signature}"))
+        .get[String](_signature)
     val encryption =
       config
-        .getString(_encryption)
-        .getOrElse(
-          throw new Exception(s"Missing configuration value: ${_encryption}"))
+        .get[String](_encryption)
     val claims =
       config
-        .getStringSeq(_claims)
+        .getOptional[Seq[String]](_claims)
         .getOrElse(Seq.empty[String])
 
     build(token, signature, encryption, claims = claims)

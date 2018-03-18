@@ -16,11 +16,11 @@ object JsCompressorConfig {
             _semiColons: String,
             config: Configuration): JsCompressorConfig = {
     val optimize =
-      config.getBoolean(_optimize).getOrElse(true)
+      config.getOptional[Boolean](_optimize).getOrElse(true)
     val munge =
-      config.getBoolean(_munge).getOrElse(true)
+      config.getOptional[Boolean](_munge).getOrElse(true)
     val semiColons =
-      config.getBoolean(_semiColons).getOrElse(true)
+      config.getOptional[Boolean](_semiColons).getOrElse(true)
 
     JsCompressorConfig(optimize, munge, semiColons)
   }

@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 import scala.reflect._
 
 case class ModelValidationException[A: ClassTag](
-    errors: Seq[(JsPath, Seq[ValidationError])])
+    errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])])
     extends Throwable(
       s"""
        |Error parsing: ${classTag[A].runtimeClass},

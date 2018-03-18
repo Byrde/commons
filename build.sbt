@@ -39,8 +39,8 @@ val sqlPersistence =
 
 val play =
   Seq(
-    "com.typesafe.play" % "play_2.11" % "2.5.18",
-    "com.typesafe.play" % "play-ws_2.11" % "2.5.18",
+    "com.typesafe.play" % "play_2.11" % "2.6.12",
+    "com.typesafe.play" % "play-ws_2.11" % "2.6.12",
     "com.google.inject" % "guice" % "4.1.0")
 
 val amazon =
