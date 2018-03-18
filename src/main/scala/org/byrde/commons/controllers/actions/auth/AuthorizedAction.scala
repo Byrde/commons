@@ -12,22 +12,21 @@ import scala.util.Success
 
 case class AuthorizedAction(parser: BodyParsers.Default,
                             jwtConfig: JwtConfig,
-                            _failSafe: Option[Call] = None,
+                            failSafe: Request[_] => Call = {
+                              _ => throw E0401
+                            },
                             saltInstructions: Request[_] => String = {
                               request =>
                                 request.headers
                                   .get("Client-IP")
-                                  .orElse(
-                                    request.headers.get("X-Forwarded-For"))
                                   .getOrElse(request.remoteAddress)
                             })(override implicit val executionContext: ExecutionContext)
   extends ActionBuilder[AuthenticatedRequest, AnyContent] {
-  lazy val failsafe: Future[Result] =
-    Future.successful(
-      _failSafe.fold(throw E0401)(Results.Redirect(_).withNewSession))
-
   override def invokeBlock[A](request: Request[A],
                               block: (AuthenticatedRequest[A]) => Future[Result]): Future[Result] = {
+    lazy val redirect =
+      Future.successful(Results.Redirect(failSafe(request)).withNewSession)
+
     val tokenOpt =
       request.headers
         .get(jwtConfig.tokenName)
@@ -38,7 +37,7 @@ case class AuthorizedAction(parser: BodyParsers.Default,
               Some(cookie.value)
           })
 
-    tokenOpt.fold(failsafe) { token =>
+    tokenOpt.fold(redirect) { token =>
       val configWSalt =
         jwtConfig.copy(saltOpt = Some(saltInstructions(request)))
 
@@ -46,7 +45,7 @@ case class AuthorizedAction(parser: BodyParsers.Default,
         case Success(jwt) =>
           block(AuthenticatedRequest(jwt)(request))
         case _ =>
-          failsafe
+          redirect
       }
     }
   }

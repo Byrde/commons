@@ -73,9 +73,9 @@ object JwtConfig {
     }
 
     JwtConfig(token,
-              signature,
-              resolvedEncryption,
-              Set.empty[HeaderField],
-              resolvedClaims.toSet)
+      signature,
+      resolvedEncryption,
+      Set.empty[HeaderField],
+      resolvedClaims.toSet)
   }
 }
