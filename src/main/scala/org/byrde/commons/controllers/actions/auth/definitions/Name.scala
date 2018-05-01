@@ -1,6 +1,7 @@
 package org.byrde.commons.controllers.actions.auth.definitions
 
 import io.igl.jwt.{ClaimField, ClaimValue}
+
 import play.api.libs.json.{JsString, JsValue}
 
 case class Name(value: String) extends ClaimValue {

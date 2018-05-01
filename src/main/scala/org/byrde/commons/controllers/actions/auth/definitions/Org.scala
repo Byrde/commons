@@ -4,17 +4,16 @@ import io.igl.jwt.{ClaimField, ClaimValue}
 
 import play.api.libs.json.{JsString, JsValue}
 
-case class Admin(value: String) extends ClaimValue {
+case class Org(value: String) extends ClaimValue {
   override val field: ClaimField =
-    Admin
+    Org
 
   override val jsValue: JsValue =
     JsString(value)
 }
 
-object Admin extends ClaimField {
-  override val name =
-    "admin"
+object Org extends ClaimField {
+  override val name = "org"
 
   override def attemptApply(value: JsValue): Option[ClaimValue] =
     value.asOpt[String].map(apply)
