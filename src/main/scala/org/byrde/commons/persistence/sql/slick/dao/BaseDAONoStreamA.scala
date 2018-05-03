@@ -38,8 +38,8 @@ abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[A], A <: BaseEntity](tab
     findById(row.id).flatMap{
       _.fold {
         insert(row)
-      }{ _ =>
-        val func = tableQ.filter(_.id === row.id).update(row)
+      }{ foundRow =>
+        val func = tableQ.update(row)
         session.fold(db.run(func))(_.apply(db).database.run(func.withPinnedSession)).map { _ =>
           row
         }
