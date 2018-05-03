@@ -2,7 +2,7 @@ package org.byrde.commons.utils
 
 import scala.util.{Failure, Success, Try}
 
-class TryUtils {
+object TryUtils {
   implicit class Any2Success[T](value: T) {
     @inline def success: Try[T] = Success(value)
     @inline def + : Try[T] = Success(value)
