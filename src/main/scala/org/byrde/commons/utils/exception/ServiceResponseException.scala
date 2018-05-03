@@ -9,6 +9,12 @@ case class ServiceResponseException(_msg: String, _code: Int, _status: Int)
   override def apply(message: String): ServiceResponseException =
     new ServiceResponseException(message, _code, _status)
 
+  def apply(throwable: Throwable): ServiceResponseException =
+    apply(new Exception(throwable))
+
+  def apply(exception: Exception): ServiceResponseException =
+    new ServiceResponseException(exception.getMessage, _code, _status)
+
   override def msg: String =
     _msg
 
