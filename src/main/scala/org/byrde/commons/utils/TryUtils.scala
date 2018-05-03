@@ -10,6 +10,6 @@ object TryUtils {
 
   implicit class Throwable2Failure[T](value: Throwable) {
     @inline def failure: Try[T] = Failure(value)
-    @inline def !- : Failure[T] = Failure(value)
+    @inline def !- : Try[T] = Failure(value)
   }
 }
