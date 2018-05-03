@@ -61,10 +61,3 @@ trait ServiceResponse[T] {
     "response" -> Json.toJson(response)
   )
 }
-
-object ServiceResponse {
-  implicit val writes: Writes[ServiceResponse[_]] =
-    new Writes[ServiceResponse[_]] {
-      def writes(o: ServiceResponse[_]): JsObject = o.toJson
-    }
-}
