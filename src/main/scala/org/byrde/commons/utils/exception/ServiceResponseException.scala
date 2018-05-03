@@ -1,16 +1,14 @@
 package org.byrde.commons.utils.exception
 
 import org.byrde.commons.models.services.CommonsServiceResponseDictionary.E0500
-import org.byrde.commons.models.services.{
-  DefaultServiceResponse,
-  ServiceResponse
-}
-
-import play.api.libs.json.Writes
+import org.byrde.commons.models.services.{DefaultServiceResponse, ServiceResponse}
 
 case class ServiceResponseException(_msg: String, _code: Int, _status: Int)
     extends Throwable(_msg)
     with DefaultServiceResponse {
+  override def apply(message: String): ServiceResponseException =
+    new ServiceResponseException(message, _code, _status)
+
   override def msg: String =
     _msg
 
@@ -22,14 +20,9 @@ case class ServiceResponseException(_msg: String, _code: Int, _status: Int)
 }
 
 object ServiceResponseException {
-  def apply[T](serviceResponse: ServiceResponse[T])(
-      implicit writes: Writes[T]): ServiceResponseException =
-    ServiceResponseException(
-      serviceResponse.msg,
-      serviceResponse.code,
-      serviceResponse.status
-    )
+  def apply(throwable: Throwable): ServiceResponseException =
+    apply(new Exception(throwable))
 
-  def apply(ex: Throwable): ServiceResponseException =
+  def apply(ex: Exception): ServiceResponseException =
     E0500.copy(_msg = ex.getMessage)
 }

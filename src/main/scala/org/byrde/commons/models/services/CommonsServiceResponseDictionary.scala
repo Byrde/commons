@@ -8,15 +8,15 @@ object CommonsServiceResponseDictionary {
   object E0200 extends DefaultServiceResponse {
     override def msg: String = "Ok"
     override def status: Int = 200
-    override def code: Int   = 0
+    override def code: Int   = 200
   }
   // Client errors (1 - 499)
-  object E0400 extends ServiceResponseException("Bad request", 1, 400)
-  object E0401 extends ServiceResponseException("Unauthorized", 2, 401)
-  object E0403 extends ServiceResponseException("Forbidden", 3, 403)
-  object E0404 extends ServiceResponseException("Not found", 4, 404)
+  object E0400 extends ServiceResponseException("Bad request", 400, 400)
+  object E0401 extends ServiceResponseException("Unauthorized", 401, 401)
+  object E0403 extends ServiceResponseException("Forbidden", 403, 403)
+  object E0404 extends ServiceResponseException("Not found", 404, 404)
   // Server errors (500 - 999)
   object E0500
       extends ServiceResponseException("Internal Server Error", 500, 500)
-  object E0504 extends ServiceResponseException("Service timeout", 501, 504)
+  object E0504 extends ServiceResponseException("Service timeout", 504, 504)
 }
