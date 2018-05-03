@@ -1,4 +1,4 @@
-package org.byrde.commons.models.utils
+package org.byrde.commons.utils
 
 import play.api.libs.json.{JsString, JsValue, Writes}
 

@@ -1,4 +1,4 @@
-package org.byrde.commons.models.utils
+package org.byrde.commons.utils
 
 object OptionUtils {
   implicit class Any2Some[T](value: T) {
