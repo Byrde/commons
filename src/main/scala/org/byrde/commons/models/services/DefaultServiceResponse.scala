@@ -25,11 +25,3 @@ trait DefaultServiceResponse extends ServiceResponse[String] {
     override val response: String =
       msg
 }
-
-object DefaultServiceResponse {
-  implicit val writes: Writes[DefaultServiceResponse] =
-    new Writes[DefaultServiceResponse] {
-      override def writes(o: DefaultServiceResponse): JsValue =
-        o.toJson
-    }
-}
