@@ -2,7 +2,6 @@ package org.byrde.commons.persistence.sql.slick.dao
 
 import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
 import org.byrde.commons.persistence.sql.slick.table.TablesA
-import org.byrde.commons.utils.OptionUtils._
 import slick.jdbc.JdbcBackend
 import slick.lifted.{CanBeQueryCondition, TableQuery}
 
@@ -22,29 +21,6 @@ abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[A], A <: BaseEntity](tab
     val func = tableQ returning tableQ.map(_.id) ++= rows
     session.fold(db.run(func))(_.apply(db).database.run(func.withPinnedSession)).flatMap(rows => Future.sequence(rows.map(findById))).map(_.flatten)
   }
-
-  def update(id: Long, fn: A => A)(implicit session: Option[JdbcBackend#Database => JdbcBackend#Session] = None): Future[Option[A]] =
-    findById(id).flatMap {
-      _.fold(Future.successful(Option.empty[A])) { row =>
-        val updatedRow = fn(row)
-        val func = tableQ.update(updatedRow)
-        session.fold(db.run(func))(_.apply(db).database.run(func.withPinnedSession)).map { _ =>
-          updatedRow.?
-        }
-      }
-    }
-
-  def upsert(row: A)(implicit session: Option[JdbcBackend#Database => JdbcBackend#Session] = None): Future[A] =
-    findById(row.id).flatMap{
-      _.fold {
-        insert(row)
-      }{ foundRow =>
-        val func = tableQ.update(row)
-        session.fold(db.run(func))(_.apply(db).database.run(func.withPinnedSession)).map { _ =>
-          row
-        }
-      }
-    }
 
   def findById(id: Long)(implicit session: Option[JdbcBackend#Database => JdbcBackend#Session] = None): Future[Option[A]] = {
     val func = tableQ.filter(_.id === id).result.headOption
