@@ -1,6 +1,5 @@
 package org.byrde.commons.services.rest
 
-import play.api.http._
 import play.api.libs.json.Reads
 import play.api.libs.ws.{BodyWritable, WSRequest, WSResponse}
 
@@ -17,6 +16,6 @@ abstract class RestService {
   def get[A: ClassTag](implicit ec: ExecutionContext, reads: Reads[A]): Future[A] =
     wrapRequest[A](None)(requestHolder.withRequestTimeout(timeout).get())
 
-  def post[A: ClassTag, T](body: T)(implicit wrt: BodyWritable[T], ct: ContentTypeOf[T], ec: ExecutionContext, reads: Reads[A]): Future[A] =
+  def post[A: ClassTag, T](body: T)(implicit wrt: BodyWritable[T], ec: ExecutionContext, reads: Reads[A]): Future[A] =
     wrapRequest[A](Some(body.toString))(requestHolder.withRequestTimeout(timeout).post(body))
 }

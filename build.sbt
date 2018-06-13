@@ -13,24 +13,19 @@ organization :=
 scalaVersion :=
   Option(
     System.getProperty("scalaVersion"))
-    .getOrElse("2.11.11")
+    .getOrElse("2.12.4")
 
 lazy val root =
   project in file(".")
 
 val utils =
   Seq(
-    "io.igl" %% "jwt" % "1.2.0",
+    "io.igl" %% "jwt" % "1.2.2",
     "org.scalaz" %% "scalaz-core" % "7.2.8",
     "org.joda" % "joda-convert" % "1.8.1",
     "commons-io" % "commons-io" % "2.5",
     "com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2",
     "org.mozilla" % "rhino" % "1.7.7.1")
-
-val nosqlPersistence =
-  Seq(
-    // Couch
-    "com.ibm" %% "couchdb-scala" % "0.7.2")
 
 val sqlPersistence =
   Seq(
@@ -39,13 +34,9 @@ val sqlPersistence =
 
 val play =
   Seq(
-    "com.typesafe.play" % "play_2.11" % "2.6.12",
-    "com.typesafe.play" % "play-ws_2.11" % "2.6.12",
+    "com.typesafe.play" % "play_2.12" % "2.6.12",
+    "com.typesafe.play" % "play-ws_2.12" % "2.6.12",
     "com.google.inject" % "guice" % "4.1.0")
-
-val amazon =
-  Seq(
-    "com.amazonaws" % "aws-java-sdk" % "1.11.33")
 
 val mail =
   Seq(
@@ -55,10 +46,8 @@ val mail =
 libraryDependencies ++=
   utils ++
     play ++
-    amazon ++
     mail ++
-    sqlPersistence ++
-    nosqlPersistence
+    sqlPersistence
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath

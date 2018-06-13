@@ -9,12 +9,8 @@ import org.byrde.commons.utils.compressor.conf.JsCompressorConfig
 
 import play.api.http.MimeTypes
 
-import scala.concurrent.ExecutionContext
-
-case class JsResultCompressor(jsConfig: JsCompressorConfig)(
-    implicit ec: ExecutionContext,
-    mat: Materializer)
-    extends ResultCompressor[YuiJavaScriptCompressor] {
+case class JsResultCompressor(jsConfig: JsCompressorConfig)(implicit mat: Materializer)
+  extends ResultCompressor[YuiJavaScriptCompressor] {
   override lazy val compressor: YuiJavaScriptCompressor =
     jsConfig.compressor
 

@@ -2,7 +2,7 @@ package org.byrde.commons.models.services
 
 import org.byrde.commons.utils.WritesUtils
 
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.Writes
 
 trait DefaultServiceResponse extends ServiceResponse[String] {
   self =>

@@ -11,11 +11,9 @@ import play.api.http.{HttpEntity, HttpProtocol}
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
-abstract class ResultCompressor[C <: Compressor](implicit ec: ExecutionContext,
-                                                 mat: Materializer) {
-
+abstract class ResultCompressor[C <: Compressor](implicit mat: Materializer) {
   /**
     * The compressor instance.
     */

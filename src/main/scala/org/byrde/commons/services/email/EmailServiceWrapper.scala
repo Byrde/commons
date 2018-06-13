@@ -16,14 +16,16 @@ import org.byrde.commons.utils.email.conf.EmailConfig
 
 import play.twirl.api.Html
 
-case class EmailServiceWrapper(emailConfig: EmailConfig) {
+class EmailServiceWrapper(emailConfig: EmailConfig) {
   def sendMessage(recipient: String,
                   subject: String,
                   content: Html): ServiceResponse[EmailResponse] = {
     val message =
       new MimeMessage(emailConfig.sessionFromConfig)
+
     val multipart =
       new MimeMultipart()
+
     val messageBodyPart =
       new MimeBodyPart()
 
@@ -39,9 +41,9 @@ case class EmailServiceWrapper(emailConfig: EmailConfig) {
 
     Transport.send(message)
 
-    EmailResponse.apply(subject,
-                        recipient,
-                        content,
-                        new Timestamp(System.currentTimeMillis))
+    EmailResponse(subject,
+                  recipient,
+                  content,
+                  new Timestamp(System.currentTimeMillis))
   }
 }

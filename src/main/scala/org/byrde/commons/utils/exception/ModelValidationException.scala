@@ -1,6 +1,5 @@
 package org.byrde.commons.utils.exception
 
-import play.api.data.validation.ValidationError
 import play.api.libs.json.JsPath
 
 import scala.reflect.ClassTag

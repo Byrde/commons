@@ -9,12 +9,8 @@ import org.byrde.commons.utils.compressor.conf.HtmlCompressorConfig
 
 import play.api.http.MimeTypes
 
-import scala.concurrent.ExecutionContext
-
-case class HtmlResultCompressor(htmlConfig: HtmlCompressorConfig)(
-    implicit ec: ExecutionContext,
-    mat: Materializer)
-    extends ResultCompressor[HtmlCompressor] {
+case class HtmlResultCompressor(htmlConfig: HtmlCompressorConfig)(implicit mat: Materializer)
+  extends ResultCompressor[HtmlCompressor] {
   override lazy val compressor: HtmlCompressor =
     htmlConfig.compressor
 

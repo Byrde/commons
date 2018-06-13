@@ -11,7 +11,7 @@ object CommonsServiceResponseDictionary {
     override def code: Int   = 200
   }
   // Client errors (1 - 499)
-  object E0400 extends ServiceResponseException("Bad request", 400, 400)
+  object E0400 extends ServiceResponseException("Bad Request", 400, 400)
   object E0401 extends ServiceResponseException("Unauthorized", 401, 401)
   object E0403 extends ServiceResponseException("Forbidden", 403, 403)
   object E0404 extends ServiceResponseException("Not Found", 404, 404)

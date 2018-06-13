@@ -3,8 +3,6 @@ package org.byrde.commons.utils.compressor
 import java.io._
 import java.util.zip.GZIPOutputStream
 
-import com.amazonaws.services.s3.model.S3Object
-
 import org.apache.commons.io.{FilenameUtils, IOUtils}
 
 import org.byrde.commons.utils.compressor.conf.{
@@ -31,13 +29,6 @@ case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None,
     } else {
       orig
     }
-  }
-
-  def compress(s3: S3Object, fileName: String): File = {
-    val stream = s3.getObjectContent
-    val file   = new File(s"$fileName")
-
-    commonCompress(stream, file)
   }
 
   private def commonCompress(is: InputStream, target: File) = {

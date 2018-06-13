@@ -9,10 +9,8 @@ import org.byrde.commons.utils.compressor.conf.CssCompressorConfig
 
 import play.api.http.MimeTypes
 
-import scala.concurrent.ExecutionContext
-
-case class CssResultCompressor(implicit ec: ExecutionContext, mat: Materializer)
-    extends ResultCompressor[YuiCssCompressor] {
+case class CssResultCompressor()(implicit mat: Materializer)
+  extends ResultCompressor[YuiCssCompressor] {
   override lazy val compressor: YuiCssCompressor =
     CssCompressorConfig().compressor
 
