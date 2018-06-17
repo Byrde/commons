@@ -14,6 +14,8 @@ scalaVersion :=
   Option(
     System.getProperty("scalaVersion"))
     .getOrElse("2.11.12")
+scalaModuleInfo ~=
+  (_.map(_.withOverrideScalaVersion(true)))
 
 lazy val root =
   project in file(".")
@@ -29,8 +31,8 @@ val utils =
 
 val sqlPersistence =
   Seq(
-    "com.typesafe.slick" % "slick-hikaricp_2.11" % "3.2.0",
-    "com.typesafe.slick" % "slick_2.11" % "3.2.0")
+    "com.typesafe.slick" % "slick-hikaricp_2.11" % "3.2.3",
+    "com.typesafe.slick" % "slick_2.11" % "3.2.3")
 
 val play =
   Seq(
