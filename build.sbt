@@ -13,7 +13,7 @@ organization :=
 scalaVersion :=
   Option(
     System.getProperty("scalaVersion"))
-    .getOrElse("2.12.4")
+    .getOrElse("2.11.12")
 
 lazy val root =
   project in file(".")
@@ -34,9 +34,9 @@ val sqlPersistence =
 
 val play =
   Seq(
-    "com.typesafe.play" % "play_2.12" % "2.6.12",
-    "com.typesafe.play" % "play-ws_2.12" % "2.6.12",
-    "com.google.inject" % "guice" % "4.1.0")
+    "com.typesafe.play" % "play_2.11" % "2.6.15",
+    "com.typesafe.play" % "play-ws_2.11" % "2.6.15",
+    "com.google.inject" % "guice" % "4.2.0")
 
 val mail =
   Seq(
