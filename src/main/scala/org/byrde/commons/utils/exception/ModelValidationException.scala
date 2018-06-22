@@ -4,6 +4,7 @@ import play.api.libs.json.JsPath
 
 import scala.reflect.ClassTag
 import scala.reflect._
+import scala.util.control.NoStackTrace
 
 case class ModelValidationException[A: ClassTag](
     errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])])
@@ -13,4 +14,4 @@ case class ModelValidationException[A: ClassTag](
        |errors: [${errors.foldLeft("") { (acc, err) =>
            (if (acc.isEmpty) acc else s"$acc ,") +
              s"(path: ${err._1.toString()}, errors: [${err._2.map(_.messages.mkString(" ")).mkString(", ")}])"
-         }}]""".stripMargin)
+         }}]""".stripMargin) with NoStackTrace

@@ -33,12 +33,15 @@ object JwtConfig {
     val token =
       config
         .get[String](_token)
+
     val signature =
       config
         .get[String](_signature)
+
     val encryption =
       config
         .get[String](_encryption)
+
     val claims =
       config
         .getOptional[Seq[String]](_claims)
@@ -78,7 +81,8 @@ object JwtConfig {
         Exp
     }
 
-    JwtConfig(token,
+    JwtConfig(
+      token,
       signature,
       resolvedEncryption,
       Set.empty[HeaderField],
