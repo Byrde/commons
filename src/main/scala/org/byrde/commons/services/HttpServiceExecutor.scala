@@ -2,13 +2,13 @@ package org.byrde.commons.services
 
 import org.byrde.commons.utils.RequestUtils._
 
-import play.api.libs.ws.{BodyWritable, WSRequest, WSResponse}
+import play.api.libs.ws.{BodyWritable, WSClient, WSRequest, WSResponse}
 import play.api.mvc.Request
 
 import scala.concurrent.Future
 
 trait HttpServiceExecutor {
-  def connection: WSRequest
+  type Host = String
 
   val name: String = {
     val clazz =
@@ -20,20 +20,27 @@ trait HttpServiceExecutor {
       clazz.getSimpleName
   }
 
+  def host: Host
+
+  def client: WSClient
+
   def executeRequest(request: WSRequest): Future[WSResponse]
 
-  def underlyingGet(requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
-    executeRequest(requestBuilder(connection).withMethod("GET"))
+  def underlyingGet(path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path, secure)).withMethod("GET"))
 
-  def underlyingPost[T](body: T)(requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(connection).withBody(body).withMethod("POST"))
+  def underlyingPost[T](body: T)(path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path, secure)).withBody(body).withMethod("POST"))
 
-  def underlyingPut[T](body: T)(requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(connection).withBody(body).withMethod("PUT"))
+  def underlyingPut[T](body: T)(path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path, secure)).withBody(body).withMethod("PUT"))
 
-  def underlyingDelete(requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
-    executeRequest(requestBuilder(connection).withMethod("DELETE"))
+  def underlyingDelete(path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path, secure)).withMethod("DELETE"))
 
-  def proxy[T](requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(request.toWSRequest(connection)))
+  def proxy[T](path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(request.toWSRequest(buildWSRequest(path, secure))))
+
+  private def buildWSRequest(path: String, secure: Boolean): WSRequest =
+    client.url((if (secure) "https://" else "http://") + s"$host$path")
 }
