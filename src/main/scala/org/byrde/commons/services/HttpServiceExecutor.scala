@@ -1,4 +1,4 @@
-package org.byrde.commons.services.rest
+package org.byrde.commons.services
 
 import org.byrde.commons.utils.RequestUtils._
 

@@ -1,4 +1,4 @@
-package org.byrde.commons.services.rest
+package org.byrde.commons.services
 
 import org.byrde.commons.services.circuitbreaker.HttpServiceCircuitBreaker
 import org.byrde.commons.utils.circuitbreaker.conf.CircuitBreakerConfig
