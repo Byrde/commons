@@ -6,7 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 
 case class CircuitBreakerConfig(maxFailures: Int, callTimeout: FiniteDuration, resetTimeout: FiniteDuration)
 
-object JwtConfig {
+object CircuitBreakerConfig {
   def apply(config: Configuration): CircuitBreakerConfig =
     apply("max-failures", "call-timeout", "reset-timeout", config)
 
