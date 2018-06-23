@@ -1,5 +1,6 @@
 package org.byrde.commons.services
 
+import org.byrde.commons.models.uri.Path
 import org.byrde.commons.services.circuitbreaker.HttpServiceCircuitBreaker
 import org.byrde.commons.utils.circuitbreaker.conf.CircuitBreakerConfig
 import org.byrde.commons.utils.exception.ModelValidationException
@@ -25,16 +26,16 @@ abstract class JsonHttpServiceExecutor(implicit ec: ExecutionContext) extends Ht
   val circuitBreaker: HttpServiceCircuitBreaker =
     new HttpServiceCircuitBreaker(name, scheduler, circuitBreakerConfig)(returnThreadPool)
 
-  def get[T: ClassTag](path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit reads: Reads[T]): Future[T] =
+  def get[T: ClassTag](path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit reads: Reads[T]): Future[T] =
     super.underlyingGet(path, secure, requestBuilder).map(processResponse[T])(returnThreadPool)
 
-  def post[T, TT: ClassTag](body: T)(path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
+  def post[T, TT: ClassTag](body: T)(path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
     super.underlyingPost(body)(path, secure, requestBuilder).map(processResponse[TT])(returnThreadPool)
 
-  def put[T, TT: ClassTag](body: T)(path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
+  def put[T, TT: ClassTag](body: T)(path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
     super.underlyingPut(body)(path, secure, requestBuilder).map(processResponse[TT])(returnThreadPool)
 
-  def delete[T: ClassTag](path: String, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit reads: Reads[T]): Future[T] =
+  def delete[T: ClassTag](path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit reads: Reads[T]): Future[T] =
     super.underlyingDelete(path, secure, requestBuilder).map(processResponse[T])(returnThreadPool)
 
   override def executeRequest(request: WSRequest): Future[WSResponse] =

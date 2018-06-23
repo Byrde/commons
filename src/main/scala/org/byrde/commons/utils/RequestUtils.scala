@@ -7,7 +7,7 @@ import play.api.mvc.{Cookie, Request}
 
 object RequestUtils {
   implicit class Request2WSRequest[T](value: Request[T]) {
-    def toWSRequest(base: WSRequest)(implicit bodyWritable: BodyWritable[T]): WSRequest =
+    @inline def toWSRequest(base: WSRequest)(implicit bodyWritable: BodyWritable[T]): WSRequest =
       base
         .withBody(value.body)
         .withMethod(value.method)
@@ -18,7 +18,7 @@ object RequestUtils {
   implicit class Cookie2WSCookie(value: Cookie) {
     self =>
 
-    def toWSCookie: WSCookie =
+    @inline def toWSCookie: WSCookie =
       new WSCookie {
         override def name: String =
           self.value.name

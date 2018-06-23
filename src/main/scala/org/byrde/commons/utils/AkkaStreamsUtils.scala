@@ -7,7 +7,7 @@ import scala.collection.immutable
 
 object AkkaStreamsUtils {
   implicit class Iterable2Source[T](iterable: Iterable[T]) {
-    def toSource: Source[T, NotUsed] =
+    @inline def toSource: Source[T, NotUsed] =
       Source(iterable.to[immutable.Iterable])
   }
 }
