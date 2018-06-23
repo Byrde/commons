@@ -25,21 +25,21 @@ trait HttpServiceExecutor {
 
   def executeRequest(request: WSRequest): Future[WSResponse]
 
-  def underlyingGet(path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path, secure)).withMethod("GET"))
+  def underlyingGet(path: Path, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path)).withMethod("GET"))
 
-  def underlyingPost[T](body: T)(path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path, secure)).withBody(body).withMethod("POST"))
+  def underlyingPost[T](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path)).withBody(body).withMethod("POST"))
 
-  def underlyingPut[T](body: T)(path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path, secure)).withBody(body).withMethod("PUT"))
+  def underlyingPut[T](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path)).withBody(body).withMethod("PUT"))
 
-  def underlyingDelete(path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path, secure)).withMethod("DELETE"))
+  def underlyingDelete(path: Path, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
+    executeRequest(requestBuilder(buildWSRequest(path)).withMethod("DELETE"))
 
-  def proxy[T](path: Path, secure: Boolean = true, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(request.toWSRequest(buildWSRequest(path, secure))))
+  def proxy[T](path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(request.toWSRequest(buildWSRequest(path))))
 
-  private def buildWSRequest(path: Path, secure: Boolean): WSRequest =
+  private def buildWSRequest(path: Path): WSRequest =
     client.url(Url(host, path).toString)
 }
