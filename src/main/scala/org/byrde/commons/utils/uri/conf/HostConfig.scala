@@ -13,12 +13,13 @@ object HostConfig {
             _port: String,
             config: Configuration): Host = {
     val protocol =
-      config.get[String]("protocol") match {
-        case "http" =>
-          Protocol.http
-        case "https" =>
-          Protocol.https
-      }
+      config
+        .get[String](_protocol) match {
+          case "http" =>
+            Protocol.http
+          case "https" =>
+            Protocol.https
+        }
 
     val host =
       config

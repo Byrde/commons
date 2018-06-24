@@ -1,14 +1,11 @@
 package org.byrde.commons.services
 
 import org.byrde.commons.models.uri.Path
-import org.byrde.commons.services.circuitbreaker.HttpServiceCircuitBreaker
-import org.byrde.commons.utils.circuitbreaker.conf.CircuitBreakerConfig
+import org.byrde.commons.services.circuitbreaker.CircuitBreakerLike
 import org.byrde.commons.utils.exception.ModelValidationException
 
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import play.api.libs.ws.{BodyWritable, WSRequest, WSResponse}
-
-import akka.actor.Scheduler
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -17,14 +14,9 @@ import scala.reflect.ClassTag
 abstract class JsonHttpServiceExecutor(implicit ec: ExecutionContext) extends HttpServiceExecutor {
   self =>
 
-  def scheduler: Scheduler
-
-  def circuitBreakerConfig: CircuitBreakerConfig
-
   def returnThreadPool: ExecutionContext
 
-  val circuitBreaker: HttpServiceCircuitBreaker =
-    new HttpServiceCircuitBreaker(name, scheduler, circuitBreakerConfig)(returnThreadPool)
+  def circuitBreaker: CircuitBreakerLike
 
   def get[T: ClassTag](path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit reads: Reads[T]): Future[T] =
     super.underlyingGet(path, requestBuilder).map(processResponse[T])(returnThreadPool)
