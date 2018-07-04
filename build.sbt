@@ -49,7 +49,8 @@ libraryDependencies ++=
   utils ++
     play ++
     mail ++
-    sqlPersistence
+    sqlPersistence :+
+    "org.scalatest" %% "scalatest" % "3.0.1" % Test
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath

@@ -1,42 +1,67 @@
 package org.byrde.commons.models.uri
 
-case class Path(path: String, queries: Queries = Queries(Set())) {
+import java.net.URL
+
+case class Path(path: Seq[String], queries: Queries = Queries.empty) {
   def /(newPath: String): Path =
-    this.copy(path = path + s"/$newPath")
+    copy(path = path :+ newPath)
 
-  def +(newQuery: (String, String)): Queries =
-    queries + newQuery
+  def /(newPath: Path): Path =
+    copy(path = path ++ newPath.path, queries = queries withQueries newPath.queries)
 
-  def ++(newQuery: Set[(String, String)]): Queries =
-    queries ++ newQuery
+  def +(newQuery: (String, String)): Path =
+    copy(queries = queries + newQuery)
+
+  def ++(newQuery: Set[(String, String)]): Path =
+    copy(queries = queries ++ newQuery)
+
+  def withQueries(newQuery: Queries): Path =
+    copy(queries = queries withQueries newQuery)
 
   override def toString: String =
-    s"/$path" + queries.toString
+    (if (path.nonEmpty) path.mkString("/") else "").trim + queries.toString
 }
 
 object Path {
-  val empty: Path =
-    Path("")
+  val context: URL =
+    new URL("http", "na.com", "")
 
-  def fromString(value: String): Path = {
-    val originalPath =
-      value
-        .split("/")
-        .drop(1)
+  def empty(queries: Queries = Queries.empty): Path =
+    Path(Nil, queries)
 
-    val startOpt =
-      originalPath
-        .headOption
-        .map(Path.apply(_))
+  def apply(value: String): Path =
+    Path(value :: Nil)
 
-    val path =
-      startOpt
-        .map { start =>
-          originalPath
-            .drop(1)
-            .foldLeft(start)(_ / _)
-        }
+  def fromString(value: String): Path =
+    if (value.isEmpty)
+      Path.empty()
+    else
+      fromURL(new URL(context, value))
 
-    path.getOrElse(empty)
+  def fromURL: URL => Path = {
+    case url if Option(url.getPath).nonEmpty && url.getPath.head == '/' =>
+      val originalPath =
+        url.getPath.split("/")
+
+      val startOpt =
+        originalPath
+          .headOption
+          .map(start => Path.apply(Seq(start)))
+
+      val path =
+        startOpt
+          .map { start =>
+            originalPath
+              .drop(1)
+              .foldLeft(start)(_ / _)
+          }
+
+      val queries =
+        Queries.fromURL(url)
+
+      path.fold(empty(queries))(_.copy(queries = queries))
+
+    case url =>
+      Path.empty(Queries.fromURL(url))
   }
 }

@@ -18,8 +18,8 @@ class HttpServiceCircuitBreaker(serviceName: String, scheduler: Scheduler, circu
     closedTime.set(System.currentTimeMillis)
   }
 
-  override def withCircuitBreaker[T](body: => Future[T])(implicit ec: ExecutionContext): Future[T] =
-    withCircuitBreaker(body, defineFailureFn).transform(identity, {
+  override def withCircuitBreaker[T](fn: => Future[T]): Future[T] =
+    withCircuitBreaker(fn, defineFailureFn).transform(identity, {
       case ex: CircuitBreakerOpenException =>
         val elapsedTime =
           System.currentTimeMillis - closedTime.get

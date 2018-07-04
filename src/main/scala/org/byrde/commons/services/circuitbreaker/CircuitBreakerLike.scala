@@ -1,7 +1,7 @@
 package org.byrde.commons.services.circuitbreaker
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait CircuitBreakerLike {
-  def withCircuitBreaker[T](body: => Future[T])(implicit ec: ExecutionContext): Future[T]
+  def withCircuitBreaker[T](fn: => Future[T]): Future[T]
 }
