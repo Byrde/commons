@@ -1,7 +1,6 @@
 package org.byrde.commons.services
 
 import org.byrde.commons.models.uri.{Host, Path, Url}
-import org.byrde.commons.utils.Cookies
 import org.byrde.commons.utils.RequestUtils._
 
 import play.api.libs.ws.{BodyWritable, WSClient, WSRequest, WSResponse}
@@ -38,30 +37,8 @@ trait HttpServiceExecutor {
   def underlyingDelete(path: Path, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
     executeRequest(requestBuilder(buildWSRequest(path)).withMethod("DELETE"))
 
-  def proxy[T](path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] = {
-    val proxyRequest =
-      request.toWSRequest(buildWSRequest(path))
-
-    val proxyHeaders =
-      proxyRequest
-        .headers
-        .map {
-          case (key, value) if key.equalsIgnoreCase(Cookies.Host) =>
-            key -> Seq(host.host.toString)
-          case (key, value) =>
-            key -> value
-        }
-        .filterNot {
-          case (key, _) =>
-            Cookies.proxyHeadersFilter.contains(key.toLowerCase)
-        }
-
-    val proxyRequestWithProxyHeaders =
-      proxyRequest
-        .withHttpHeaders(proxyHeaders.mapValues(_.mkString(",")).toSeq: _*)
-
-    executeRequest(requestBuilder(proxyRequestWithProxyHeaders))
-  }
+  def proxy[T](path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
+    executeRequest(requestBuilder(request.toWSRequest(buildWSRequest(path), Some(host))))
 
   private def buildWSRequest(path: Path): WSRequest =
     client.url(Url(host, path).toString)
