@@ -5,9 +5,22 @@ import org.byrde.commons.utils.WritesUtils
 import play.api.libs.json.Writes
 
 trait DefaultServiceResponse extends ServiceResponse[String] {
-  override implicit val writes: Writes[String] =
-    WritesUtils.string
+  self =>
+    override implicit def writes: Writes[String] =
+      WritesUtils.string
 
-  override val response: String =
-    msg
+    override def response: String =
+      msg
+
+    protected def apply(message: String): DefaultServiceResponse =
+      new DefaultServiceResponse {
+        override def msg: String =
+          message
+
+        override def code: Int =
+          self.code
+
+        override def status: Int =
+          self.status
+      }
 }

@@ -4,14 +4,13 @@ import org.byrde.commons.models.services.DefaultServiceResponse
 
 import scala.util.control.NoStackTrace
 
-class ServiceResponseException(_msg: String, _code: Int, _status: Int)
+abstract class ServiceResponseException[T <: ServiceResponseException[T]](_msg: String, _code: Int, _status: Int)
     extends Throwable(_msg)
-    with DefaultServiceResponse with NoStackTrace {
-  def apply(message: String): ServiceResponseException =
-    new ServiceResponseException(message, _code, _status)
+    with DefaultServiceResponse
+    with NoStackTrace {
+  self =>
 
-  def apply(throwable: Throwable): ServiceResponseException =
-    new ServiceResponseException(throwable.getMessage, _code, _status)
+  def apply(throwable: Throwable): T
 
   override def msg: String =
     _msg
