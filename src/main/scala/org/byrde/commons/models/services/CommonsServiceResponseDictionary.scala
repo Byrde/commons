@@ -2,9 +2,11 @@ package org.byrde.commons.models.services
 
 import org.byrde.commons.utils.exception.ServiceResponseException
 
+import scala.util.control.NoStackTrace
+
 // Commons codes are between 1 - 1000;
 object CommonsServiceResponseDictionary {
-  case class ClientException(_msg: String, _code: Int, _status: Int) extends ServiceResponseException[ClientException](_msg, _code, _status) {
+  case class ClientException(_msg: String, _code: Int, _status: Int) extends ServiceResponseException[ClientException](_msg, _code, _status) with NoStackTrace {
     override def apply(message: String): ClientException =
       ClientException(message, _code, _status)
 
