@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
-class RedisClient(namespace: String, pool: Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
+class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
   private val namespacedKey: (String => String) =
     x => s"$namespace::$x"
 
