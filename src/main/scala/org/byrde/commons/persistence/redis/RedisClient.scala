@@ -18,6 +18,9 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
   private val namespacedKey: (String => String) =
     x => s"$namespace::$x"
 
+  def destroy(): Unit =
+    pool.underlying.destroy()
+
   def get[T](userKey: String)(implicit ct: ClassTag[T]): Future[Option[T]] = {
     try {
       val valueF =
