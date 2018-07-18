@@ -4,9 +4,9 @@ import org.byrde.commons.utils.exception.ServiceResponseException
 
 // Commons codes are between 1 - 1000;
 object CommonsServiceResponseDictionary {
-  sealed trait ClientException
+  class ClientException(_msg: String, _code: Int, _status: Int) extends ServiceResponseException(_msg, _code, _status)
 
-  sealed trait ServerException
+  class ServerException(_msg: String, _code: Int, _status: Int) extends ServiceResponseException(_msg, _code, _status)
 
   // OK
   object E0200 extends DefaultServiceResponse {
@@ -20,13 +20,12 @@ object CommonsServiceResponseDictionary {
       200
   }
   // Client errors (1 - 499)
-  object E0400 extends ServiceResponseException("Bad Request", 400, 400) with ClientException
-  object E0401 extends ServiceResponseException("Unauthorized", 401, 401) with ClientException
-  object E0403 extends ServiceResponseException("Forbidden", 403, 403) with ClientException
-  object E0404 extends ServiceResponseException("Not Found", 404, 404) with ClientException
-  object E0415 extends ServiceResponseException("Unsupported Media Type", 415, 415) with ClientException
+  object E0400 extends ClientException("Bad Request", 400, 400)
+  object E0401 extends ClientException("Unauthorized", 401, 401)
+  object E0403 extends ClientException("Forbidden", 403, 403)
+  object E0404 extends ClientException("Not Found", 404, 404)
+  object E0415 extends ClientException("Unsupported Media Type", 415, 415)
   // Server errors (500 - 999)
-  object E0500
-      extends ServiceResponseException("Internal Server Error", 500, 500) with ServerException
-  object E0504 extends ServiceResponseException("Service timeout", 504, 504) with ServerException
+  object E0500 extends ServerException("Internal Server Error", 500, 500)
+  object E0504 extends ServerException("Service Timeout", 504, 504)
 }
