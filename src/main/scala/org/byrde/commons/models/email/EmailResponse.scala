@@ -14,18 +14,34 @@ class EmailResponse(val subject: String,
                     val timestamp: Timestamp)
 
 object EmailResponse {
-  implicit val writes: Writes[EmailResponse] = new Writes[EmailResponse] {
-    override def writes(o: EmailResponse): JsObject = Json.obj(
-      "subject"        -> o.subject,
-      "emailRecipient" -> o.emailRecipient,
-      "timestamp"      -> o.timestamp.toLocalDateTime.toString
-    )
-  }
+  implicit val writes: Writes[EmailResponse] =
+    new Writes[EmailResponse] {
+      override def writes(o: EmailResponse): JsObject =
+        Json.obj(
+          "subject"        -> o.subject,
+          "emailRecipient" -> o.emailRecipient,
+          "timestamp"      -> o.timestamp.toLocalDateTime.toString
+        )
+    }
 
   def apply(subject: String,
             emailRecipient: String,
             content: Html,
             timestamp: Timestamp): ServiceResponse[EmailResponse] =
-    E0200.withResponse(
-      new EmailResponse(subject, emailRecipient, content, timestamp))
+    new ServiceResponse[EmailResponse] {
+      override implicit def writes: Writes[EmailResponse] =
+        EmailResponse.writes
+
+      override def msg: String =
+        "Email Sent"
+
+      override def status: Int =
+        200
+
+      override def code: Int =
+        200
+
+      override def response =
+        new EmailResponse(subject, emailRecipient, content, timestamp)
+    }
 }
