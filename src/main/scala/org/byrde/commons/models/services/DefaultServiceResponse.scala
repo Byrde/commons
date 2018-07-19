@@ -12,7 +12,7 @@ trait DefaultServiceResponse extends ServiceResponse[String] {
     override def response: String =
       msg
 
-    protected def apply(message: String): DefaultServiceResponse =
+    def apply(message: String): DefaultServiceResponse =
       new DefaultServiceResponse {
         override def msg: String =
           message
