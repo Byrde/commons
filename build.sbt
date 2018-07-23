@@ -53,6 +53,7 @@ val play =
   Seq(
     "com.typesafe.play" % "play_2.11" % "2.6.15",
     "com.typesafe.play" % "play-ws_2.11" % "2.6.15",
+    "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.0-M2",
     "com.google.inject" % "guice" % "4.2.0")
 
 val mail =

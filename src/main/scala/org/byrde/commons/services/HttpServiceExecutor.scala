@@ -9,6 +9,14 @@ import play.api.mvc.Request
 import scala.concurrent.Future
 
 trait HttpServiceExecutor {
+  type CurlRequest = String
+
+  private lazy val logFilter: AhcCurlRequestLogger =
+    new AhcCurlRequestLogger(log)
+
+  val log: CurlRequest => Unit =
+    _ => ()
+
   val name: String = {
     val clazz =
       this.getClass
@@ -41,5 +49,5 @@ trait HttpServiceExecutor {
     executeRequest(requestBuilder(request.toWSRequest(buildWSRequest(path), Some(host))))
 
   private def buildWSRequest(path: Path): WSRequest =
-    client.url(Url(host, path).toString)
+    client.url(Url(host, path).toString).withRequestFilter(logFilter)
 }
