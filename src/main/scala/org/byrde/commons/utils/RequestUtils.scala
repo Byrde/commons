@@ -25,9 +25,8 @@ object RequestUtils {
           case (headerKey, _) if newHost.nonEmpty && headerKey.equalsIgnoreCase(Headers.Host) =>
             Some(headerKey -> newHost.get.host.toString)
           case (headerKey, headerValue) =>
-            Some(headerKey -> headerValue.mkString(", "))
+            Some(headerKey -> headerValue)
         }
-        .toSeq
   }
 
   implicit class Cookie2WSCookie(value: play.api.mvc.Cookie) {
