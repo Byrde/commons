@@ -41,17 +41,25 @@ object Path {
   def fromURL: URL => Path = {
     case url if Option(url.getPath).nonEmpty && url.getPath.head == '/' =>
       val originalPath =
-        url.getPath.split("/")
+        url
+          .getPath
+          .split("/")
+
+      val originalPath2 =
+        if (originalPath.size <= 1)
+          originalPath
+        else
+          originalPath.drop(1)
 
       val startOpt =
-        originalPath
+        originalPath2
           .headOption
-          .map(start => Path.apply(Seq(start)))
+          .map(Path.apply)
 
       val path =
         startOpt
           .map { start =>
-            originalPath
+            originalPath2
               .drop(1)
               .foldLeft(start)(_ / _)
           }
