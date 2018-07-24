@@ -18,16 +18,16 @@ abstract class JsonHttpServiceExecutor(implicit ec: ExecutionContext) extends Ht
 
   def circuitBreaker: CircuitBreakerLike
 
-  def get[T: ClassTag](path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => T = defaultErrorHandler[T])(implicit reads: Reads[T]): Future[T] =
+  def get[T: ClassTag](path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => T)(implicit reads: Reads[T]): Future[T] =
     super.underlyingGet(path, requestBuilder).map(processResponse[T](_, handleError))(returnThreadPool)
 
-  def post[T, TT: ClassTag](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => TT = defaultErrorHandler[TT])(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
+  def post[T, TT: ClassTag](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => TT)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
     super.underlyingPost(body)(path, requestBuilder).map(processResponse[TT](_, handleError))(returnThreadPool)
 
-  def put[T, TT: ClassTag](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => TT = defaultErrorHandler[TT])(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
+  def put[T, TT: ClassTag](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => TT)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
     super.underlyingPut(body)(path, requestBuilder).map(processResponse[TT](_, handleError))(returnThreadPool)
 
-  def delete[T: ClassTag](path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => T = defaultErrorHandler[T])(implicit reads: Reads[T]): Future[T] =
+  def delete[T: ClassTag](path: Path, requestBuilder: WSRequest => WSRequest = identity, handleError: (WSResponse, JsError) => T)(implicit reads: Reads[T]): Future[T] =
     super.underlyingDelete(path, requestBuilder).map(processResponse[T](_, handleError))(returnThreadPool)
 
   override def executeRequest(request: WSRequest): Future[WSResponse] =
@@ -42,8 +42,4 @@ abstract class JsonHttpServiceExecutor(implicit ec: ExecutionContext) extends Ht
         case JsError(errors) =>
           throw ModelValidationException[T](errors)
       }
-
-  private def defaultErrorHandler[T]: (WSResponse, JsError) => T =
-    (_, err) =>
-      throw ModelValidationException[T](err.errors)
 }
