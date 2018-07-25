@@ -1,6 +1,6 @@
 package org.byrde.commons.utils.exception
 
-import org.byrde.commons.models.services.DefaultServiceResponse
+import org.byrde.commons.models.services.{DefaultServiceResponse, ServiceResponseType}
 
 import scala.util.control.NoStackTrace
 
@@ -10,6 +10,9 @@ abstract class ServiceResponseException[T <: ServiceResponseException[T]](_msg: 
   self =>
 
   def apply(throwable: Throwable): T
+
+  override def `type`: ServiceResponseType =
+    ServiceResponseType.Error
 
   override def msg: String =
     _msg
