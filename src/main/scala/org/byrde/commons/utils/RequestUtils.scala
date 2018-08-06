@@ -1,36 +1,35 @@
 package org.byrde.commons.utils
 
-import OptionUtils._
 import org.byrde.commons.models.uri.Host
+import org.byrde.commons.utils.OptionUtils._
 
 import play.api.libs.ws.{BodyWritable, WSCookie, WSRequest}
-import play.api.mvc.{Cookie, Request}
 
 object RequestUtils {
-  implicit class Request2WSRequest[T](value: Request[T]) {
-    @inline def toWSRequest(base: WSRequest, newHost: Option[Host] = None)(implicit bodyWritable: BodyWritable[T]): WSRequest = {
-      val filteredProxyHeaders =
-        base
-          .headers
-          .flatMap {
-            case (headerKey, _) if Headers.proxyHeadersFilter.contains(headerKey.toLowerCase) =>
-              None
-            case (headerKey, _) if newHost.nonEmpty && headerKey.equalsIgnoreCase(Headers.Host) =>
-              Some(headerKey -> newHost.get.host.toString)
-            case (headerKey, headerValue) =>
-              Some(headerKey -> headerValue.mkString(", "))
-          }
-          .toSeq
-
+  implicit class Request2WSRequest[T](value: play.api.mvc.Request[T]) {
+    @inline def toWSRequest(base: WSRequest, newHost: Option[Host] = None)(implicit bodyWritable: BodyWritable[T]): WSRequest =
       base
         .withBody(value.body)
         .withMethod(value.method)
-        .withHttpHeaders(filteredProxyHeaders: _*)
+        .withHttpHeaders(value.headers.toHeaderSeq(newHost): _*)
         .withCookies(value.cookies.map(_.toWSCookie).toSeq: _*)
-    }
   }
 
-  implicit class Cookie2WSCookie(value: Cookie) {
+  implicit class Headers2HeaderSeq(value: play.api.mvc.Headers) {
+    @inline def toHeaderSeq(newHost: Option[Host] = None): Seq[(String, String)]  =
+      value
+        .headers
+        .flatMap {
+          case (headerKey, _) if Headers.proxyHeadersFilter.contains(headerKey.toLowerCase) =>
+            None
+          case (headerKey, _) if newHost.nonEmpty && headerKey.equalsIgnoreCase(Headers.Host) =>
+            Some(headerKey -> newHost.get.host.toString)
+          case (headerKey, headerValue) =>
+            Some(headerKey -> headerValue)
+        }
+  }
+
+  implicit class Cookie2WSCookie(value: play.api.mvc.Cookie) {
     self =>
 
     @inline def toWSCookie: WSCookie =

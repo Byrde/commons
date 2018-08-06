@@ -9,6 +9,8 @@ import play.api.mvc.Request
 import scala.concurrent.Future
 
 trait HttpServiceExecutor {
+  type CurlRequest = String
+
   val name: String = {
     val clazz =
       this.getClass
@@ -25,21 +27,21 @@ trait HttpServiceExecutor {
 
   def executeRequest(request: WSRequest): Future[WSResponse]
 
-  def underlyingGet(path: Path, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path)).withMethod("GET"))
+  def underlyingGet(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[WSResponse] =
+    executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withMethod("GET"))
 
-  def underlyingPost[T](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path)).withBody(body).withMethod("POST"))
+  def underlyingPost[T](body: T)(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+    executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withBody(body).withMethod("POST"))
 
-  def underlyingPut[T](body: T)(path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path)).withBody(body).withMethod("PUT"))
+  def underlyingPut[T](body: T)(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+    executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withBody(body).withMethod("PUT"))
 
-  def underlyingDelete(path: Path, requestBuilder: WSRequest => WSRequest = identity): Future[WSResponse] =
-    executeRequest(requestBuilder(buildWSRequest(path)).withMethod("DELETE"))
+  def underlyingDelete(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[WSResponse] =
+    executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withMethod("DELETE"))
 
-  def proxy[T](path: Path, requestBuilder: WSRequest => WSRequest = identity)(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
-    executeRequest(requestBuilder(request.toWSRequest(buildWSRequest(path), Some(host))))
+  def proxy[T](path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
+    executeRequest(requestHook(request.toWSRequest(buildWSRequest(path, curlRequestHook), Some(host))))
 
-  private def buildWSRequest(path: Path): WSRequest =
-    client.url(Url(host, path).toString)
+  private def buildWSRequest(path: Path, curlRequestHook: CurlRequest => Unit): WSRequest =
+    client.url(Url(host, path).toString).withRequestFilter(new AhcCurlRequestFilter(curlRequestHook))
 }

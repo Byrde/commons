@@ -2,9 +2,7 @@ package org.byrde.commons.models.email
 
 import java.sql.Timestamp
 
-import org.byrde.commons.models.services.CommonsServiceResponseDictionary.E0200
-import org.byrde.commons.models.services.ServiceResponse
-
+import org.byrde.commons.models.services.{ServiceResponse, ServiceResponseType}
 import play.api.libs.json.{JsObject, Json, Writes}
 import play.twirl.api.Html
 
@@ -31,6 +29,9 @@ object EmailResponse {
     new ServiceResponse[EmailResponse] {
       override implicit def writes: Writes[EmailResponse] =
         EmailResponse.writes
+
+      override def `type`: ServiceResponseType =
+        ServiceResponseType.Success
 
       override def msg: String =
         "Email Sent"
