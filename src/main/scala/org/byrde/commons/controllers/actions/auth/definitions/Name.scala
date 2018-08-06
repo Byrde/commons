@@ -13,7 +13,8 @@ case class Name(value: String) extends ClaimValue {
 }
 
 object Name extends ClaimField {
-  override val name = "name"
+  override val name =
+    "name"
 
   override def attemptApply(value: JsValue): Option[ClaimValue] =
     value.asOpt[String].map(apply)

@@ -14,7 +14,7 @@ case class Admin(value: String) extends ClaimValue {
 
 object Admin extends ClaimField {
   override val name =
-    "admin"
+    "adm"
 
   override def attemptApply(value: JsValue): Option[ClaimValue] =
     value.asOpt[String].map(apply)

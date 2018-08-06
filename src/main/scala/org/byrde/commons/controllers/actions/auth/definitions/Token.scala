@@ -14,7 +14,7 @@ case class Token(value: String) extends ClaimValue {
 
 object Token extends ClaimField {
   override val name =
-    "token"
+    "tok"
 
   override def attemptApply(value: JsValue): Option[ClaimValue] =
     value.asOpt[String].map(apply)
