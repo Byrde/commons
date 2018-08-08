@@ -16,9 +16,9 @@ object EmailResponse {
     new Writes[EmailResponse] {
       override def writes(o: EmailResponse): JsObject =
         Json.obj(
-          "subject"        -> o.subject,
+          "subject" -> o.subject,
           "emailRecipient" -> o.emailRecipient,
-          "timestamp"      -> o.timestamp.toLocalDateTime.toString
+          "timestamp" -> o.timestamp.toLocalDateTime.toString
         )
     }
 
