@@ -2,7 +2,6 @@ package org.byrde.commons.persistence.sql.slick.dao
 
 import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
 import org.byrde.commons.persistence.sql.slick.table.TablesA
-import slick.jdbc.JdbcBackend
 import slick.lifted.{CanBeQueryCondition, TableQuery}
 
 import scala.concurrent.{ExecutionContext, Future}

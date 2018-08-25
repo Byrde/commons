@@ -15,13 +15,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
-  private val namespacedKey: (String => String) =
+  private val namespacedKey: String => String =
     x => s"$namespace::$x"
 
   def destroy(): Unit =
     pool.underlying.destroy()
 
-  def get[T](userKey: String)(implicit ct: ClassTag[T]): Future[Option[T]] = {
+  def get[T](userKey: String): Future[Option[T]] = {
     try {
       val valueF =
         Future {

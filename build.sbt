@@ -16,7 +16,7 @@ organization :=
 scalaVersion :=
   Option(
     System.getProperty("scalaVersion"))
-    .getOrElse("2.11.12")
+    .getOrElse("2.12.6")
 
 scalaModuleInfo ~=
   (_.map(_.withOverrideScalaVersion(true)))
@@ -32,7 +32,6 @@ resolvers ++=
 val utils =
   Seq(
     "io.igl" %% "jwt" % "1.2.2",
-    "org.scalaz" %% "scalaz-core" % "7.2.8",
     "org.joda" % "joda-convert" % "1.8.1",
     "commons-io" % "commons-io" % "2.5",
     "com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2",
@@ -41,18 +40,18 @@ val utils =
 
 val sqlPersistence =
   Seq(
-    "com.typesafe.slick" % "slick-hikaricp_2.11" % "3.2.3",
-    "com.typesafe.slick" % "slick_2.11" % "3.2.3")
+    "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3",
+    "com.typesafe.slick" %% "slick" % "3.2.3")
 
 val redis =
   Seq(
-    "org.sedis" %% "sedis" % "1.2.2",
+    "org.sedis" % "sedis_2.11" % "1.2.2",
     "redis.clients" % "jedis" % "2.4.2")
 
 val play =
   Seq(
-    "com.typesafe.play" % "play_2.11" % "2.6.15",
-    "com.typesafe.play" % "play-ws_2.11" % "2.6.15",
+    "com.typesafe.play" %% "play" % "2.6.15",
+    "com.typesafe.play" %% "play-ws" % "2.6.15",
     "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.0-M2",
     "com.google.inject" % "guice" % "4.2.0")
 

@@ -4,12 +4,12 @@ import java.util.concurrent.atomic.AtomicLong
 
 import org.byrde.commons.utils.circuitbreaker.conf.CircuitBreakerConfig
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.Scheduler
 import akka.pattern.{CircuitBreaker, CircuitBreakerOpenException}
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
-import scala.util.{Failure, Try}
 import scala.util.control.NoStackTrace
+import scala.util.{Failure, Try}
 
 class HttpServiceCircuitBreaker(serviceName: String, scheduler: Scheduler, circuitBreakerConfig: CircuitBreakerConfig)(implicit ec: ExecutionContext) extends CircuitBreaker(ec, scheduler, circuitBreakerConfig.maxFailures, circuitBreakerConfig.callTimeout, circuitBreakerConfig.resetTimeout) with CircuitBreakerLike {
   private val closedTime = new AtomicLong(0)

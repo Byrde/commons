@@ -1,8 +1,6 @@
 package org.byrde.commons.models.services
 
-import org.byrde.commons.utils.exception.{ClientException, ServerException, ServiceResponseException}
-
-import scala.util.control.NoStackTrace
+import org.byrde.commons.utils.exception.{ClientException, ServerException}
 
 // Commons codes are between 1 - 1000;
 object CommonsServiceResponseDictionary {

@@ -2,7 +2,10 @@ sudo: required
 
 # Defacto version and lang used in most Byrde projects.
 language: scala
-scala: 2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION}
+jdk: oraclejdk8
+scala:
+  - 2.11.12
+  - 2.12.6
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
@@ -21,10 +24,10 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=${PROJECT_NAME} -Dversion=${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} clean test
+  - sbt -Dname=${PROJECT_NAME} -Dversion=${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname=${PROJECT_NAME} -Dversion=${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} -DscalaVersion=2.${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION} package makePom;
+      sbt ++$TRAVIS_SCALA_VERSION -Dname=${PROJECT_NAME} -Dversion=${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} package packageSrc makePom;
     fi
 
 # Cached dependencies cleanup.
@@ -36,17 +39,17 @@ before_cache:
 # Cache dependencies.
 cache:
   directories:
-    - $HOME/.m2
-    - $HOME/.ivy2
-    - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
-    - $HOME/.sbt/launchers
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
   - |
-    if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
-      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.jar --pom-file=${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.pom; 
+    if [ ${TRAVIS_BRANCH} == 'master' ]; then
+      cd ${COMPILE_DIRECTORY}
+      echo ll
+#      cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
+#      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.jar --pom-file=${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.pom;
     fi
 
 # Configure notifications
