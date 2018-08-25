@@ -46,10 +46,8 @@ cache:
 after_success:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
-      cd ${COMPILE_DIRECTORY}
-      echo ll
-#      cd ${COMPILE_DIRECTORY}/scala-2.${SCALA_MAJOR_VERSION};
-#      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.jar --pom-file=${PROJECT_NAME}_2.${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.pom;
+      cd ${COMPILE_DIRECTORY};
+      echo ll;
     fi
 
 # Configure notifications
