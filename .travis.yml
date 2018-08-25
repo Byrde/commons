@@ -24,10 +24,10 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=$PROJECT_NAME -Dversion=$TRAVIS_BUILD_NUMBER -Dorganization=$MAVEN_ORG -DscalaVersion=$TRAVIS_SCALA_VERSION clean test
+  - sbt -Dname="$PROJECT_NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$MAVEN_ORG" -DscalaVersion="$TRAVIS_SCALA_VERSION" clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname=$PROJECT_NAME -Dversion==$TRAVIS_BUILD_NUMBER -Dorganization=$MAVEN_ORG -DscalaVersion=$TRAVIS_SCALA_VERSION package packageSrc makePom;
+      sbt -Dname="$PROJECT_NAME" -Dversion=="$TRAVIS_BUILD_NUMBER" -Dorganization="$MAVEN_ORG" -DscalaVersion="$TRAVIS_SCALA_VERSION" package packageSrc makePom;
     fi
 
 # Cached dependencies cleanup.
