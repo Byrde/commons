@@ -24,10 +24,10 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname=${PROJECT_NAME} -Dversion=${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} clean test
+  - sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} -DscalaVersion=${TRAVIS_SCALA_VERSION} clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt ++$TRAVIS_SCALA_VERSION -Dname=${PROJECT_NAME} -Dversion=${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} package packageSrc makePom;
+      sbt -Dname=${PROJECT_NAME} -Dversion=${PROJECT_VERSION}.${TRAVIS_BUILD_NUMBER} -Dorganization=${MAVEN_ORG} -DscalaVersion=${TRAVIS_SCALA_VERSION} package makePom;
     fi
 
 # Cached dependencies cleanup.
@@ -46,8 +46,12 @@ cache:
 after_success:
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then
-      cd ${COMPILE_DIRECTORY};
-      echo ll;
+      IFS='.'
+      read -ra VERSIONS_DENOTATION <<< "$TRAVIS_SCALA_VERSION"
+      SCALA_MAJOR_VERSION="$VERSIONS_DENOTATION[0].$VERSIONS_DENOTATION[1]"
+      echo "Current Scala version: $SCALA_MAJOR_VERSION"
+      cd ${COMPILE_DIRECTORY}/scala-${SCALA_MAJOR_VERSION};
+      cloudsmith push maven byrde/libraries ${PROJECT_NAME}_${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.jar --pom-file=${PROJECT_NAME}_${SCALA_MAJOR_VERSION}-${TRAVIS_BUILD_NUMBER}.pom;
     fi
 
 # Configure notifications
