@@ -5,7 +5,7 @@ Melting pot of useful Scala utilities.
 # How to install
 
 * add to your dependencies library dependencies:
-```libraryDependencies += "org.byrde" %% "commons" % "VERSION"```
+```libraryDependencies += "org.byrde" %% "commons" % "160"```
 
 * add this resolver to your resolvers dependencies:
 ```resolvers += "byrdelibraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/"```
