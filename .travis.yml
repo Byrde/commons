@@ -49,8 +49,9 @@ after_success:
       IFS='.';
       read -ra VERSIONS_DENOTATION <<< "$TRAVIS_SCALA_VERSION";
       SCALA_MAJOR_VERSION="${VERSIONS_DENOTATION[0]}.${VERSIONS_DENOTATION[1]}";
-      echo "Current Scala version: $SCALA_MAJOR_VERSION";
       cd "$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
+      echo "Current Scala version: $SCALA_MAJOR_VERSION";
+      ls;
       cloudsmith push maven byrde/libraries "$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --pom-file="$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
     fi
 
