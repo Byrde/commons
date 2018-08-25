@@ -52,7 +52,7 @@ after_success:
       cd "$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
       echo "Current Scala version: $SCALA_MAJOR_VERSION";
       ls;
-      cloudsmith push maven byrde/libraries "$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
+      cloudsmith push maven byrde/libraries "${PROJECT_NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="$PROJECT_NAME_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
     fi
 
 # Configure notifications
