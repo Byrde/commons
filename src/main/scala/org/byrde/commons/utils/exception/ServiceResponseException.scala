@@ -1,6 +1,6 @@
 package org.byrde.commons.utils.exception
 
-import org.byrde.commons.models.services.{DefaultServiceResponse, ServiceResponseType}
+import org.byrde.commons.models.services.{DefaultServiceResponse, ServiceResponse, ServiceResponseType}
 
 import scala.util.control.NoStackTrace
 
@@ -29,4 +29,7 @@ object ServiceResponseException {
     override def apply(throwable: Throwable): TransientServiceResponseException =
       TransientServiceResponseException(throwable.getMessage, code, status)
   }
+
+  def apply(serviceResponse: ServiceResponse[String]): TransientServiceResponseException =
+    TransientServiceResponseException(serviceResponse.msg, serviceResponse.code, serviceResponse.status)
 }
