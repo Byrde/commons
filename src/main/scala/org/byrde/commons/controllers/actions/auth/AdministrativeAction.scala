@@ -2,7 +2,7 @@ package org.byrde.commons.controllers.actions.auth
 
 import io.igl.jwt.Jwt
 
-import org.byrde.commons.controllers.actions.auth.definitions.Admin
+import org.byrde.commons.utils.auth.definitions.Admin
 import org.byrde.commons.models.http.requests.AuthenticatedRequest
 import org.byrde.commons.models.services.CommonsServiceResponseDictionary.E0401
 

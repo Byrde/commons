@@ -1,21 +1,23 @@
-package org.byrde.commons.controllers.actions.auth.definitions
+package org.byrde.commons.utils.auth.definitions
 
 import io.igl.jwt.{ClaimField, ClaimValue}
 
 import play.api.libs.json.{JsString, JsValue}
 
-case class Admin(value: String) extends ClaimValue {
+case class Token(value: String) extends ClaimValue {
   override val field: ClaimField =
-    Admin
+    Token
 
   override val jsValue: JsValue =
     JsString(value)
 }
 
-object Admin extends ClaimField {
+object Token extends ClaimField {
   override val name =
-    "adm"
+    "tok"
 
   override def attemptApply(value: JsValue): Option[ClaimValue] =
     value.asOpt[String].map(apply)
 }
+
+

@@ -4,7 +4,7 @@ import io.igl.jwt._
 
 import org.apache.commons.codec.binary.Base64
 
-import org.byrde.commons.controllers.actions.auth.definitions.{Admin, Name, Org, Token}
+import org.byrde.commons.utils.auth.definitions.{Admin, Name, Org, Token}
 
 import play.api.Configuration
 

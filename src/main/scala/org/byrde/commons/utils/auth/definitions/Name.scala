@@ -1,4 +1,4 @@
-package org.byrde.commons.controllers.actions.auth.definitions
+package org.byrde.commons.utils.auth.definitions
 
 import io.igl.jwt.{ClaimField, ClaimValue}
 
