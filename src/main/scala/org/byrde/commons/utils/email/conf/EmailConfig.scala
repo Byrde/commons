@@ -6,7 +6,7 @@ import javax.mail.{PasswordAuthentication, Session}
 
 import play.api.Configuration
 
-case class EmailConfig(email: String, password: String, port: Int) {
+case class EmailConfig(email: String, password: String, port: Int, from: String) {
   def propertiesFromConfig: Properties = {
     val props = new Properties()
     props.put("mail.smtp.auth", "true")
@@ -26,20 +26,26 @@ case class EmailConfig(email: String, password: String, port: Int) {
 
 object EmailConfig {
   def apply(config: Configuration): EmailConfig =
-    apply("email", "password", "port")(config)
+    apply("email", "password", "port", "from")(config)
 
-  def apply(_email: String, _password: String, _port: String)(
-      config: Configuration): EmailConfig = {
+  def apply(_email: String, _password: String, _port: String, _from: String)(config: Configuration): EmailConfig = {
     val email =
       config
         .get[String](_email)
+
     val password =
       config
         .get[String](_password)
+
     val port =
       config
         .get[Int](_port)
 
-    EmailConfig(email, password, port)
+    val from =
+      config
+        .getOptional[String](_from)
+        .getOrElse(email)
+
+    EmailConfig(email, password, port, from)
   }
 }

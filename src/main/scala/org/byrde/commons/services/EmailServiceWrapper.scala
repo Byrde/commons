@@ -29,7 +29,7 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
     val messageBodyPart =
       new MimeBodyPart()
 
-    message.setFrom(new InternetAddress(emailConfig.email))
+    message.setFrom(new InternetAddress(emailConfig.from))
     message.setRecipients(Message.RecipientType.TO, recipient)
     message.setSubject(subject)
 
