@@ -28,6 +28,7 @@ class HttpServiceCircuitBreaker(serviceName: String, scheduler: Scheduler, circu
           s"$serviceName ${ex.getMessage} (${elapsedTime}ms)"
 
         new CircuitBreakerOpenException(ex.remainingDuration, msg)
+
       case ex: TimeoutException =>
         val callTimeout =
           circuitBreakerConfig.callTimeout
@@ -36,6 +37,7 @@ class HttpServiceCircuitBreaker(serviceName: String, scheduler: Scheduler, circu
           s"$serviceName ${ex.getMessage} (${callTimeout.toMillis}ms)"
 
         new TimeoutException(msg) with NoStackTrace
+
       case throwable =>
         throwable
     })
@@ -43,6 +45,7 @@ class HttpServiceCircuitBreaker(serviceName: String, scheduler: Scheduler, circu
   private def defineFailureFn[T]: Try[T] => Boolean = {
     case Failure(_) =>
       true
+
     case _ =>
       false
   }

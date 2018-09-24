@@ -14,20 +14,7 @@ case class RedisConfig(poolConfig: JedisPoolConfig,
                        port: Int,
                        password: String,
                        timeout: Int,
-                       database: Int) {
-  lazy val pool: Pool = {
-    val jedisPool =
-      new JedisPool(
-        poolConfig,
-        host,
-        port,
-        timeout,
-        password,
-        database)
-
-    new Pool(jedisPool)
-  }
-}
+                       database: Int)
 
 object RedisConfig {
   def apply(config: Configuration, namespace: String = "global"): RedisConfig = {

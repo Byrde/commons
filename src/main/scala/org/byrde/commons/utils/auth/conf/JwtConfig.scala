@@ -14,12 +14,11 @@ case class JwtConfig(tokenName: String,
                      headers: Set[HeaderField],
                      claims: Set[ClaimField],
                      saltOpt: Option[String] = None) {
-  lazy val signature: String = {
+  lazy val signature: String =
     saltOpt.fold(secret) { salt =>
       Base64.encodeBase64URLSafeString(
         secret.getBytes("UTF-8") ++ salt.getBytes("UTF-8"))
     }
-  }
 }
 
 object JwtConfig {

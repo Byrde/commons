@@ -1,4 +1,4 @@
-# Commons [![Build Status](https://travis-ci.org/Byrde/commons.svg?branch=master)](https://travis-ci.org/Byrde/commons) ![Version](https://img.shields.io/badge/version-164-blue.svg)
+# Commons [![Build Status](https://travis-ci.org/Byrde/commons.svg?branch=master)](https://travis-ci.org/Byrde/commons) ![Version](https://img.shields.io/badge/version-165-blue.svg)
 
 Melting pot of useful Scala utilities.
 

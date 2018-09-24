@@ -1,4 +1,4 @@
-package org.byrde.commons.controllers.actions.compress
+package org.byrde.commons.controllers.play.actions.compress
 
 import akka.stream.Materializer
 
@@ -21,18 +21,20 @@ case class CompressAction(parser: BodyParsers.Default,
                           _htmlConfig: Option[HtmlCompressorConfig] = None,
                           _jsConfig: Option[JsCompressorConfig] = None)(override implicit val executionContext: ExecutionContext, implicit val mat: Materializer)
   extends ActionBuilder[Request, AnyContent] {
-  override def invokeBlock[A](request: Request[A],
-                              block: (Request[A]) => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
     val htmlConfig =
       _htmlConfig.getOrElse(HtmlCompressorConfig.default)
+
     val jsConfig =
       _jsConfig.getOrElse(JsCompressorConfig.default)
 
     block(request).flatMap { result =>
       val htmlCompressor =
         HtmlResultCompressor(htmlConfig)
+
       val cssCompressor =
         CssResultCompressor()
+
       val jsCompressor =
         JsResultCompressor(jsConfig)
 

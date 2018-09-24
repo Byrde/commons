@@ -7,7 +7,6 @@ trait Stylesheet {
 }
 
 case class StylesheetInline(private val css: String) extends Stylesheet {
-  def markup: Elem = {
+  def markup: Elem =
     <style media="text/css">{ css }</style>
-  }
 }

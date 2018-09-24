@@ -45,6 +45,7 @@ abstract class JsonHttpServiceExecutor(implicit ec: ExecutionContext) extends Ht
       .validate[T] match {
         case JsSuccess(validated, _) =>
           validated
+
         case err: JsError =>
           errorHook
             .fold(throw ModelValidationException[T](err.errors)) { func =>
@@ -62,6 +63,7 @@ object JsonHttpServiceExecutor {
         .validate[TransientServiceResponse[String]](ServiceResponse.reads(JsonUtils.Format.string(ServiceResponse.message))) match {
           case JsSuccess(validated, _) if validated.`type` == ServiceResponseType.Error =>
             throw validated.toException
+
           case _ =>
             value
         }

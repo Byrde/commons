@@ -44,14 +44,19 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
           data.head match {
             case "oos" =>
               Some(withObjectInputStream(bytes)(_.readObject().asInstanceOf[T]))
+
             case "string" =>
               Some(withDataInputStream(bytes)(_.readUTF().asInstanceOf[T]))
+
             case "int" =>
               Some(withDataInputStream(bytes)(_.readInt().asInstanceOf[T]))
+
             case "long" =>
               Some(withDataInputStream(bytes)(_.readLong().asInstanceOf[T]))
+
             case "boolean" =>
               Some(withDataInputStream(bytes)(_.readBoolean().asInstanceOf[T]))
+
             case _ =>
               throw new IOException(s"was not able to recognize the type of serialized value. The type was ${data.head} ")
           }
@@ -97,6 +102,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
             dos.writeUTF(value.asInstanceOf[String])
 
             "string"
+
           case _: Int =>
             dos =
               new DataOutputStream(baos)
@@ -104,6 +110,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
             dos.writeInt(value.asInstanceOf[Int])
 
             "int"
+
           case _: Long =>
             dos =
               new DataOutputStream(baos)
@@ -111,6 +118,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
             dos.writeLong(value.asInstanceOf[Long])
 
             "long"
+
           case _: Boolean =>
             dos =
               new DataOutputStream(baos)
@@ -118,6 +126,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
             dos.writeBoolean(value.asInstanceOf[Boolean])
 
             "boolean"
+
           case _: Serializable =>
             oos =
               new ObjectOutputStream(baos)
@@ -126,6 +135,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
             oos.flush()
 
             "oos"
+
           case _ =>
             throw new IOException("could not serialize: " + value.toString)
         }

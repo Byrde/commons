@@ -1,6 +1,6 @@
-package org.byrde.commons.controllers.actions.auth
+package org.byrde.commons.controllers.play.actions.auth
 
-import org.byrde.commons.models.http.requests.AuthenticatedRequest
+import org.byrde.commons.models.play.http.requests.AuthenticatedRequest
 import org.byrde.commons.models.services.CommonsServiceResponseDictionary.E0401
 import org.byrde.commons.utils.auth.JsonWebTokenWrapper
 import org.byrde.commons.utils.auth.conf.JwtConfig

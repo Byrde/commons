@@ -1,9 +1,9 @@
-package org.byrde.commons.controllers.actions.auth
+package org.byrde.commons.controllers.play.actions.auth
 
 import io.igl.jwt.Jwt
 
 import org.byrde.commons.utils.auth.definitions.Admin
-import org.byrde.commons.models.http.requests.AuthenticatedRequest
+import org.byrde.commons.models.play.http.requests.AuthenticatedRequest
 import org.byrde.commons.models.services.CommonsServiceResponseDictionary.E0401
 
 import play.api.mvc._
@@ -11,9 +11,7 @@ import play.api.mvc._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-case class AdministrativeAction(_failSafe: Option[Call])(
-    override implicit val executionContext: ExecutionContext)
-    extends ActionFilter[AuthenticatedRequest] {
+case class AdministrativeAction(_failSafe: Option[Call])(override implicit val executionContext: ExecutionContext) extends ActionFilter[AuthenticatedRequest] {
   private lazy val failsafe =
     _failSafe.fold(throw E0401)(Results.Redirect(_).withNewSession)
 
