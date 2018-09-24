@@ -1,10 +1,8 @@
 package org.byrde.commons.utils.redis.conf
 
-import redis.clients.jedis.{JedisPool, JedisPoolConfig}
-
 import java.net.URI
 
-import org.sedis.Pool
+import redis.clients.jedis.JedisPoolConfig
 
 import play.api.Configuration
 

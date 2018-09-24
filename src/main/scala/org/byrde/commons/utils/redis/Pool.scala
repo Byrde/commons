@@ -1,12 +1,11 @@
 package org.byrde.commons.utils.redis
-import org.byrde.commons.utils.redis.conf.RedisConfig
 
-import org.sedis.Pool
+import org.byrde.commons.utils.redis.conf.RedisConfig
 
 import redis.clients.jedis.JedisPool
 
 object Pool {
-  def apply(config: RedisConfig): Pool = {
+  def apply(config: RedisConfig): org.sedis.Pool = {
     val jedisPool =
       new JedisPool(
         config.poolConfig,
@@ -16,6 +15,6 @@ object Pool {
         config.password,
         config.database)
 
-    new Pool(jedisPool)
+    new org.sedis.Pool(jedisPool)
   }
 }

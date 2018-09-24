@@ -1,11 +1,9 @@
 package org.byrde.commons.persistence.redis
 
 import biz.source_code.base64Coder.Base64Coder
-
 import java.io._
 
-import org.sedis.Pool
-
+import org.byrde.commons.utils.redis.Pool
 import org.byrde.commons.utils.redis.conf.RedisConfig
 
 import akka.Done
@@ -14,7 +12,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
-class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
+class RedisClient(val namespace: String, val pool: org.sedis.Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
   private val namespacedKey: String => String =
     x => s"$namespace::$x"
 
@@ -201,5 +199,5 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
 
 object RedisClient {
   def apply(redisConfig: RedisConfig, classLoader: ClassLoader)(implicit ec: ExecutionContext) =
-    new RedisClient(redisConfig.namespace, redisConfig.pool, classLoader)
+    new RedisClient(redisConfig.namespace, Pool(redisConfig), classLoader)
 }

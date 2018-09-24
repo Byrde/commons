@@ -13,10 +13,9 @@ import play.api.libs.json._
 import play.api.libs.ws.{BodyWritable, WSRequest, WSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.postfixOps
 import scala.reflect.ClassTag
 
-abstract class JsonHttpServiceExecutor(implicit ec: ExecutionContext) extends HttpServiceExecutor {
+abstract class JsonHttpServiceExecutor extends HttpServiceExecutor {
   self =>
 
   def returnThreadPool: ExecutionContext

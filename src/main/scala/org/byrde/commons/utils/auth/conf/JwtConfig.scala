@@ -58,10 +58,13 @@ object JwtConfig {
     val resolvedEncryption = encryption match {
       case "HS256" =>
         Algorithm.HS256
+
       case "HS384" =>
         Algorithm.HS384
+
       case "HS512" =>
         Algorithm.HS512
+
       case _ =>
         Algorithm.HS256
     }
@@ -69,16 +72,22 @@ object JwtConfig {
     val resolvedClaims: Seq[ClaimField] = claims.map {
       case "sub" =>
         Sub
+
       case "aud" =>
         Aud
+
       case Admin.name =>
         Admin
+
       case Org.name =>
         Org
+
       case Name.name =>
         Name
+
       case Token.name =>
         Token
+
       case "exp" =>
         Exp
     }
