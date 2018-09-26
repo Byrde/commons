@@ -67,4 +67,19 @@ object ServiceResponse {
     (_type: ServiceResponseType, _msg: String, _status: Int, _code: Int, _response: T) =>
       TransientServiceResponse[T](_type, _msg, _status, _code, _response)(format)
   }
+
+  def apply[T](response: T)(implicit writes: Writes[T]): TransientServiceResponse[T] =
+    apply("Success", response)(writes)
+
+  def apply[T](msg: String, response: T)(implicit writes: Writes[T]): TransientServiceResponse[T] =
+    apply(msg, 200, response)
+
+  def apply[T](msg: String, code: Int, response: T)(implicit writes: Writes[T]): TransientServiceResponse[T] =
+    apply(ServiceResponseType.Success, msg, code, response)(writes)
+
+  def apply[T](`type`: ServiceResponseType, msg: String, code: Int, response: T)(implicit writes: Writes[T]): TransientServiceResponse[T] =
+    apply(`type`, msg, 200, code, response)(writes)
+
+  def apply[T](`type`: ServiceResponseType, msg: String, status: Int, code: Int, response: T)(implicit writes: Writes[T]): TransientServiceResponse[T] =
+    TransientServiceResponse[T](`type`, msg, status, code, response)(writes)
 }

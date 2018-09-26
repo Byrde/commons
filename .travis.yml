@@ -1,5 +1,11 @@
 sudo: required
 
+# Define the following to reuse:
+# - CLOUDSMITH_API_KEY
+# - NAME
+# - ORGANIZATION
+# - COMPILE_DIRECTORY
+
 # Defacto version and lang used in most Byrde projects.
 language: scala
 jdk: oraclejdk8
@@ -24,10 +30,10 @@ install:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname="$PROJECT_NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$MAVEN_ORG" -DscalaVersion="$TRAVIS_SCALA_VERSION" clean test
+  - sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" clean test
   - |
     if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname="$PROJECT_NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$MAVEN_ORG" -DscalaVersion="$TRAVIS_SCALA_VERSION" package packageSrc makePom;
+      sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" package packageSrc makePom;
     fi
 
 # Cached dependencies cleanup.
@@ -52,13 +58,5 @@ after_success:
       cd "$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
       echo "Current Scala version: $SCALA_MAJOR_VERSION";
       ls;
-      cloudsmith push maven byrde/libraries "${PROJECT_NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${PROJECT_NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${PROJECT_NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
+      cloudsmith push maven byrde/libraries "${NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${NAME}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
     fi
-
-# Configure notifications
-notifications:
-  email:
-    recipients:
-      - ${ADMINISTRATIVE_EMAIL}
-    on_success: never
-    on_failure: always
