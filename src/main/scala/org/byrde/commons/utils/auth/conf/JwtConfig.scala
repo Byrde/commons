@@ -1,10 +1,8 @@
 package org.byrde.commons.utils.auth.conf
 
 import io.igl.jwt._
-
 import org.apache.commons.codec.binary.Base64
-
-import org.byrde.commons.utils.auth.definitions.{Admin, Name, Org, Token}
+import org.byrde.commons.utils.auth.definitions._
 
 import play.api.Configuration
 
@@ -87,6 +85,9 @@ object JwtConfig {
 
       case Token.name =>
         Token
+
+      case Type.name =>
+        Type
 
       case "exp" =>
         Exp
