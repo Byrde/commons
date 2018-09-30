@@ -3,11 +3,11 @@ package org.byrde.commons.utils
 import org.byrde.commons.models.uri.Host
 import org.byrde.commons.utils.OptionUtils._
 
-import play.api.libs.ws.{BodyWritable, WSCookie, WSRequest}
+import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, WSCookie}
 
 object RequestUtils {
   implicit class Request2WSRequest[T](value: play.api.mvc.Request[T]) {
-    @inline def toWSRequest(base: WSRequest, newHost: Option[Host] = None)(implicit bodyWritable: BodyWritable[T]): WSRequest =
+    @inline def toWSRequest(base: StandaloneWSRequest, newHost: Option[Host] = None)(implicit bodyWritable: BodyWritable[T]): StandaloneWSRequest =
       base
         .withBody(value.body)
         .withMethod(value.method)

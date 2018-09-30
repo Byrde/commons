@@ -1,16 +1,16 @@
 package org.byrde.commons.services
 
-import org.byrde.commons.models.services.{ServiceResponse, ServiceResponseType}
 import org.byrde.commons.models.services.ServiceResponse.TransientServiceResponse
+import org.byrde.commons.models.services.{ServiceResponse, ServiceResponseType}
 import org.byrde.commons.models.uri.Path
+import org.byrde.commons.services.JsonHttpServiceExecutor._
 import org.byrde.commons.services.circuitbreaker.CircuitBreakerLike
 import org.byrde.commons.utils.JsonUtils
-import org.byrde.commons.utils.exception.ModelValidationException
 import org.byrde.commons.utils.ServiceResponseUtils._
-import JsonHttpServiceExecutor._
+import org.byrde.commons.utils.exception.ModelValidationException
 
 import play.api.libs.json._
-import play.api.libs.ws.{BodyWritable, WSRequest, WSResponse}
+import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, StandaloneWSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -22,22 +22,22 @@ abstract class JsonHttpServiceExecutor extends HttpServiceExecutor {
 
   def circuitBreaker: CircuitBreakerLike
 
-  def get[T: ClassTag](path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
+  def get[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
     super.underlyingGet(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(returnThreadPool)
 
-  def post[T, TT: ClassTag](body: T)(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
+  def post[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
     super.underlyingPost(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(returnThreadPool)
 
-  def put[T, TT: ClassTag](body: T)(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
+  def put[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
     super.underlyingPut(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(returnThreadPool)
 
-  def delete[T: ClassTag](path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
+  def delete[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
     super.underlyingDelete(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(returnThreadPool)
 
-  override def executeRequest(request: WSRequest): Future[WSResponse] =
+  override def executeRequest(request: StandaloneWSRequest): Future[StandaloneWSResponse] =
     circuitBreaker.withCircuitBreaker(request.execute().map(identity)(returnThreadPool))
 
-  private def processResponse[T: ClassTag](response: WSResponse, errorHook: Option[JsParsingError => T])(implicit reads: Reads[T]): T =
+  private def processResponse[T: ClassTag](response: StandaloneWSResponse, errorHook: Option[JsParsingError => T])(implicit reads: Reads[T]): T =
     Json
       .parse(response.body)
       .errorHook
@@ -54,7 +54,7 @@ abstract class JsonHttpServiceExecutor extends HttpServiceExecutor {
 }
 
 object JsonHttpServiceExecutor {
-  case class JsParsingError(res: WSResponse, err: JsError)
+  case class JsParsingError(res: StandaloneWSResponse, err: JsError)
 
   implicit class JsValue2ServiceResponseError(value: JsValue) {
     @inline def errorHook: JsValue =

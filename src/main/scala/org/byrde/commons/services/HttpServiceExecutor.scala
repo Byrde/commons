@@ -3,7 +3,7 @@ package org.byrde.commons.services
 import org.byrde.commons.models.uri.{Host, Path, Url}
 import org.byrde.commons.utils.RequestUtils._
 
-import play.api.libs.ws.{BodyWritable, WSClient, WSRequest, WSResponse}
+import play.api.libs.ws.{BodyWritable, StandaloneWSClient, StandaloneWSRequest, StandaloneWSResponse}
 import play.api.mvc.Request
 
 import scala.concurrent.Future
@@ -23,25 +23,25 @@ trait HttpServiceExecutor {
 
   def host: Host
 
-  def client: WSClient
+  def client: StandaloneWSClient
 
-  def executeRequest(request: WSRequest): Future[WSResponse]
+  def executeRequest(request: StandaloneWSRequest): Future[StandaloneWSResponse]
 
-  def underlyingGet(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[WSResponse] =
+  def underlyingGet(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[StandaloneWSResponse] =
     executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withMethod("GET"))
 
-  def underlyingPost[T](body: T)(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+  def underlyingPost[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[StandaloneWSResponse] =
     executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withBody(body).withMethod("POST"))
 
-  def underlyingPut[T](body: T)(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[WSResponse] =
+  def underlyingPut[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[StandaloneWSResponse] =
     executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withBody(body).withMethod("PUT"))
 
-  def underlyingDelete(path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[WSResponse] =
+  def underlyingDelete(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[StandaloneWSResponse] =
     executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withMethod("DELETE"))
 
-  def proxy[T](path: Path, requestHook: WSRequest => WSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[WSResponse] =
+  def proxy[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[StandaloneWSResponse] =
     executeRequest(requestHook(request.toWSRequest(buildWSRequest(path, curlRequestHook), Some(host))))
 
-  private def buildWSRequest(path: Path, curlRequestHook: CurlRequest => Unit): WSRequest =
+  private def buildWSRequest(path: Path, curlRequestHook: CurlRequest => Unit): StandaloneWSRequest =
     client.url(Url(host, path).toString).withRequestFilter(new AhcCurlRequestFilter(curlRequestHook))
 }
