@@ -14,16 +14,19 @@ trait DefaultServiceResponse extends ServiceResponse[String] {
     override def response: String =
       msg
 
-    def apply(message: String): DefaultServiceResponse =
+    def apply(_msg: String): DefaultServiceResponse =
+      apply(_msg, self.code)
+
+    def apply(_msg: String, _code: Int): DefaultServiceResponse =
       new DefaultServiceResponse {
         override def `type`: ServiceResponseType =
           self.`type`
 
         override def msg: String =
-          message
+          _msg
 
         override def code: Int =
-          self.code
+          _code
 
         override def status: Int =
           self.status
