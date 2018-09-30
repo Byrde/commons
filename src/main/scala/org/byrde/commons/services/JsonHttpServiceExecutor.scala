@@ -18,24 +18,24 @@ import scala.reflect.ClassTag
 abstract class JsonHttpServiceExecutor extends HttpServiceExecutor {
   self =>
 
-  def returnThreadPool: ExecutionContext
+  def ec: ExecutionContext
 
   def circuitBreaker: CircuitBreakerLike
 
   def get[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
-    super.underlyingGet(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(returnThreadPool)
+    super.underlyingGet(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(ec)
 
   def post[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
-    super.underlyingPost(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(returnThreadPool)
+    super.underlyingPost(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
 
   def put[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit bodyWritable: BodyWritable[T], reads: Reads[TT]): Future[TT] =
-    super.underlyingPut(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(returnThreadPool)
+    super.underlyingPut(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
 
   def delete[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
-    super.underlyingDelete(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(returnThreadPool)
+    super.underlyingDelete(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(ec)
 
   override def executeRequest(request: StandaloneWSRequest): Future[StandaloneWSResponse] =
-    circuitBreaker.withCircuitBreaker(request.execute().map(identity)(returnThreadPool))
+    circuitBreaker.withCircuitBreaker(request.execute().map(identity)(ec))
 
   private def processResponse[T: ClassTag](response: StandaloneWSResponse, errorHook: Option[JsParsingError => T])(implicit reads: Reads[T]): T =
     Json
