@@ -68,6 +68,24 @@ object ServiceResponse {
       TransientServiceResponse[T](_type, _msg, _status, _code, _response)(format)
   }
 
+  implicit val reads_DefaultServiceResponse: Reads[DefaultServiceResponse] = (
+    (__ \ message).read[String] and
+    (__ \ status).read[Int] and
+    (__ \ code).read[Int]
+  ) {
+    (, _msg: String, _status: Int, _code: Int) =>
+      new DefaultServiceResponse {
+        override def msg: String =
+          _msg
+
+        override def status: Int =
+          _status
+
+        override def code: Int   =
+          _code
+      }
+  }
+
   def apply[T](response: T)(implicit writes: Writes[T]): TransientServiceResponse[T] =
     apply("Success", response)(writes)
 
