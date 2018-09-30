@@ -73,7 +73,7 @@ object ServiceResponse {
     (__ \ status).read[Int] and
     (__ \ code).read[Int]
   ) {
-    (, _msg: String, _status: Int, _code: Int) =>
+    (_msg: String, _status: Int, _code: Int) =>
       new DefaultServiceResponse {
         override def msg: String =
           _msg
