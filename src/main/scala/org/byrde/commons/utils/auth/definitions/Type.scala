@@ -6,7 +6,7 @@ import play.api.libs.json.{JsString, JsValue}
 
 case class Type(value: String) extends ClaimValue {
   override val field: ClaimField =
-    Admin
+    Type
 
   override val jsValue: JsValue =
     JsString(value)
