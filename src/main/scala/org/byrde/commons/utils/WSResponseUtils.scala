@@ -1,11 +1,11 @@
 package org.byrde.commons.utils
 
 import play.api.http.HttpEntity
-import play.api.libs.ws.WSResponse
+import play.api.libs.ws.StandaloneWSResponse
 import play.api.mvc.{ResponseHeader, Result}
 
 object WSResponseUtils {
-  implicit class WSResponse2Result(value: WSResponse) {
+  implicit class WSResponse2Result(value: StandaloneWSResponse) {
     @inline def toResult: Result = {
       val headers =
         value
