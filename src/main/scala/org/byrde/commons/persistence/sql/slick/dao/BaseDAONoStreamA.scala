@@ -2,65 +2,34 @@ package org.byrde.commons.persistence.sql.slick.dao
 
 import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
 import org.byrde.commons.persistence.sql.slick.table.TablesA
+
 import slick.lifted.{CanBeQueryCondition, TableQuery}
+import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
-import scala.concurrent.{ExecutionContext, Future}
-
-abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[TT], TT <: BaseEntity](tableQ: TableQuery[T])(implicit tables: TablesA, ec: ExecutionContext) {
-  import tables.db
+abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[TT], TT <: BaseEntity](tableQ: TableQuery[T])(implicit val tables: TablesA) {
   import tables.profile.api._
 
-  def run: Future[Seq[TT]] =
-    db.run(tableQ.result)
+  def findById(id: Long): SqlAction[Option[TT], NoStream, Effect.Read] =
+    tableQ
+      .filter(_.id === id)
+      .result
+      .headOption
 
-  def inserts(rows: TT*): Future[Seq[TT]] = {
-    val func =
-      tableQ returning tableQ.map(_.id) ++= rows
+  def findByFilter[C: CanBeQueryCondition](f: T => C): FixedSqlStreamingAction[Seq[TT], TT, Effect.Read] =
+    tableQ
+      .withFilter(f)
+      .result
 
-    db.run(func)
-      .flatMap { rows =>
-        Future.sequence(rows.map(findById))
-      }
-      .map(_.flatten)
-  }
+  def inserts(rows: TT*): FixedSqlAction[Seq[Long], NoStream, Effect.Write] =
+    tableQ returning tableQ.map(_.id) ++= rows
 
-  def findById(id: Long): Future[Option[TT]] = {
-    val func =
-      tableQ
-        .filter(_.id === id)
-        .result
-        .headOption
+  def deleteByIds(ids: Long*): FixedSqlAction[Int, NoStream, Effect.Write] =
+    tableQ
+      .filter(_.id.inSet(ids))
+      .delete
 
-    db.run(func)
-  }
-
-  def findByFilter[C: CanBeQueryCondition](f: (T) => C): Future[Seq[TT]] = {
-    val func =
-      tableQ
-        .withFilter(f)
-        .result
-
-    db.run(func)
-  }
-
-  def deleteByIds(ids: Long*): Future[Int] = {
-    val func =
-      tableQ
-        .filter(_.id.inSet(ids))
-        .delete
-
-    db.run(func)
-  }
-
-  def deleteByFilter[C : CanBeQueryCondition](f:  (T) => C): Future[Int] = {
-    val func =
-      tableQ
-        .withFilter(f)
-        .delete
-
-    db.run(func)
-  }
-
-  def fields: Seq[String] =
-    Seq.empty
+  def deleteByFilter[C : CanBeQueryCondition](f: T => C): FixedSqlAction[Int, NoStream, Effect.Write] =
+    tableQ
+      .withFilter(f)
+      .delete
 }
