@@ -32,4 +32,13 @@ abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[TT], TT <: BaseEntity](p
     tableQ
       .withFilter(f)
       .delete
+
+  def update[Value: ColumnType, C: CanBeQueryCondition](query: Query[TT, TT, Seq])(value: Value, field: TT => Rep[Value]): FixedSqlAction[Int, NoStream, Effect.Write] = {
+    val innerQuery =
+      for {
+        c <- query
+      } yield field(c)
+
+    innerQuery.update(value)
+  }
 }
