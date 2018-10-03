@@ -10,8 +10,8 @@ sudo: required
 language: scala
 jdk: oraclejdk8
 scala:
-  - 2.11.12
   - 2.12.6
+  - 2.11.12
 
 # Install cloudsmit cli, required for publishing artifact.
 install:
