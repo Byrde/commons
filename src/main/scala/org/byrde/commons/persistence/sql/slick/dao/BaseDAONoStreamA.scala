@@ -6,7 +6,7 @@ import org.byrde.commons.persistence.sql.slick.table.TablesA
 import slick.lifted.{CanBeQueryCondition, TableQuery}
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
-abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[TT], TT <: BaseEntity](tableQ: TableQuery[T])(implicit val tables: TablesA) {
+abstract class BaseDAONoStreamA[T <: TablesA#BaseTableA[TT], TT <: BaseEntity](protected val tableQ: TableQuery[T])(implicit val tables: TablesA) {
   import tables.profile.api._
 
   def findById(id: Long): SqlAction[Option[TT], NoStream, Effect.Read] =
