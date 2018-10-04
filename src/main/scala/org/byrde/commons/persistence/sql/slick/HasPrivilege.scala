@@ -11,7 +11,9 @@ import scala.annotation.implicitNotFound
 trait HasPrivilege[R <: Role, E <: Effect]
 
 object HasPrivilege {
-  type ReadWriteTransactionSchema = Read with Write with Transactional with Schema
+  type WriteTransaction = Write with Transactional
+
+  type ReadWriteTransaction = Read with Write with Transactional
 
   implicit val slaveCanRead: Slave HasPrivilege Read =
     null
@@ -22,6 +24,12 @@ object HasPrivilege {
   implicit val masterCanWrite: Master HasPrivilege Write =
     null
 
-  implicit val masterCanPerformTransactions: Master HasPrivilege ReadWriteTransactionSchema =
+  implicit val masterCanSchema: Master HasPrivilege Schema =
+    null
+
+  implicit val masterCanPerformTransactions: Master HasPrivilege WriteTransaction =
+    null
+
+  implicit val masterCanPerformReadTransactions: Master HasPrivilege ReadWriteTransaction =
     null
 }

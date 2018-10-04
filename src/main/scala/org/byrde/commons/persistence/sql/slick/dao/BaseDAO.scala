@@ -1,7 +1,9 @@
 package org.byrde.commons.persistence.sql.slick.dao
 
 import org.byrde.commons.persistence.sql.slick.sqlbase.db.Db
-import org.byrde.commons.persistence.sql.slick.sqlbase.{BaseEntity, TablesA}
+import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
+import org.byrde.commons.persistence.sql.slick.sqlbase.conf.Profile
+import org.byrde.commons.persistence.sql.slick.sqlbase.table.Tables
 import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 
 import slick.lifted.{CanBeQueryCondition, TableQuery}
@@ -9,11 +11,16 @@ import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
 import scala.concurrent.Future
 
-abstract class BaseDAONoStreamA[R <: Role, TableType <: TablesA#BaseTableA[Entity], Entity <: BaseEntity](protected val tableQ: TableQuery[TableType])(implicit val db: Db[R]) {
-  import db.profile.api._
+abstract class BaseDAO[R <: Role, TableType <: Tables#BaseTable[Entity], Entity <: BaseEntity](val profile: Profile[R]) {
+  protected def tableQ: TableQuery[TableType]
 
-  implicit class Query2Run[A, E <: Effect](query: DBIOAction[A, NoStream, E]) {
-    def run(implicit ev: R HasPrivilege E): Future[A] =
+  protected val db =
+    Db(profile)
+
+  import profile.api._
+
+  implicit class Query2Run[T, E <: Effect](query: DBIOAction[T, NoStream, E]) {
+    def run(implicit ev: R HasPrivilege E): Future[T] =
       db.run(query)
   }
 
