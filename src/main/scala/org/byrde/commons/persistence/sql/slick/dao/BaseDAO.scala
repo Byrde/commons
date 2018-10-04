@@ -6,14 +6,13 @@ import org.byrde.commons.persistence.sql.slick.sqlbase.conf.Profile
 import org.byrde.commons.persistence.sql.slick.sqlbase.table.Tables
 import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 
-import slick.lifted.{CanBeQueryCondition, TableQuery}
+import slick.lifted.{CanBeQueryCondition, Tag}
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
 import scala.concurrent.Future
+import scala.language.higherKinds
 
-abstract class BaseDAO[R <: Role, TableType <: Tables#BaseTable[Entity], Entity <: BaseEntity](val profile: Profile[R]) {
-  protected def tableQ: TableQuery[TableType]
-
+abstract class BaseDAO[R <: Role, Entity <: BaseEntity, TableType <: Tables#BaseTable[Entity]](val profile: Profile[R])(table: Tag => TableType) {
   protected val db =
     Db(profile)
 
@@ -24,32 +23,28 @@ abstract class BaseDAO[R <: Role, TableType <: Tables#BaseTable[Entity], Entity 
       db.run(query)
   }
 
+  val QueryBuilder =
+    TableQuery(table)
+
   def findById(id: Long): SqlAction[Option[Entity], NoStream, Effect.Read] =
-    tableQ
-      .filter(_.id === id)
-      .result
-      .headOption
+    QueryBuilder.withFilter(_.id === id).result.headOption
 
   def findByFilter[QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlStreamingAction[Seq[Entity], Entity, Effect.Read] =
-    tableQ.withFilter(f).result
+    QueryBuilder.withFilter(f).result
 
   def inserts(rows: Entity*): FixedSqlAction[Seq[Long], NoStream, Effect.Write] =
-    tableQ returning tableQ.map(_.id) ++= rows
+    QueryBuilder returning QueryBuilder.map(_.id) ++= rows
 
   def deleteByIds(ids: Long*): FixedSqlAction[Int, NoStream, Effect.Write] =
-    tableQ
-      .filter(_.id.inSet(ids))
-      .delete
+    QueryBuilder.withFilter(_.id.inSet(ids)).delete
 
   def deleteByFilter[QueryCondition : CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlAction[Int, NoStream, Effect.Write] =
-    tableQ
-      .withFilter(f)
-      .delete
+    QueryBuilder.withFilter(f).delete
 
   def update[Value: ColumnType, QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition)(value: Value, field: TableType => Rep[Value]): FixedSqlAction[Int, NoStream, Effect.Write] = {
     val query =
       for {
-        c <- tableQ.withFilter(f)
+        c <- QueryBuilder.withFilter(f)
       } yield field(c)
 
     query.update(value)
