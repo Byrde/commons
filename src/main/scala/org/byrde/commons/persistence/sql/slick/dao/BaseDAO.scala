@@ -13,15 +13,15 @@ import scala.concurrent.Future
 import scala.language.higherKinds
 
 abstract class BaseDAO[R <: Role, Entity <: BaseEntity, TableType <: Tables#BaseTable[Entity]](val profile: Profile[R])(table: Tag => TableType) {
-  protected val db =
-    Db(profile)
-
   import profile.api._
 
   implicit class Query2Run[T, E <: Effect](query: DBIOAction[T, NoStream, E]) {
     def run(implicit ev: R HasPrivilege E): Future[T] =
       db.run(query)
   }
+
+  protected val db =
+    Db(profile)
 
   val QueryBuilder =
     TableQuery(table)

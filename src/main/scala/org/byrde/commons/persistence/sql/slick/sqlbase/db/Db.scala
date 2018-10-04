@@ -6,11 +6,9 @@ import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 import scala.concurrent.Future
 
 case class Db[R <: Role](profile: Profile[R]) {
-  import profile.api._
-
   private val underlyingDb =
     profile.jdbc.db
 
-  def run[A, E <: Effect](query: DBIOAction[A, NoStream, E])(implicit ev: R HasPrivilege E): Future[A] =
+  def run[A, E <: profile.api.Effect](query: profile.api.DBIOAction[A, profile.api.NoStream, E])(implicit ev: R HasPrivilege E): Future[A] =
     underlyingDb.run(query)
 }
