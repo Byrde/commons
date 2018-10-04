@@ -1,6 +1,5 @@
 package org.byrde.commons.persistence.sql.slick.dao
 
-import org.byrde.commons.persistence.sql.slick.Role
 import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
 import org.byrde.commons.persistence.sql.slick.sqlbase.conf.Profile
 import org.byrde.commons.persistence.sql.slick.sqlbase.table.Tables
@@ -8,7 +7,7 @@ import org.byrde.commons.persistence.sql.slick.sqlbase.table.Tables
 import slick.lifted.CanBeQueryCondition
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
-abstract class BaseDAO[R <: Role, Entity <: BaseEntity, TableType <: Tables#BaseTable[Entity]](protected val profile: Profile[R]) {
+abstract class BaseDAO[Entity <: BaseEntity, TableType <: Tables#BaseTable[Entity]](protected val profile: Profile) {
   import profile.api._
 
   def QueryBuilder: TableQuery[TableType]
