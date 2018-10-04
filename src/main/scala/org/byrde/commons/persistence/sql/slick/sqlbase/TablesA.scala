@@ -1,11 +1,11 @@
-package org.byrde.commons.persistence.sql.slick.table
+package org.byrde.commons.persistence.sql.slick.sqlbase
 
-import org.byrde.commons.persistence.sql.slick.sqlbase.db.Db
+import org.byrde.commons.persistence.sql.slick.sqlbase.db.Profile
 
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-abstract class TablesA(val jdbcConfiguration: DatabaseConfig[JdbcProfile]) extends Db {
+abstract class TablesA(val jdbcConfiguration: DatabaseConfig[JdbcProfile]) extends Profile {
   import profile.api._
 
 	abstract class BaseTableA[T](tag: Tag, name: String) extends Table[T](tag, name) {
