@@ -26,22 +26,22 @@ abstract class BaseDAO[R <: Role, Entity <: BaseEntity, TableType <: Tables#Base
   val QueryBuilder =
     TableQuery(table)
 
-  def findById(id: Long): SqlAction[Option[Entity], NoStream, Effect.Read] =
+  protected def findById(id: Long): SqlAction[Option[Entity], NoStream, Effect.Read] =
     QueryBuilder.withFilter(_.id === id).result.headOption
 
-  def findByFilter[QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlStreamingAction[Seq[Entity], Entity, Effect.Read] =
+  protected def findByFilter[QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlStreamingAction[Seq[Entity], Entity, Effect.Read] =
     QueryBuilder.withFilter(f).result
 
-  def inserts(rows: Entity*): FixedSqlAction[Seq[Long], NoStream, Effect.Write] =
+  protected def inserts(rows: Entity*): FixedSqlAction[Seq[Long], NoStream, Effect.Write] =
     QueryBuilder returning QueryBuilder.map(_.id) ++= rows
 
-  def deleteByIds(ids: Long*): FixedSqlAction[Int, NoStream, Effect.Write] =
+  protected def deleteByIds(ids: Long*): FixedSqlAction[Int, NoStream, Effect.Write] =
     QueryBuilder.withFilter(_.id.inSet(ids)).delete
 
-  def deleteByFilter[QueryCondition : CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlAction[Int, NoStream, Effect.Write] =
+  protected def deleteByFilter[QueryCondition : CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlAction[Int, NoStream, Effect.Write] =
     QueryBuilder.withFilter(f).delete
 
-  def update[Value: ColumnType, QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition)(value: Value, field: TableType => Rep[Value]): FixedSqlAction[Int, NoStream, Effect.Write] = {
+  protected def update[Value: ColumnType, QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition)(value: Value, field: TableType => Rep[Value]): FixedSqlAction[Int, NoStream, Effect.Write] = {
     val query =
       for {
         c <- QueryBuilder.withFilter(f)
