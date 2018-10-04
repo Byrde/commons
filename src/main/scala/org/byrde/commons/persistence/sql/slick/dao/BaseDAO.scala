@@ -7,7 +7,7 @@ import org.byrde.commons.persistence.sql.slick.sqlbase.table.Tables
 import slick.lifted.CanBeQueryCondition
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
-abstract class BaseDAO[Entity <: BaseEntity, TableType <: Tables#BaseTable[Entity]](protected val profile: Profile) {
+abstract class BaseDAO[Entity <: BaseEntity, TableType <: Tables#BaseTable[Entity]](protected val profile: Profile[_]) {
   import profile.api._
 
   def QueryBuilder: TableQuery[TableType]

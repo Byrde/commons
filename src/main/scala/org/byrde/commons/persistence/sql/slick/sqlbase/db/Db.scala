@@ -5,7 +5,7 @@ import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 
 import scala.concurrent.Future
 
-case class Db[R <: Role](profile: Profile) {
+case class Db[R <: Role](profile: Profile[R]) {
   private val underlyingDb =
     profile.jdbc.db
 
