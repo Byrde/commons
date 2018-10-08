@@ -4,13 +4,11 @@ import org.byrde.commons.persistence.sql.slick.BaseEntity
 import org.byrde.commons.persistence.sql.slick.conf.Profile
 import org.byrde.commons.persistence.sql.slick.table.BaseTables
 
-import slick.lifted.CanBeQueryCondition
+import slick.lifted.{CanBeQueryCondition, TableQuery}
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
-abstract class BaseDAO[Entity <: BaseEntity, TableType <: BaseTables#BaseTable[Entity]](protected val profile: Profile[_]) {
+abstract class BaseDAO[TableType <: BaseTables#BaseTable[Entity], Entity <: BaseEntity](val QueryBuilder: TableQuery[TableType], protected val profile: Profile[_]) {
   import profile.api._
-
-  def QueryBuilder: slick.lifted.TableQuery[TableType]
 
   def findById(id: Long): SqlAction[Option[Entity], slick.dbio.NoStream, slick.dbio.Effect.Read] =
     QueryBuilder.withFilter(_.id === id).result.headOption
