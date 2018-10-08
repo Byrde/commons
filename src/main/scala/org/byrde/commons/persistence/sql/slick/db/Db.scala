@@ -1,4 +1,5 @@
 package org.byrde.commons.persistence.sql.slick.db
+
 import org.byrde.commons.persistence.sql.slick.conf.Profile
 import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 

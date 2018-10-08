@@ -2,8 +2,7 @@ package org.byrde.commons.persistence.sql.slick.dao
 
 import org.byrde.commons.persistence.sql.slick.BaseEntity
 import org.byrde.commons.persistence.sql.slick.conf.Profile
-import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
-import org.byrde.commons.persistence.sql.slick.sqlbase.table.BaseTables
+import org.byrde.commons.persistence.sql.slick.table.BaseTables
 
 import slick.lifted.CanBeQueryCondition
 import slick.sql.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
