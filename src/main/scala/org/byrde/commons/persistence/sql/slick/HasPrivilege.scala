@@ -15,21 +15,21 @@ object HasPrivilege {
 
   type ReadWriteTransaction = Read with Write with Transactional
 
-  implicit val slaveCanRead: Slave HasPrivilege Read =
+  implicit val SlaveCanRead: Slave HasPrivilege Read =
     null
 
-  implicit val masterCanRead: Master HasPrivilege Read =
+  implicit val MasterCanRead: Master HasPrivilege Read =
     null
 
-  implicit val masterCanWrite: Master HasPrivilege Write =
+  implicit val MasterCanWrite: Master HasPrivilege Write =
     null
 
-  implicit val masterCanSchema: Master HasPrivilege Schema =
+  implicit val MasterCanSchema: Master HasPrivilege Schema =
     null
 
-  implicit val masterCanPerformTransactions: Master HasPrivilege WriteTransaction =
+  implicit val MasterCanPerformTransactions: Master HasPrivilege WriteTransaction =
     null
 
-  implicit val masterCanPerformReadTransactions: Master HasPrivilege ReadWriteTransaction =
+  implicit val MasterCanPerformReadTransactions: Master HasPrivilege ReadWriteTransaction =
     null
 }

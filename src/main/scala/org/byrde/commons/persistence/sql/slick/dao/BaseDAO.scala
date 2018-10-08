@@ -1,7 +1,8 @@
 package org.byrde.commons.persistence.sql.slick.dao
 
+import org.byrde.commons.persistence.sql.slick.BaseEntity
+import org.byrde.commons.persistence.sql.slick.conf.Profile
 import org.byrde.commons.persistence.sql.slick.sqlbase.BaseEntity
-import org.byrde.commons.persistence.sql.slick.sqlbase.conf.Profile
 import org.byrde.commons.persistence.sql.slick.sqlbase.table.BaseTables
 
 import slick.lifted.CanBeQueryCondition
@@ -24,7 +25,7 @@ abstract class BaseDAO[Entity <: BaseEntity, TableType <: BaseTables#BaseTable[E
   def deleteByIds(ids: Long*): FixedSqlAction[Int, slick.dbio.NoStream, slick.dbio.Effect.Write] =
     QueryBuilder.withFilter(_.id.inSet(ids)).delete
 
-  def deleteByFilter[QueryCondition : CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlAction[Int, slick.dbio.NoStream, slick.dbio.Effect.Write] =
+  def deleteByFilter[QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition): FixedSqlAction[Int, slick.dbio.NoStream, slick.dbio.Effect.Write] =
     QueryBuilder.withFilter(f).delete
 
   def update[Value: ColumnType, QueryCondition: CanBeQueryCondition](f: TableType => QueryCondition)(value: Value, field: TableType => slick.lifted.Rep[Value]): FixedSqlAction[Int, slick.dbio.NoStream, slick.dbio.Effect.Write] = {

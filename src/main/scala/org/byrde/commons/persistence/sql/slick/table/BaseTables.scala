@@ -1,6 +1,6 @@
-package org.byrde.commons.persistence.sql.slick.sqlbase.table
+package org.byrde.commons.persistence.sql.slick.table
 
-import org.byrde.commons.persistence.sql.slick.sqlbase.conf.Profile
+import org.byrde.commons.persistence.sql.slick.conf.Profile
 
 import slick.lifted.{Rep, Tag}
 

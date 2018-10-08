@@ -1,5 +1,4 @@
-package org.byrde.commons.persistence.sql.slick.sqlbase.conf
-
+package org.byrde.commons.persistence.sql.slick.conf
 import org.byrde.commons.persistence.sql.slick.Role
 
 import slick.basic.DatabaseConfig

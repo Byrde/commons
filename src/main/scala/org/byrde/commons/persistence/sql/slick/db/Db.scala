@@ -1,6 +1,5 @@
-package org.byrde.commons.persistence.sql.slick.sqlbase.db
-
-import org.byrde.commons.persistence.sql.slick.sqlbase.conf.Profile
+package org.byrde.commons.persistence.sql.slick.db
+import org.byrde.commons.persistence.sql.slick.conf.Profile
 import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 
 import slick.dbio.{DBIOAction, Effect, NoStream}
