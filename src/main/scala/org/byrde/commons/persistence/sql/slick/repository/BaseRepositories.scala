@@ -7,20 +7,12 @@ import org.byrde.commons.persistence.sql.slick.{HasPrivilege, Role}
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
+import scala.language.reflectiveCalls
 
-trait BaseRepositories[T <: BaseRepositories[T]] {
+trait BaseRepositories[T <: BaseRepositories[T, Tables], Tables <: BaseTables] {
   self: T =>
-    type Tables <: BaseTables
-
-    def table: Tables
+    def tables: Tables
 
     def run[Result, R <: Role, E <: Effect](query: T => DBIOAction[Result, NoStream, E])(db: T => Db[R])(implicit ev: R HasPrivilege E): Future[Result] =
       db(self).run(query(self))
-}
-
-object BaseRepositories {
-  type Aux[A0 <: BaseRepositories[A0], B0 <: BaseTables] =
-    BaseRepositories[A0] {
-      type Tables = B0
-    }
 }
