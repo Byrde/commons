@@ -11,18 +11,18 @@ import scala.annotation.implicitNotFound
 class HasPrivilege[R <: Role, +E <: Effect](profile: Profile[R])
 
 object HasPrivilege {
-  implicit def SlaveCanRead[R <: Role](implicit profile: Profile[R]): Slave HasPrivilege profile.api.Effect.Read =
+  implicit def SlaveCanRead(implicit profile: Profile[Slave]): Slave HasPrivilege profile.api.Effect.Read =
     null
 
-  implicit def MasterCanRead[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Read =
+  implicit def MasterCanRead(implicit profile: Profile[Master]): Master HasPrivilege profile.api.Effect.Read =
     null
 
-  implicit def MasterCanWrite[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Write =
+  implicit def MasterCanWrite(implicit profile: Profile[Master]): Master HasPrivilege profile.api.Effect.Write =
     null
 
-  implicit def MasterCanSchema[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Schema =
+  implicit def MasterCanSchema(implicit profile: Profile[Master]): Master HasPrivilege profile.api.Effect.Schema =
     null
 
-  implicit def MasterCanPerformTransactions[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Write with profile.api.Effect.Transactional =
+  implicit def MasterCanPerformTransactions(implicit profile: Profile[Master]): Master HasPrivilege profile.api.Effect.Write with profile.api.Effect.Transactional =
     null
 }
