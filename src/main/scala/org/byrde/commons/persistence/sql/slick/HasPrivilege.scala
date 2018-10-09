@@ -1,35 +1,28 @@
 package org.byrde.commons.persistence.sql.slick
 
 import org.byrde.commons.persistence.sql.slick.Role.{Master, Slave}
+import org.byrde.commons.persistence.sql.slick.conf.Profile
 
 import slick.dbio.Effect
-import slick.dbio.Effect.{Read, Schema, Transactional, Write}
 
 import scala.annotation.implicitNotFound
 
 @implicitNotFound("'${R}' database is not privileged to to perform effect '${E}'.")
-trait HasPrivilege[R <: Role, E <: Effect]
+class HasPrivilege[R <: Role, +E <: Effect](profile: Profile[R])
 
 object HasPrivilege {
-  type WriteTransaction = Write with Transactional
-
-  type ReadWriteTransaction = Read with Write with Transactional
-
-  implicit val SlaveCanRead: Slave HasPrivilege Read =
+  implicit def SlaveCanRead[R <: Role](implicit profile: Profile[R]): Slave HasPrivilege profile.api.Effect.Read =
     null
 
-  implicit val MasterCanRead: Master HasPrivilege Read =
+  implicit def MasterCanRead[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Read =
     null
 
-  implicit val MasterCanWrite: Master HasPrivilege Write =
+  implicit def MasterCanWrite[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Write =
     null
 
-  implicit val MasterCanSchema: Master HasPrivilege Schema =
+  implicit def MasterCanSchema[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Schema =
     null
 
-  implicit val MasterCanPerformTransactions: Master HasPrivilege WriteTransaction =
-    null
-
-  implicit val MasterCanPerformReadTransactions: Master HasPrivilege ReadWriteTransaction =
+  implicit def MasterCanPerformTransactions[R <: Role](implicit profile: Profile[R]): Master HasPrivilege profile.api.Effect.Write with profile.api.Effect.Transactional =
     null
 }
