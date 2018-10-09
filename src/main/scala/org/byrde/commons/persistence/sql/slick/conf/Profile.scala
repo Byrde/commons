@@ -2,12 +2,13 @@ package org.byrde.commons.persistence.sql.slick.conf
 
 import org.byrde.commons.persistence.sql.slick.Role
 
-import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-case class Profile[R <: Role](jdbc: DatabaseConfig[JdbcProfile]) extends DatabaseConfiguration[R] {
+trait Profile[R <: Role] {
+	def configuration: DatabaseConfiguration[R]
+
 	implicit val profile: JdbcProfile =
-		jdbc.profile
+		configuration.jdbc.profile
 
 	implicit val api: profile.API =
 		profile.api

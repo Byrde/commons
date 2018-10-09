@@ -10,7 +10,7 @@ import scala.concurrent.Future
 trait Db[R <: Role] {
   self: Profile[R] =>
     private val underlyingDb =
-      jdbc.db
+      configuration.jdbc.db
 
     def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
       underlyingDb.run(query)
