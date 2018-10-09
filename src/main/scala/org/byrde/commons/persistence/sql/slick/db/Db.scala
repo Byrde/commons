@@ -7,10 +7,11 @@ import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
 
-case class Db[R <: Role](profile: Profile[R]) {
-  private val underlyingDb =
-    profile.jdbc.db
+trait Db[R <: Role] {
+  self: Profile[R] =>
+    private val underlyingDb =
+      jdbc.db
 
-  def run[Result, E <: Effect](query: Profile[R] => DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
-    underlyingDb.run(query(profile))
+    def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
+      underlyingDb.run(query)
 }
