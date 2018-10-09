@@ -11,6 +11,6 @@ case class Db[R <: Role](profile: Profile[R]) {
   private val underlyingDb =
     profile.jdbc.db
 
-  def run[A, E <: Effect](query: DBIOAction[A, NoStream, E])(implicit ev: R HasPrivilege E): Future[A] =
-    underlyingDb.run(query)
+  def run[Result, E <: Effect](query: Profile[R] => DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
+    underlyingDb.run(query(profile))
 }
