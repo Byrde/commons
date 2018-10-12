@@ -14,4 +14,7 @@ trait Db[R <: Role] {
 
     def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
       underlyingDb.run(query)
+
+    def shutdown: Future[Unit] =
+      underlyingDb.shutdown
 }
