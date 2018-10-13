@@ -28,7 +28,7 @@ class RedisClient(val namespace: String, val pool: org.byrde.sedis.Pool, classLo
 
   def keys(pattern: String): Future[Set[Key]] =
     Future {
-      pool.withClient(_.keys(s"KEYS $namespace::$pattern"))
+      pool.withClient(_.keys(s"$namespace::$pattern"))
     }
 
   def get[T](key: Key): Future[Option[PortableRedisObject[T]]] = {
