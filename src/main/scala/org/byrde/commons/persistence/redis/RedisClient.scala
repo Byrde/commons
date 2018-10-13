@@ -1,77 +1,97 @@
 package org.byrde.commons.persistence.redis
 
-import biz.source_code.base64Coder.Base64Coder
 import java.io._
 
+import org.byrde.commons.persistence.redis.RedisClient.{Key, PortableRedisObject}
+import org.byrde.commons.utils.OptionUtils._
 import org.byrde.commons.utils.redis.Pool
 import org.byrde.commons.utils.redis.conf.RedisConfig
 
+import biz.source_code.base64Coder.Base64Coder
+
 import akka.Done
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 import scala.reflect.ClassTag
 
-class RedisClient(val namespace: String, val pool: org.sedis.Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
+class RedisClient(val namespace: String, val pool: org.byrde.sedis.Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
   private val namespacedKey: String => String =
     x => s"$namespace::$x"
 
   def destroy(): Unit =
     pool.underlying.destroy()
 
-  def get[T](userKey: String): Future[Option[T]] = {
-    try {
-      val valueF =
-        Future {
-          pool
-            .withJedisClient { client =>
-              client.get(namespacedKey(userKey))
-            }
-        }
+  def keys: Future[Set[Key]] =
+    keys("*")
 
-      valueF.map {
-        case null =>
-          None
-        case _data =>
-          val data: Seq[String] =
-            _data.split("-")
-
-          val bytes =
-            Base64Coder.decode(data.last)
-
-          data.head match {
-            case "oos" =>
-              Some(withObjectInputStream(bytes)(_.readObject().asInstanceOf[T]))
-
-            case "string" =>
-              Some(withDataInputStream(bytes)(_.readUTF().asInstanceOf[T]))
-
-            case "int" =>
-              Some(withDataInputStream(bytes)(_.readInt().asInstanceOf[T]))
-
-            case "long" =>
-              Some(withDataInputStream(bytes)(_.readLong().asInstanceOf[T]))
-
-            case "boolean" =>
-              Some(withDataInputStream(bytes)(_.readBoolean().asInstanceOf[T]))
-
-            case _ =>
-              throw new IOException(s"was not able to recognize the type of serialized value. The type was ${data.head} ")
-          }
-      }
-    } catch {
-      case _: Exception =>
-        Future.successful(None)
+  def keys(pattern: String): Future[Set[Key]] =
+    Future {
+      pool.withClient(_.keys(s"KEYS $namespace::$pattern"))
     }
+
+  def get[T](key: Key): Future[Option[PortableRedisObject[T]]] = {
+    pool
+      .withJedisClient { client =>
+        try {
+          val ttl =
+            client.ttl(key).longValue() seconds
+
+          def valueF =
+            Future {
+              client.get(namespacedKey(key))
+            }
+
+          valueF.map {
+            case null =>
+              None
+
+            case _data =>
+              val data: Seq[String] =
+                _data.split("-")
+
+              val bytes =
+                Base64Coder.decode(data.last)
+
+              val `object` =
+                data.head match {
+                  case "oos" =>
+                    withObjectInputStream(bytes)(_.readObject().asInstanceOf[T])
+
+                  case "string" =>
+                    withDataInputStream(bytes)(_.readUTF().asInstanceOf[T])
+
+                  case "int" =>
+                    withDataInputStream(bytes)(_.readInt().asInstanceOf[T])
+
+                  case "long" =>
+                    withDataInputStream(bytes)(_.readLong().asInstanceOf[T])
+
+                  case "boolean" =>
+                    withDataInputStream(bytes)(_.readBoolean().asInstanceOf[T])
+
+                  case _ =>
+                    throw new IOException(
+                      s"was not able to recognize the type of serialized value. The type was ${data.head} ")
+                }
+
+              PortableRedisObject[T](key, `object`, ttl).?
+          }
+        } catch {
+          case _: Exception =>
+            Future.successful(None)
+        }
+      }
   }
 
-  def remove(key: String): Future[Done] =
+  def remove(key: Key): Future[Done] =
     Future {
       pool
         .withJedisClient(_.del(namespacedKey(key)))
     }.map(_ => Done)
 
-  def set(_key: String, value: Any, expiration: Duration = Duration.Inf): Future[Done] = {
+  def set(_key: Key, value: Any, expiration: Duration = Duration.Inf): Future[Done] = {
     val expirationInSec =
       if (expiration == Duration.Inf)
         0
@@ -164,7 +184,7 @@ class RedisClient(val namespace: String, val pool: org.sedis.Pool, classLoader: 
     }
   }
 
-  def getOrElseUpdate[A: ClassTag](key: String, expiration: Duration)(orElse: => Future[A]): Future[A] =
+  def getOrElseUpdate[A: ClassTag](key: Key, expiration: Duration)(orElse: => Future[PortableRedisObject[A]]): Future[PortableRedisObject[A]] =
     get[A](key)
       .flatMap {
         _.fold {
@@ -198,6 +218,10 @@ class RedisClient(val namespace: String, val pool: org.sedis.Pool, classLoader: 
 }
 
 object RedisClient {
+  type Key = String
+
+  case class PortableRedisObject[T](key: Key, `object`: T, ttl: Duration)
+
   def apply(redisConfig: RedisConfig, classLoader: ClassLoader)(implicit ec: ExecutionContext) =
     new RedisClient(redisConfig.namespace, Pool(redisConfig), classLoader)
 }

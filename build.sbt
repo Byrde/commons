@@ -26,6 +26,7 @@ lazy val root =
 
 resolvers ++=
   Seq(
+    "byrdelibraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/",
     "pk11 repo" at "http://pk11-scratch.googlecode.com/svn/trunk",
     "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases")
 
@@ -45,7 +46,7 @@ val sqlPersistence =
 
 val redis =
   Seq(
-    "org.sedis" % "sedis_2.11" % "1.2.2",
+    "org.byrde" %% "sedis" % "7",
     "redis.clients" % "jedis" % "2.4.2")
 
 val play =
