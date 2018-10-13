@@ -31,64 +31,57 @@ class RedisClient(val namespace: String, val pool: org.byrde.sedis.Pool, classLo
       pool.withClient(_.keys(s"$namespace::$pattern"))
     }
 
-  def get[T](key: Key): Future[Option[PortableRedisObject[T]]] = {
-    pool
-      .withJedisClient { client =>
-        try {
-          val ttl =
-            client.ttl(key).longValue() seconds
+  def get[T](key: Key): Future[Option[PortableRedisObject[T]]] =
+    try {
+      val ttl =
+        pool.withJedisClient(_.ttl(key).longValue() seconds)
 
-          def valueF =
-            Future {
-              client.get(namespacedKey(key))
+      def valueF =
+        Future(pool.withJedisClient(_.get(namespacedKey(key))))
+
+      valueF.map {
+        case null =>
+          None
+
+        case _data =>
+          val data: Seq[String] =
+            _data.split("-")
+
+          val bytes =
+            Base64Coder.decode(data.last)
+
+          val `object` =
+            data.head match {
+              case "oos" =>
+                withObjectInputStream(bytes)(_.readObject().asInstanceOf[T])
+
+              case "string" =>
+                withDataInputStream(bytes)(_.readUTF().asInstanceOf[T])
+
+              case "int" =>
+                withDataInputStream(bytes)(_.readInt().asInstanceOf[T])
+
+              case "long" =>
+                withDataInputStream(bytes)(_.readLong().asInstanceOf[T])
+
+              case "boolean" =>
+                withDataInputStream(bytes)(_.readBoolean().asInstanceOf[T])
+
+              case _ =>
+                throw new IOException(
+                  s"was not able to recognize the type of serialized value. The type was ${data.head} ")
             }
 
-          valueF.map {
-            case null =>
-              None
-
-            case _data =>
-              val data: Seq[String] =
-                _data.split("-")
-
-              val bytes =
-                Base64Coder.decode(data.last)
-
-              val `object` =
-                data.head match {
-                  case "oos" =>
-                    withObjectInputStream(bytes)(_.readObject().asInstanceOf[T])
-
-                  case "string" =>
-                    withDataInputStream(bytes)(_.readUTF().asInstanceOf[T])
-
-                  case "int" =>
-                    withDataInputStream(bytes)(_.readInt().asInstanceOf[T])
-
-                  case "long" =>
-                    withDataInputStream(bytes)(_.readLong().asInstanceOf[T])
-
-                  case "boolean" =>
-                    withDataInputStream(bytes)(_.readBoolean().asInstanceOf[T])
-
-                  case _ =>
-                    throw new IOException(
-                      s"was not able to recognize the type of serialized value. The type was ${data.head} ")
-                }
-
-              PortableRedisObject[T](key, `object`, ttl).?
-          }
-        } catch {
-          case _: Exception =>
-            Future.successful(None)
-        }
+          PortableRedisObject[T](key, `object`, ttl).?
       }
-  }
+    } catch {
+      case _: Exception =>
+        Future.successful(None)
+    }
 
   def remove(key: Key): Future[Done] =
     Future {
-      pool
-        .withJedisClient(_.del(namespacedKey(key)))
+      pool.withJedisClient(_.del(namespacedKey(key)))
     }.map(_ => Done)
 
   def set(_key: Key, value: Any, expiration: Duration = Duration.Inf): Future[Done] = {
