@@ -46,7 +46,7 @@ val sqlPersistence =
 
 val redis =
   Seq(
-    "org.byrde" %% "sedis" % "7",
+    "org.byrde" %% "sedis" % "8",
     "redis.clients" % "jedis" % "2.4.2")
 
 val play =
