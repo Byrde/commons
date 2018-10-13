@@ -34,7 +34,7 @@ class RedisClient(val namespace: String, val pool: org.byrde.sedis.Pool, classLo
   def get[T](key: Key): Future[Option[PortableRedisObject[T]]] =
     try {
       val ttl =
-        pool.withJedisClient(_.ttl(key).longValue() seconds)
+        pool.withJedisClient(_.ttl(namespacedKey(key)).longValue() seconds)
 
       def valueF =
         Future(pool.withJedisClient(_.get(namespacedKey(key))))
