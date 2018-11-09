@@ -61,7 +61,7 @@ after_success:
 
       for (( i=0; i<${#array[@]}; i++ ));
       do
-        cd "$PROJECT_DIRECTORY/${array[$i]}/target/scala-$SCALA_MAJOR_VERSION";
+        cd "$TRAVIS_BUILD_DIR/${array[$i]}/COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
         cloudsmith push maven byrde/libraries "${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
       done
     fi
