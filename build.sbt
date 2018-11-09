@@ -1,73 +1,72 @@
-name :=
-  Option(
-    System.getProperty("name"))
-    .getOrElse("commons")
-
-version :=
-  Option(
-    System.getProperty("version"))
-    .getOrElse("1.0")
-
-organization :=
-  Option(
-    System.getProperty("organization"))
-    .getOrElse("org.byrde")
-
-scalaVersion :=
-  Option(
-    System.getProperty("scalaVersion"))
-    .getOrElse("2.12.6")
-
-scalaModuleInfo ~=
-  (_.map(_.withOverrideScalaVersion(true)))
-
-lazy val root =
-  project in file(".")
-
-resolvers ++=
+val commons =
   Seq(
-    "byrdelibraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/",
-    "pk11 repo" at "http://pk11-scratch.googlecode.com/svn/trunk",
-    "Scalaz Bintray Repo" at "http://dl.bintray.com/scalaz/releases")
+    version :=
+      Option(
+        System.getProperty("version"))
+        .getOrElse("1.0"),
+    organization :=
+      Option(
+        System.getProperty("organization"))
+        .getOrElse("org.byrde"),
+    scalaVersion :=
+      Option(
+        System.getProperty("scalaVersion"))
+        .getOrElse("2.12.6"),
+    scalaModuleInfo ~=
+      (_.map(_.withOverrideScalaVersion(true))))
 
-val utils =
-  Seq(
-    "io.igl" %% "jwt" % "1.2.2",
-    "org.joda" % "joda-convert" % "1.8.1",
-    "commons-io" % "commons-io" % "2.5",
-    "com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2",
-    "org.mozilla" % "rhino" % "1.7.7.1",
-    "biz.source_code" % "base64coder" % "2010-12-19")
+lazy val `akka-http` =
+  project
+    .settings(commons)
 
-val sqlPersistence =
-  Seq(
-    "com.typesafe.slick" %% "slick-hikaricp" % "3.2.3",
-    "com.typesafe.slick" %% "slick" % "3.2.3")
+lazy val clients =
+  project
+    .dependsOn(
+      `service-response`,
+      uri,
+      utils
+    )
+    .settings(commons)
 
-val redis =
-  Seq(
-    "org.byrde" %% "sedis" % "8",
-    "redis.clients" % "jedis" % "2.9.0")
+lazy val email =
+  project
+    .dependsOn(`service-response`)
+    .settings(commons)
 
-val play =
-  Seq(
-    "com.typesafe.play" %% "play" % "2.6.15",
-    "com.typesafe.play" %% "play-ws" % "2.6.15",
-    "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.0-M2",
-    "com.google.inject" % "guice" % "4.2.0")
+lazy val jwt =
+  project
+    .settings(commons)
 
-val mail =
-  Seq(
-    "javax" % "javaee-api" % "7.0",
-    "javax.mail" % "mail" % "1.4")
+lazy val play =
+  project
+    .dependsOn(
+      jwt,
+      `service-response`,
+      uri,
+      utils
+    )
+    .settings(commons)
 
-libraryDependencies ++=
-  utils ++
-    play ++
-    mail ++
-    redis ++
-    sqlPersistence :+
-    "org.scalatest" %% "scalatest" % "3.0.1" % Test
+lazy val redis =
+  project
+    .settings(commons)
+
+lazy val `service-response` =
+  project
+    .settings(commons)
+
+lazy val slick =
+  project
+    .settings(commons)
+
+lazy val uri =
+  project
+    .settings(commons)
+
+lazy val utils =
+  project
+    .dependsOn(uri)
+    .settings(commons)
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath

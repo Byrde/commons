@@ -31,8 +31,8 @@ Temporary Items
 # =========================
 
 # Windows image file caches
-Thumbs.db
-ehthumbs.db
+Thumbs.org.byrde.slick.db
+ehthumbs.org.byrde.slick.db
 
 # Folder config file
 Desktop.ini
