@@ -1,4 +1,4 @@
-name := "email"
+name := """email"""
 
 libraryDependencies ++=
   Dependencies.EmailDependencies ++ Dependencies.PlayDependencies

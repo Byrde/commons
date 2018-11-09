@@ -1,11 +1,5 @@
 sudo: required
 
-# Define the following to reuse:
-# - CLOUDSMITH_API_KEY
-# - NAME
-# - ORGANIZATION
-# - COMPILE_DIRECTORY
-
 # Defacto version and lang used in most Byrde projects.
 language: scala
 jdk: oraclejdk8
@@ -61,7 +55,7 @@ after_success:
 
       for (( i=0; i<${#array[@]}; i++ ));
       do
-        cd "$TRAVIS_BUILD_DIR/${array[$i]}/COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
+        cd "$TRAVIS_BUILD_DIR/${array[$i]}/$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
         cloudsmith push maven byrde/libraries "${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
       done
     fi

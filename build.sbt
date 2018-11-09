@@ -15,10 +15,6 @@ val commons =
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))))
 
-lazy val `akka-http` =
-  project
-    .settings(commons)
-
 lazy val clients =
   project
     .dependsOn(
