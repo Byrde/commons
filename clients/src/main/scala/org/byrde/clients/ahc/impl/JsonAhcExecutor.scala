@@ -5,7 +5,7 @@ import org.byrde.clients.ahc.impl.JsonAhcExecutor.JsParsingError
 import org.byrde.clients.circuitbreaker.CircuitBreakerLike
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.utils.ServiceResponseUtils._
-import org.byrde.service.response.{ModelValidationException, ServiceResponse, ServiceResponseType}
+import org.byrde.service.response.{ServiceResponse, ServiceResponseType}
 import org.byrde.uri.Path
 import org.byrde.utils.JsonUtils
 
@@ -13,11 +13,18 @@ import play.api.libs.json._
 import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, StandaloneWSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
+import scala.reflect.{ClassTag, classTag}
+import scala.util.control.NoStackTrace
 
 abstract class JsonAhcExecutor extends AhcExecutor {
   self =>
   import JsonAhcExecutor.JsValue2ServiceResponseError
+
+  private case class ModelValidationException[A: ClassTag](errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])])
+    extends Throwable(
+      s"""
+         |Error parsing: ${classTag[A].runtimeClass},
+         |errors: [${formatErrors(errors)}]""".stripMargin) with NoStackTrace
 
   def ec: ExecutionContext
 
@@ -52,6 +59,18 @@ abstract class JsonAhcExecutor extends AhcExecutor {
               func(JsParsingError(response, err))
             }
       }
+
+  private def formatErrors(errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])]): String =
+    errors.foldLeft("") {
+      case (acc, err) =>
+        val error =
+          s"(path: ${err._1.toString()}, errors: [${err._2.map(_.messages.mkString(" ")).mkString(", ")}])"
+
+        if (acc.isEmpty)
+          error
+        else
+          s"$acc, $error"
+    }
 }
 
 object JsonAhcExecutor {

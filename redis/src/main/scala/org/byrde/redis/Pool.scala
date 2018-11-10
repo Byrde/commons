@@ -1,10 +1,32 @@
 package org.byrde.redis
 import org.byrde.redis.conf.RedisConfig
 
-import redis.clients.jedis.JedisPool
+import redis.clients.jedis.{Jedis, JedisPool}
+
+class Pool(val underlying: JedisPool) {
+  def withClient[T](body: Dress.Wrap => T): T = {
+    val jedis: Jedis =
+      underlying.getResource
+
+    try
+      body(Dress.up(jedis))
+    finally
+      underlying.returnResourceObject(jedis)
+  }
+
+  def withJedisClient[T](body: Jedis => T): T = {
+    val jedis: Jedis =
+      underlying.getResource
+
+    try
+      body(jedis)
+    finally
+      underlying.returnResourceObject(jedis)
+  }
+}
 
 object Pool {
-  def apply(config: RedisConfig): org.byrde.sedis.Pool = {
+  def apply(config: RedisConfig): Pool = {
     val jedisPool =
       new JedisPool(
         config.poolConfig,
@@ -14,6 +36,6 @@ object Pool {
         config.password,
         config.database)
 
-    new org.byrde.sedis.Pool(jedisPool)
+    new Pool(jedisPool)
   }
 }

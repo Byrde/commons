@@ -1,5 +1,5 @@
 package org.byrde.slick
 
-trait BaseEntity {
+trait Entity {
   def id: Long
 }

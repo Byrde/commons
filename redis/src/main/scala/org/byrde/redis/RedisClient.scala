@@ -13,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.reflect.ClassTag
 
-class RedisClient(val namespace: String, val pool: org.byrde.sedis.Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
+class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
   private val namespacedKey: String => String =
     x => s"$namespace::$x"
 

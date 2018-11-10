@@ -24,7 +24,7 @@ case class Path(path: Seq[String], queries: Queries = Queries.empty) {
 
 object Path {
   val context: URL =
-    new URL("http", "na.com", "")
+    new URL("http", "example.com", "")
 
   def empty(queries: Queries = Queries.empty): Path =
     Path(Nil, queries)

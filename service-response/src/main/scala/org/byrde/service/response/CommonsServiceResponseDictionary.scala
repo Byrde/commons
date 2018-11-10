@@ -1,4 +1,5 @@
 package org.byrde.service.response
+
 import org.byrde.service.response.exceptions.{ClientException, ServerException}
 
 // Commons codes are between 1 - 1000;
@@ -19,6 +20,7 @@ object CommonsServiceResponseDictionary {
   object E0401 extends ClientException("Unauthorized", 401, 401)
   object E0403 extends ClientException("Forbidden", 403, 403)
   object E0404 extends ClientException("Not Found", 404, 404)
+  object E0405 extends ClientException("Method Not Allowed", 405, 405)
   object E0415 extends ClientException("Unsupported Media Type", 415, 415)
   // Server errors (500 - 999)
   object E0500 extends ServerException("Internal Server Error", 500, 500)

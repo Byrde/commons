@@ -5,7 +5,7 @@ import org.byrde.slick.db.Db
 
 import scala.concurrent.Future
 
-trait Repository[R <: Role] {
+trait DAO[R <: Role] {
   self: Profile[R] with Db[R] =>
     import profile.api._
 

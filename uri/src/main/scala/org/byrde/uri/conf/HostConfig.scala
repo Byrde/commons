@@ -18,6 +18,7 @@ object HostConfig {
         .get[String](_protocol) match {
           case "http" =>
             Protocol.http
+
           case "https" =>
             Protocol.https
         }

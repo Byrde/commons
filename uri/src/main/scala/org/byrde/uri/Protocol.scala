@@ -6,8 +6,11 @@ case class Protocol(protocol: String) extends AnyVal {
 }
 
 object Protocol {
-  lazy val http  = new Protocol("http://")
-  lazy val https = new Protocol("https://")
+  lazy val http  =
+    new Protocol("http://")
+
+  lazy val https =
+    new Protocol("https://")
 
   def fromString: String => Protocol = {
     case "https" =>
