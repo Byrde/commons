@@ -1,4 +1,5 @@
 package org.byrde.akka.http.logging
+
 import org.byrde.logging.JsonLoggingFormat
 
 import akka.http.scaladsl.model.HttpRequest

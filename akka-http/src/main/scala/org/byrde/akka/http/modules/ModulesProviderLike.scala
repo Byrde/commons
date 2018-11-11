@@ -1,12 +1,24 @@
 package org.byrde.akka.http.modules
+
 import org.byrde.akka.http.conf.ConfigLike
 import org.byrde.akka.http.libs.typedmap.{TypedEntry, TypedKey}
+import org.byrde.akka.http.logging.{HttpErrorLogging, HttpRequestLogging}
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
 
+import scala.language.higherKinds
+
 trait ModulesProviderLike[RuntimeModulesExt[T] <: RuntimeModulesLike[T]] {
+  def SuccessCode: Int
+
+  def ErrorCode: Int
+
   def config: ConfigLike
 
   def akka: AkkaLike
+
+  def RequestLogger: HttpRequestLogging
+
+  def ErrorLogger: HttpErrorLogging
 
   def ModulesAttr[Req]: TypedKey[RuntimeModulesExt[Req]] =
     TypedKey[RuntimeModulesExt[Req]]("Modules")
