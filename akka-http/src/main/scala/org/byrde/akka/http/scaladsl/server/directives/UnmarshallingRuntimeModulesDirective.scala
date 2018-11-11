@@ -13,12 +13,11 @@ import scala.reflect.ClassTag
 
 trait UnmarshallingRuntimeModulesDirective [
   RuntimeModulesExt[T] <: RuntimeModulesLike[T],
-  ModulesExt <: ModulesProviderLike[RuntimeModulesExt],
-  RuntimeModulesBuilderExt <: RuntimeModulesLike.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
+  ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
 ] extends UnmarshallingRequestWithJsonRequestDirective {
   def provider: ModulesExt
 
-  def builder: RuntimeModulesBuilderExt
+  def builder: RuntimeModulesLike.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 
   override def requestWithEntity[T](um: FromEntityUnmarshaller[T]): Directive1[HttpRequestWithEntity[T]] =
     super.requestWithEntity(um).tflatMap(tup => appendAttrs(tup._1))

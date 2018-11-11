@@ -2,6 +2,7 @@ package org.byrde.akka.http
 
 import org.byrde.akka.http.conf.CORSConfig
 import org.byrde.akka.http.logging.{HttpErrorLogging, HttpRequestLogging}
+import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
 import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
 import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
 import org.byrde.akka.http.support.RequestResponseHandlingSupport
@@ -16,18 +17,17 @@ import scala.language.higherKinds
 
 trait ServerLike [
   RuntimeModulesExt[T] <: RuntimeModulesLike[T],
-  ModulesExt <: ModulesProviderLike[RuntimeModulesExt],
-  RuntimeModulesBuilderExt <: RuntimeModulesLike.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
+  ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
 ] extends RequestResponseHandlingSupport {
   self =>
 
   type Domain = String
 
-  trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt, RuntimeModulesBuilderExt] {
+  trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt] {
     override lazy val provider: ModulesExt =
       self.provider
 
-    override lazy val builder: RuntimeModulesBuilderExt =
+    override lazy val builder: RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt] =
       self.builder
   }
 
@@ -40,7 +40,7 @@ trait ServerLike [
 
   def provider: ModulesExt
 
-  def builder: RuntimeModulesBuilderExt
+  def builder: RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 
   def map: Map[Domain, RouteLike]
 
@@ -70,7 +70,7 @@ trait ServerLike [
   lazy val CORSConfig: CORSConfig =
     provider.config.cors
 
-  private def reduceRouteMap(pathBindings: Map[Domain, RouteLike]): Route =
+  def reduceRouteMap(pathBindings: Map[Domain, RouteLike]): Route =
     pathBindings.map {
       case (k, v) =>
         pathPrefix(k)(v.routes)

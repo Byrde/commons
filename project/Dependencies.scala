@@ -54,8 +54,8 @@ object Dependencies extends DependencyBuilders {
 
   val SlickDependencies =
     Seq(
-      "com.typesafe.slick" %% "slick-hikaricp"  % SlickVersion,
-      "com.typesafe.slick" %% "slick"           % SlickVersion)
+      "com.typesafe.slick" %% "slick-hikaricp"      % SlickVersion,
+      "com.typesafe.slick" %% "slick"               % SlickVersion)
 
   val PlayDependencies =
     Seq(
