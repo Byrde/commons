@@ -51,7 +51,7 @@ after_success:
       SCALA_MAJOR_VERSION="${VERSIONS_DENOTATION[0]}.${VERSIONS_DENOTATION[1]}";
       echo "Current Scala version: $SCALA_MAJOR_VERSION";
 
-      declare -a array=("clients" "email" "jwt" "play" "redis" "service-response" "slick" "uri" "utils")
+      declare -a array=("akka-http" "clients" "email" "jwt" "play" "redis" "service-response" "slick" "uri" "utils")
 
       for (( i=0; i<${#array[@]}; i++ ));
       do

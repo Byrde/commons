@@ -56,6 +56,18 @@ trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestW
       }
   }
 
+  private def formatErrors(errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])]): String =
+    errors.foldLeft("") {
+      case (acc, err) =>
+        val error =
+          s"(path: ${err._1.toString()}, errors: [${err._2.map(_.messages.mkString(" ")).mkString(", ")}])"
+
+        if (acc.isEmpty)
+          error
+        else
+          s"$acc, $error"
+    }
+
   def requestWithJsonEntity[T: ClassTag](errorCode: Int)(fn: HttpRequestWithEntity[T] => Route)(implicit reads: Reads[T]): Route = {
     val pf: PartialFunction[Try[(T, HttpRequest)],
                             Directive1[HttpRequestWithEntity[T]]] = {
@@ -71,18 +83,6 @@ trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestW
 
     directive[T](pf.orElse(handler))(unmarshaller[T])(fn)
   }
-
-  private def formatErrors(errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])]): String =
-    errors.foldLeft("") {
-      case (acc, err) =>
-        val error =
-          s"(path: ${err._1.toString()}, errors: [${err._2.map(_.messages.mkString(" ")).mkString(", ")}])"
-
-        if (acc.isEmpty)
-          error
-        else
-          s"$acc, $error"
-    }
 }
 
 object UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestWithJsonRequestDirective
