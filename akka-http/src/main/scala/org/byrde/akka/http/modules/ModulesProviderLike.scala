@@ -1,10 +1,7 @@
-package org.byrde.akka.http
-
+package org.byrde.akka.http.modules
 import org.byrde.akka.http.conf.ConfigLike
 import org.byrde.akka.http.libs.typedmap.{TypedEntry, TypedKey}
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
-
-import scala.language.higherKinds
 
 trait ModulesProviderLike[RuntimeModulesExt[T] <: RuntimeModulesLike[T]] {
   def config: ConfigLike

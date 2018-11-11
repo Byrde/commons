@@ -1,6 +1,6 @@
 package org.byrde.akka.http.scaladsl.server.directives
 
-import org.byrde.akka.http.{ModulesProviderLike, RuntimeModulesLike}
+import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
 
 import akka.http.scaladsl.server.directives.BasicDirectives.provide
 import akka.http.scaladsl.server.{Directive1, Route}

@@ -1,4 +1,4 @@
-package org.byrde.akka.http
+package org.byrde.akka.http.modules
 
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
 
