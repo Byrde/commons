@@ -12,9 +12,9 @@ import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
 
 trait Server [
-  RuntimeModulesExt[T] <: RuntimeModules[T],
-  ModulesExt <: ModulesProvider[RuntimeModulesExt],
-  RuntimeModulesBuilderExt <: RuntimeModules.RuntimeModulesBuilder[RuntimeModulesExt, ModulesExt]
+  RuntimeModulesExt[T] <: RuntimeModulesLike[T],
+  ModulesExt <: ModulesProviderLike[RuntimeModulesExt],
+  RuntimeModulesBuilderExt <: RuntimeModulesLike.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 ] extends RouteSupport with RequestResponseHandlingSupport {
   self =>
 

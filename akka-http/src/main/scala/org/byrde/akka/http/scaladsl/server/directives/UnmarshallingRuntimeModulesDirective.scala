@@ -1,6 +1,6 @@
 package org.byrde.akka.http.scaladsl.server.directives
 
-import org.byrde.akka.http.{ModulesProvider, RuntimeModules}
+import org.byrde.akka.http.{ModulesProviderLike, RuntimeModulesLike}
 
 import akka.http.scaladsl.server.directives.BasicDirectives.provide
 import akka.http.scaladsl.server.{Directive1, Route}
@@ -12,9 +12,9 @@ import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 trait UnmarshallingRuntimeModulesDirective [
-  RuntimeModulesExt[T] <: RuntimeModules[T],
-  ModulesExt <: ModulesProvider[RuntimeModulesExt],
-  RuntimeModulesBuilderExt <: RuntimeModules.RuntimeModulesBuilder[RuntimeModulesExt, ModulesExt]
+  RuntimeModulesExt[T] <: RuntimeModulesLike[T],
+  ModulesExt <: ModulesProviderLike[RuntimeModulesExt],
+  RuntimeModulesBuilderExt <: RuntimeModulesLike.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 ] extends UnmarshallingRequestWithJsonRequestDirective {
   def provider: ModulesExt
 

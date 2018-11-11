@@ -4,10 +4,10 @@ import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
 
 import scala.language.higherKinds
 
-trait RuntimeModules[Req]
+trait RuntimeModulesLike[Req]
 
-object RuntimeModules {
-  trait RuntimeModulesBuilder[RuntimeModulesExt[T] <: RuntimeModules[T], ModulesExt <: ModulesProvider[RuntimeModulesExt]] {
+object RuntimeModulesLike {
+  trait RuntimeModulesBuilderLike[RuntimeModulesExt[T] <: RuntimeModulesLike[T], ModulesExt <: ModulesProviderLike[RuntimeModulesExt]] {
     def apply[Req](provider: ModulesExt)(implicit req: HttpRequestWithEntity[Req]): RuntimeModulesExt[Req]
   }
 }
