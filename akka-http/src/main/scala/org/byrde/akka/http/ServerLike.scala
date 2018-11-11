@@ -31,7 +31,7 @@ trait ServerLike [
       self.builder
   }
 
-  trait RouteMixin extends RouteLike[RuntimeModulesExt, ModulesExt] {
+  trait RouteMixin extends RouteLike {
     override lazy val SuccessCode: Int =
       self.SuccessCode
   }
@@ -42,7 +42,7 @@ trait ServerLike [
 
   def builder: RuntimeModulesBuilderExt
 
-  def map: Map[Domain, RouteLike[RuntimeModulesExt, ModulesExt]]
+  def map: Map[Domain, RouteLike]
 
   implicit def system: ActorSystem =
     provider.akka.system
@@ -70,7 +70,7 @@ trait ServerLike [
   lazy val CORSConfig: CORSConfig =
     provider.config.cors
 
-  private def reduceRouteMap(pathBindings: Map[Domain, RouteLike[RuntimeModulesExt, ModulesExt]]): Route =
+  private def reduceRouteMap(pathBindings: Map[Domain, RouteLike]): Route =
     pathBindings.map {
       case (k, v) =>
         pathPrefix(k)(v.routes)
