@@ -19,16 +19,17 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
 
   def requestResponseHandler(route: Route): Route =
     cors {
-      requestId {
-        case (request, id) =>
+      requestId { id =>
           handleExceptions(exceptionHandler) {
             addRequestId(id) {
               addResponseId(id) {
-                val start =
-                  System.currentTimeMillis
+                extractRequest { request =>
+                  val start =
+                    System.currentTimeMillis
 
-                bagAndTag(request, id, start) {
-                  route
+                  bagAndTag(start, request) {
+                    route
+                  }
                 }
               }
             }
@@ -36,19 +37,18 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
       }
     }
 
-  private def requestId: Directive1[(HttpRequest, IdHeader)] =
-    extractRequestContext.flatMap[Tuple1[(HttpRequest, IdHeader)]] { ctx =>
+  private def requestId: Directive1[IdHeader] =
+    extractRequestContext.flatMap[Tuple1[IdHeader]] { ctx =>
       provide {
-        ctx.request ->
-          ctx
-            .request
-            .headers
-            .find(_.name().equalsIgnoreCase(IdHeader.name))
-            .map(_.value())
-            .map(IdHeader.apply)
-            .getOrElse {
-              IdHeader(UUID.randomUUID.toString)
-            }
+        ctx
+          .request
+          .headers
+          .find(_.name().equalsIgnoreCase(IdHeader.name))
+          .map(_.value())
+          .map(IdHeader.apply)
+          .getOrElse {
+            IdHeader(UUID.randomUUID.toString)
+          }
       }
     }
 
@@ -67,14 +67,13 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
         headers
     }
 
-  private def bagAndTag(req: HttpRequest, id: IdHeader, start: Long): Directive0 =
+  private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
     mapResponse { response =>
       RequestLogger
         .request(
-          id.value(),
           System.currentTimeMillis() - start,
           response.status.toString(),
-          req
+          request
         )
 
       response

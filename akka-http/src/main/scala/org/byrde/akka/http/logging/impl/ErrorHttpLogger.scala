@@ -14,6 +14,6 @@ class ErrorHttpLogger(val system: ActorSystem) extends HttpErrorLogging {
   override val logger: LoggingAdapter =
     Logging(system, name)
 
-  def error[T](elem: HttpRequest, throwable: Throwable)(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, Throwable)]): Unit =
-    logger.error(loggingInformation.format(throwable.getMessage, elem -> throwable).toString)
+  def error[T](request: HttpRequest, throwable: Throwable)(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, Throwable)]): Unit =
+    logger.error(loggingInformation.format(throwable.getMessage, request -> throwable).toString)
 }

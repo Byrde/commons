@@ -16,14 +16,13 @@ class RequestHttpLogger(val system: ActorSystem) extends HttpRequestLogging {
   override val logger: LoggingAdapter =
     Logging(system, name)
 
-  def request(id: String, epoch: Long, status: String, req: HttpRequest)(implicit loggingInformation: JsonLoggingFormat[HttpRequest]): Unit = {
+  def request(epoch: Long, status: String, request: HttpRequest)(implicit loggingInformation: JsonLoggingFormat[HttpRequest]): Unit = {
     val innerRequest =
       Json.obj(
-        "id" -> JsString(id),
         "status" -> JsString(status),
         "epoch" -> JsString(s"${epoch}ms")
       )
 
-    logger.info((innerRequest ++ loggingInformation.format(req)).toString())
+    logger.info((innerRequest ++ loggingInformation.format(request)).toString())
   }
 }

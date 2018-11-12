@@ -6,7 +6,7 @@ import org.byrde.logging.{JsonLoggingFormat, Logging}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpRequest
 
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsString, Json}
 
 trait HttpLogging {
   val logger: LoggingAdapter
@@ -40,7 +40,13 @@ object HttpLogging {
   implicit object HttpRequestInformationJsonLogginFormat extends JsonLoggingFormat[HttpRequest] {
     override def format(elem: HttpRequest): JsObject =
       Json.obj(
-        "id" -> elem.header[IdHeader].fold("None")(header => header.id.toString),
+        "id" -> {
+          elem
+            .headers
+            .find(_.name().equalsIgnoreCase(IdHeader.name))
+            .map(_.value())
+            .fold(JsString("None"))(JsString.apply)
+        },
         "uri" -> elem.uri.toString,
         "method" -> elem.method.value.toString,
         "headers" -> elem.headers.map(header => s"${header.name}: ${header.value}"),
