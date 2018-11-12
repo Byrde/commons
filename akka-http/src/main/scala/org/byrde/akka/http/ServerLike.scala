@@ -23,6 +23,8 @@ trait ServerLike [
 
   type Domain = String
 
+  type Version = String
+
   trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt] {
     override lazy val provider: ModulesExt =
       self.provider
@@ -42,7 +44,7 @@ trait ServerLike [
 
   def builder: RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 
-  def map: Map[Domain, RouteLike]
+  def map: Map[Version, Map[Domain, RouteLike]]
 
   implicit def system: ActorSystem =
     provider.akka.system
@@ -70,9 +72,16 @@ trait ServerLike [
   lazy val CORSConfig: CORSConfig =
     provider.config.cors
 
-  def reduceRouteMap(pathBindings: Map[Domain, RouteLike]): Route =
+  def reduceRouteMap(pathBindings: Map[Version, Map[Domain, RouteLike]]): Route =
     pathBindings.map {
       case (k, v) =>
-        pathPrefix(k)(v.routes)
+        pathPrefix(k) {
+          v.map {
+            case (k2, v2) =>
+              pathPrefix(k2) {
+                v2.route
+              }
+          } reduce (_ ~ _)
+        }
     } reduce (_ ~ _)
 }

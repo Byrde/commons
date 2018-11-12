@@ -14,15 +14,18 @@ object CORSConfig {
             config: Configuration): CORSConfig = {
     val origins =
       config
-        .get[Seq[String]](_origins)
+        .get[String](_origins)
+        .split(", ")
 
     val methods =
       config
-        .get[Seq[String]](_methods)
+        .get[String](_methods)
+        .split(", ")
 
     val headers =
       config
-        .get[Seq[String]](_headers)
+        .get[String](_headers)
+        .split(", ")
 
     CORSConfig(origins, methods, headers)
   }
