@@ -20,10 +20,7 @@ import scala.util.{Failure, Try}
 
 trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestWithRequestDirective {
   private case class ModelValidationException[A: ClassTag](errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])])
-    extends Throwable(
-      s"""
-         |Error parsing: ${classTag[A].runtimeClass},
-         |errors: [${formatErrors(errors)}]""".stripMargin) with NoStackTrace
+    extends Throwable(s"Error parsing: ${classTag[A].runtimeClass}, errors: [${formatErrors(errors)}]") with NoStackTrace
 
   private val unmarshallerContentTypes: Seq[ContentTypeRange] =
     List(`application/json`)

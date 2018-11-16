@@ -20,7 +20,7 @@ object Dependencies extends DependencyBuilders {
     "2.6.20"
 
   val PlayAhcVersion =
-    "2.0.0-RC1"
+    "2.0.0-M2"
 
   val SlickVersion =
     "3.2.3"
