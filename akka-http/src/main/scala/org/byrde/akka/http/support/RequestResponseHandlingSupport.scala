@@ -20,20 +20,22 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
   def requestResponseHandler(route: Route): Route =
     cors {
       requestId { id =>
-          handleExceptions(exceptionHandler) {
-            addRequestId(id) {
-              addResponseId(id) {
-                extractRequest { request =>
-                  val start =
-                    System.currentTimeMillis
+        addRequestId(id) {
+          addResponseId(id) {
+            extractRequest { request =>
+              val start =
+                System.currentTimeMillis
 
-                  bagAndTag(start, request) {
+              bagAndTag(start, request) {
+                handleRejections(rejectionHandler) {
+                  handleExceptions(exceptionHandler) {
                     route
                   }
                 }
               }
             }
           }
+        }
       }
     }
 
