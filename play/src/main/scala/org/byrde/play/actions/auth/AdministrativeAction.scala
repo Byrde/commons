@@ -15,21 +15,22 @@ case class AdministrativeAction(_failSafe: Option[Call])(override implicit val e
   private lazy val failsafe =
     _failSafe.fold(throw E0401)(Results.Redirect(_).withNewSession)
 
-  def hasDataPrivileges(jwt: Jwt): Boolean = {
-    jwt.getClaim[Admin] match {
-      case Some(admin) =>
-        Try(admin.value.toBoolean).toOption
-          .fold(false)(_ => true)
-      case _ =>
-        false
-    }
-  }
-
   def filter[A](request: AuthenticatedRequest[A]): Future[Option[Result]] =
     Future.successful {
-      if (hasDataPrivileges(request.jwt))
+      if (hasAdminPrivileges(request.jwt))
         None
       else
         Some(failsafe)
+    }
+
+  private def hasAdminPrivileges(jwt: Jwt): Boolean =
+    jwt.getClaim[Admin] match {
+      case Some(admin) =>
+        Try(admin.value.toBoolean)
+          .toOption
+          .fold(false)(_ => true)
+
+      case _ =>
+        false
     }
 }

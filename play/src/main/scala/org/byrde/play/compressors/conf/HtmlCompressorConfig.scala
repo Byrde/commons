@@ -40,12 +40,16 @@ object HtmlCompressorConfig {
             config: Configuration): HtmlCompressorConfig = {
     val lineBreak =
       config.getOptional[Boolean](_lineBreak).getOrElse(true)
+
     val comments =
       config.getOptional[Boolean](_comments).getOrElse(false)
+
     val intSpace =
       config.getOptional[Boolean](_intSpace).getOrElse(false)
+
     val rHttp =
       config.getOptional[Boolean](_rHttp).getOrElse(false)
+
     val rHttps =
       config.getOptional[Boolean](_rHttps).getOrElse(false)
 

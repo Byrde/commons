@@ -15,9 +15,11 @@ case class JsResultCompressor(jsConfig: JsCompressorConfig)(implicit mat: Materi
     jsConfig.compressor
 
   override def isCompressible(result: _root_.play.api.mvc.Result): Boolean = {
-    val contentType = result.body.contentType.exists {
-      _.contains(MimeTypes.JAVASCRIPT)
-    }
+    val contentType =
+      result.body
+        .contentType
+        .exists(_.contains(MimeTypes.JAVASCRIPT))
+
     super.isCompressible(result) && contentType
   }
 }

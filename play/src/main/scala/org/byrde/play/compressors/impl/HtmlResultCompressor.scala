@@ -15,9 +15,12 @@ case class HtmlResultCompressor(htmlConfig: HtmlCompressorConfig)(implicit mat: 
     htmlConfig.compressor
 
   override def isCompressible(result: _root_.play.api.mvc.Result): Boolean = {
-    val contentType = result.body.contentType.exists {
-      _.contains(MimeTypes.HTML)
-    }
+    val contentType =
+      result
+        .body
+        .contentType
+        .exists(_.contains(MimeTypes.HTML))
+
     super.isCompressible(result) && contentType
   }
 }

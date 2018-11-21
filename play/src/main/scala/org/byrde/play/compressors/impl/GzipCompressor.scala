@@ -1,4 +1,5 @@
 package org.byrde.play.compressors.impl
+
 import java.util.zip.GZIPOutputStream
 
 import akka.stream.Materializer
@@ -25,9 +26,7 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
           Future.successful(
             Result(header, compressStrictEntity(data, contentType)))
 
-        case entity @ HttpEntity.Streamed(_,
-                                          Some(contentLength),
-                                          contentType) =>
+        case entity @ HttpEntity.Streamed(_, Some(_), contentType) =>
           // It's below the chunked threshold, so buffer then compress and send
           entity.consumeData.map { data =>
             Result(header, compressStrictEntity(data, contentType))
@@ -35,8 +34,9 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
 
         case HttpEntity.Streamed(data, _, contentType) =>
           // It's above the chunked threshold, compress through the gzip flow, and send as chunked
-          val gzipped = data via GzipFlow.gzip(1024) map (d =>
-            HttpChunk.Chunk(d))
+          val gzipped =
+            data via GzipFlow.gzip(1024) map (d => HttpChunk.Chunk(d))
+
           Future.successful(
             Result(header, HttpEntity.Chunked(gzipped, contentType)))
 
@@ -50,8 +50,11 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
 
   private def compressStrictEntity(data: ByteString,
                                    contentType: Option[String]) = {
-    val builder = ByteString.newBuilder
-    val gzipOs  = new GZIPOutputStream(builder.asOutputStream, 1024, true)
+    val builder =
+      ByteString.newBuilder
+
+    val gzipOs =
+      new GZIPOutputStream(builder.asOutputStream, 1024, true)
 
     gzipOs.write(data.toArray)
     gzipOs.close()
@@ -76,8 +79,7 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
         0d
 
     def qvalue(coding: String) =
-      explicitQValue(coding) orElse explicitQValue("*") getOrElse defaultQValue(
-        coding)
+      explicitQValue(coding) orElse explicitQValue("*") getOrElse defaultQValue(coding)
 
     qvalue("gzip") > 0d && qvalue("gzip") >= qvalue("identity")
   }
@@ -117,11 +119,14 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
                               headerName: String,
                               headerValue: String): (String, String) = {
     existingHeaders.get(headerName) match {
-      case None => (headerName, headerValue)
-      case Some(existing)
-          if existing.split(",").exists(_.trim.equalsIgnoreCase(headerValue)) =>
+      case None =>
+        (headerName, headerValue)
+
+      case Some(existing) if existing.split(",").exists(_.trim.equalsIgnoreCase(headerValue)) =>
         (headerName, existing)
-      case Some(existing) => (headerName, s"$existing,$headerValue")
+
+      case Some(existing) =>
+        (headerName, s"$existing,$headerValue")
     }
   }
 
@@ -133,8 +138,11 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
       value = value0.trim
     } yield {
       RequestHeader.qPattern.findFirstMatchIn(value) match {
-        case Some(m) => (m.group(1).toDouble, m.before.toString)
-        case None    => (1.0, value) // “The default value is q=1.”
+        case Some(m) =>
+          (m.group(1).toDouble, m.before.toString)
+
+        case None =>
+          (1.0, value) // “The default value is q=1.”
       }
     }
   }

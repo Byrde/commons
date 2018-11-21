@@ -27,15 +27,19 @@ case class AuthorizedAction(parser: BodyParsers.Default,
     lazy val redirect =
       Future.successful(Results.Redirect(failSafe(request)).withNewSession)
 
+    val tokenFromCookie =
+      request
+        .cookies
+        .get(jwtConfig.tokenName)
+        .fold(Option.empty[String]) { cookie =>
+          Some(cookie.value)
+        }
+
     val tokenOpt =
       request.headers
         .get(jwtConfig.tokenName)
         .orElse(request.session.get(jwtConfig.tokenName))
-        .orElse(
-          request.cookies.get(jwtConfig.tokenName).fold(Option.empty[String]) {
-            cookie =>
-              Some(cookie.value)
-          })
+        .orElse(tokenFromCookie)
 
     tokenOpt.fold(redirect) { token =>
       val configWSalt =

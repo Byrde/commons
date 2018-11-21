@@ -26,11 +26,18 @@ abstract class ResultCompressor[C <: Compressor](implicit mat: Materializer) {
     * @return True if the result is a compressible result, false otherwise.
     */
   def isCompressible(result: Result): Boolean = {
-    val isChunked = result.header.headers
-      .get(TRANSFER_ENCODING)
-      .contains(HttpProtocol.CHUNKED)
-    val isGzipped = result.header.headers.get(CONTENT_ENCODING).contains("gzip")
-    val ret       = !isChunked && !isGzipped
+    val isChunked =
+      result
+        .header
+        .headers
+        .get(TRANSFER_ENCODING)
+        .contains(HttpProtocol.CHUNKED)
+
+    val isGzipped =
+      result.header.headers.get(CONTENT_ENCODING).contains("gzip")
+
+    val ret =
+      !isChunked && !isGzipped
 
     ret
   }
@@ -45,29 +52,39 @@ abstract class ResultCompressor[C <: Compressor](implicit mat: Materializer) {
     def compress(data: ByteString) =
       compressor.compress(data.decodeString("UTF-8").trim).getBytes("UTF-8")
 
-    if (isCompressible(result)) {
+    if (isCompressible(result))
       result.body match {
         case HttpEntity.Strict(data, contentType) =>
           Future.successful(
             Result(result.header,
                    HttpEntity.Strict(ByteString(compress(data)), contentType)))
+
         case HttpEntity.Streamed(data, _, _) =>
-          data.toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right).run() map {
-            bytes =>
-              val compressed = compress(bytes)
-              val length     = compressed.length
-              Result(
-                result.header.copy(headers = result.header.headers),
-                HttpEntity.Streamed(Source.single(ByteString(compressed)),
-                                    Some(length.toLong),
-                                    result.body.contentType)
-              )
-          }
+          data
+            .toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right)
+            .run()
+            .map { bytes =>
+              val compressed =
+                compress(bytes)
+
+              val length =
+                compressed.length
+
+              val entity =
+                HttpEntity
+                  .Streamed(
+                    Source.single(ByteString(compressed)),
+                    Some(length.toLong),
+                    result.body.contentType
+                  )
+
+              Result(result.header.copy(headers = result.header.headers), entity)
+            }
+
         case _ =>
           Future.successful(result)
       }
-    } else {
+    else
       Future.successful(result)
-    }
   }
 }
