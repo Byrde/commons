@@ -1,5 +1,6 @@
 package org.byrde.clients.ahc
 
+import org.byrde.clients.ahc.conf.ServiceConfig
 import org.byrde.clients.ahc.filters.AhcCurlRequestFilter
 import org.byrde.uri.{Host, Path, Url}
 import org.byrde.utils.RequestUtils._
@@ -22,7 +23,10 @@ trait AhcExecutor {
       clazz.getSimpleName
   }
 
-  def host: Host
+  val host: Host =
+    config.host
+
+  def config: ServiceConfig
 
   def client: StandaloneWSClient
 
