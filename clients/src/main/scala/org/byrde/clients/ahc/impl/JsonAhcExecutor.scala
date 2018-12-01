@@ -3,11 +3,14 @@ package org.byrde.clients.ahc.impl
 import org.byrde.clients.ahc.AhcExecutor
 import org.byrde.clients.ahc.impl.JsonAhcExecutor.JsParsingError
 import org.byrde.clients.circuitbreaker.CircuitBreakerLike
+import org.byrde.clients.circuitbreaker.impl.ClientCircuitBreaker
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.utils.ServiceResponseUtils._
 import org.byrde.service.response.{ServiceResponse, ServiceResponseType}
 import org.byrde.uri.Path
 import org.byrde.utils.JsonUtils
+
+import akka.actor.ActorSystem
 
 import play.api.libs.json._
 import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, StandaloneWSResponse}
@@ -26,9 +29,16 @@ abstract class JsonAhcExecutor extends AhcExecutor {
          |Error parsing: ${classTag[A].runtimeClass},
          |errors: [${formatErrors(errors)}]""".stripMargin) with NoStackTrace
 
+  val circuitBreaker: CircuitBreakerLike =
+    new ClientCircuitBreaker(
+      name,
+      system.scheduler,
+      config.circuitBreakerConfig
+    )(org.byrde.utils.ThreadPools.Trampoline)
+
   def ec: ExecutionContext
 
-  def circuitBreaker: CircuitBreakerLike
+  def system: ActorSystem
 
   def get[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[T]] = None)(implicit format: Format[T]): Future[ServiceResponse[T]] =
     super.underlyingGet(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(ec)
