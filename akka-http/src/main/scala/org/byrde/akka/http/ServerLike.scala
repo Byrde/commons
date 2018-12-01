@@ -6,10 +6,12 @@ import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
 import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
 import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
 import org.byrde.akka.http.support.RequestResponseHandlingSupport
+import org.byrde.service.response.CommonsServiceResponseDictionary.E0200
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives.{pathPrefix, _}
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
@@ -58,9 +60,16 @@ trait ServerLike [
   lazy val ErrorCode: Int =
     provider.ErrorCode
 
+  lazy val ping: Route =
+    path("ping") {
+      get {
+        complete(E0200("Pong!"))
+      }
+    }
+
   lazy val routes: Route =
     requestResponseHandler {
-      reduceRouteMap(map)
+      ping ~ reduceRouteMap(map)
     }
 
   lazy val RequestLogger: HttpRequestLogging =
