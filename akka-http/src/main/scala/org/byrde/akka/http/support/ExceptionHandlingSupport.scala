@@ -1,7 +1,7 @@
 package org.byrde.akka.http.support
 
 import org.byrde.akka.http.logging.HttpErrorLogging
-import org.byrde.akka.http.rejections.JsonParsingRejections
+import org.byrde.akka.http.rejections.{JsonParsingRejections, TransientServiceResponseRejections}
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0200, E0405, E0500}
 import org.byrde.service.response.ServiceResponse
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
@@ -52,6 +52,7 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
   implicit lazy val rejectionHandler: RejectionHandler =
     registerHandlers
       .withFallback(JsonParsingRejections.handler)
+    .withFallback(TransientServiceResponseRejections.handler)
       .withFallback(RejectionHandler.default)
       .mapRejectionResponse {
         case res @ HttpResponse(_status, _, ent: HttpEntity.Strict, _) =>
