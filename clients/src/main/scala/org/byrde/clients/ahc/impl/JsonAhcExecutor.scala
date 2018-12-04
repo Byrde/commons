@@ -43,11 +43,11 @@ abstract class JsonAhcExecutor extends AhcExecutor {
   def get[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[T]] = None)(implicit format: Format[T]): Future[ServiceResponse[T]] =
     super.underlyingGet(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(ec)
 
-  def post[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[TT]] = None)(implicit bodyWritable: BodyWritable[T], format: Format[TT]): Future[ServiceResponse[TT]] =
-    super.underlyingPost(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
+  def post[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[TT]] = None)(implicit writes: Writes[T], format: Format[TT]): Future[ServiceResponse[TT]] =
+    super.underlyingPost(Json.toJson(body))(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
 
-  def put[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[TT]] = None)(implicit bodyWritable: BodyWritable[T], format: Format[TT]): Future[ServiceResponse[TT]] =
-    super.underlyingPut(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
+  def put[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[TT]] = None)(implicit writes: Writes[T], format: Format[TT]): Future[ServiceResponse[TT]] =
+    super.underlyingPut(Json.toJson(body))(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
 
   def delete[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => ServiceResponse[T]] = None)(implicit format: Format[T]): Future[ServiceResponse[T]] =
     super.underlyingDelete(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(ec)

@@ -11,7 +11,7 @@ import org.byrde.utils.JsonUtils
 import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import akka.http.scaladsl.model.headers.Allow
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, MethodRejection, RejectionHandler}
 
@@ -49,11 +49,14 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
       }
       .result()
 
-  implicit lazy val rejectionHandler: RejectionHandler =
-    registerHandlers
+  private lazy val cachedHandler: RejectionHandler =
+    registerHandlers(default, handlers)
       .withFallback(JsonParsingRejections.handler)
-    .withFallback(TransientServiceResponseRejections.handler)
+      .withFallback(TransientServiceResponseRejections.handler)
       .withFallback(RejectionHandler.default)
+
+  def rejectionHandler(req: HttpRequest): RejectionHandler =
+    cachedHandler
       .mapRejectionResponse {
         case res @ HttpResponse(_status, _, ent: HttpEntity.Strict, _) =>
           val status =
@@ -70,6 +73,8 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
             .getOrElse(JsNull)
             .validate[TransientServiceResponse[String]](ServiceResponse.reads(JsonUtils.Format.string(ServiceResponse.message))) match {
               case JsSuccess(transientServiceResponse, _) =>
+                ErrorLogger.error(req, ServiceResponseException(transientServiceResponse))
+
                 res.copy(
                   status = transientServiceResponse.status,
                   entity =
@@ -82,6 +87,8 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
               case _ =>
                 val clientException =
                   ClientException(normalizeString(response), ErrorCode, status)
+
+                ErrorLogger.error(req, clientException)
 
                 res.copy(
                   status = status,
@@ -106,6 +113,7 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
             case serviceException: ServiceResponseException[_] =>
               ErrorLogger.error(ctx.request, serviceException)
               serviceException
+
             case _ =>
               ErrorLogger.error(ctx.request, exception)
               E0500(exception)
@@ -114,7 +122,7 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
         ctx.complete(Json.toJson(serviceException))
     }
 
-  private def registerHandlers: RejectionHandler = {
+  private def registerHandlers(initialHandlder: RejectionHandler, handlersToBeRegistered: Set[RejectionHandler]): RejectionHandler = {
     @tailrec
     def innerRegisterHandlers(iterator: Iterator[RejectionHandler], innerHandler: RejectionHandler): RejectionHandler =
       if (iterator.hasNext)
@@ -122,7 +130,7 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
       else
         innerHandler
 
-    innerRegisterHandlers(handlers.toIterator, default)
+    innerRegisterHandlers(handlersToBeRegistered.toIterator, initialHandlder)
   }
 
   private def stripLeadingAndTrailingQuotes(value: String): String = {

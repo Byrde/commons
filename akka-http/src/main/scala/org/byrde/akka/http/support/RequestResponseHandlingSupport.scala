@@ -27,7 +27,7 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
                 System.currentTimeMillis
 
               bagAndTag(start, request) {
-                handleRejections(rejectionHandler) {
+                handleRejections(rejectionHandler(request)) {
                   handleExceptions(exceptionHandler) {
                     route
                   }
