@@ -13,7 +13,7 @@ import org.byrde.utils.JsonUtils
 import akka.actor.ActorSystem
 
 import play.api.libs.json._
-import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, StandaloneWSResponse}
+import play.api.libs.ws.{StandaloneWSRequest, StandaloneWSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.{ClassTag, classTag}

@@ -22,8 +22,10 @@ object RequestUtils {
         .flatMap {
           case (headerKey, _) if Headers.proxyHeadersFilter.contains(headerKey.toLowerCase) =>
             None
+
           case (headerKey, _) if newHost.nonEmpty && headerKey.equalsIgnoreCase(Headers.Host) =>
             Some(headerKey -> newHost.get.host.toString)
+
           case (headerKey, headerValue) =>
             Some(headerKey -> headerValue)
         }
