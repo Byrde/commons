@@ -1,4 +1,8 @@
+import sbt.Resolver
 name := """akka-http"""
+
+resolvers +=
+  Resolver.bintrayRepo("hseeberger", "maven")
 
 libraryDependencies ++=
   Dependencies.AkkaDependencies ++ Dependencies.GuiceDependencies
