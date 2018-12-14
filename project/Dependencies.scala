@@ -4,6 +4,9 @@ object Dependencies extends DependencyBuilders {
   val AkkaHttpVersion =
     "10.1.0"
 
+  val AkkaVersion =
+    "2.5.11"
+
   val CompressorVersion =
     "1.5.2"
 
@@ -25,10 +28,17 @@ object Dependencies extends DependencyBuilders {
   val SlickVersion =
     "3.2.3"
 
-  val AkkaHttpDependencies =
+  val AkkaDependencies =
     Seq(
-      "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion,
-      "de.heikoseeberger" %% "akka-http-play-json"  % "1.17.0")
+      "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
+      "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
+      "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
+      "com.typesafe.akka"  %% "akka-stream"            % AkkaVersion,
+      "de.heikoseeberger"  %% "akka-http-play-json"    % "1.21.0",
+
+      "com.typesafe.akka" %% "akka-http-testkit"    % AkkaHttpVersion,
+      "com.typesafe.akka" %% "akka-testkit"         % AkkaVersion,
+      "com.typesafe.akka" %% "akka-stream-testkit"  % AkkaVersion)
 
   val CompressorDependencies =
     Seq(

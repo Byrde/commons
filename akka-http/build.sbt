@@ -1,7 +1,7 @@
 name := """akka-http"""
 
 libraryDependencies ++=
-  Dependencies.AkkaHttpDependencies ++ Dependencies.GuiceDependencies
+  Dependencies.AkkaDependencies ++ Dependencies.GuiceDependencies
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath
