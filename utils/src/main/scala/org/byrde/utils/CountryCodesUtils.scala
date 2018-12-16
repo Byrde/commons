@@ -11,7 +11,7 @@ object CountryCodesUtils {
       .toMap
 
   def findByCountry(country: String): Option[Locale] =
-    countries.get(country)
+    countries.get(normalizeKey(country))
 
   def findByCountryCode(countryCode: String) =
     new Locale(Locale.getDefault.getLanguage, countryCode)
