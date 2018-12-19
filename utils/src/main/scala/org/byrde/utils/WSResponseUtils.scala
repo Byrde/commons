@@ -6,13 +6,16 @@ import play.api.mvc.{ResponseHeader, Result}
 
 object WSResponseUtils {
   implicit class WSResponse2Result(value: StandaloneWSResponse) {
-    @inline def toResult: Result = {
+    @inline def toResult(dropHeaders: Boolean = false): Result = {
       val headers =
-        value
-          .headers
-          .map { header =>
-            header._1 -> header._2.head
-          }
+        if (dropHeaders)
+          Map.empty[String, String]
+        else
+          value
+            .headers
+            .map { header =>
+              header._1 -> header._2.head
+            }
 
       Result(
         ResponseHeader(value.status, headers),
