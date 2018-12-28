@@ -44,6 +44,9 @@ trait AhcExecutor {
   def underlyingDelete(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[StandaloneWSResponse] =
     executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withMethod("DELETE"))
 
+  def underlyingPatch[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T]): Future[StandaloneWSResponse] =
+    executeRequest(requestHook(buildWSRequest(path, curlRequestHook)).withBody(body).withMethod("PATCH"))
+
   def proxy[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit bodyWritable: BodyWritable[T], request: Request[T]): Future[StandaloneWSResponse] =
     executeRequest(requestHook(request.toWSRequest(buildWSRequest(path, curlRequestHook), Some(host))))
 

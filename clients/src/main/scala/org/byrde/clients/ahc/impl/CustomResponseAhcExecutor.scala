@@ -24,6 +24,9 @@ abstract class CustomResponseAhcExecutor extends JsonAhcExecutor {
   def delete[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => T] = None)(implicit reads: Reads[T]): Future[T] =
     super.deleteJson(path, requestHook, curlRequestHook).map(processResponse[T](_, errorHook))(ec)
 
+  def patch[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => (), errorHook: Option[JsParsingError => TT] = None)(implicit writes: Writes[T], reads: Reads[TT]): Future[TT] =
+    super.patchJson(Json.toJson(body))(path, requestHook, curlRequestHook).map(processResponse[TT](_, errorHook))(ec)
+
   private def processResponse[T: ClassTag](json: JsValue, errorHook: Option[JsParsingError => T])(implicit reads: Reads[T]): T =
     json
       .validate[T] match {

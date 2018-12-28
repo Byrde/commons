@@ -20,6 +20,9 @@ abstract class JsonAhcExecutor extends BaseAhcExecutor {
 
   def deleteJson(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[JsValue] =
     super.underlyingDelete(path, requestHook, curlRequestHook).map(_.body).map(Json.parse)
+
+  def patchJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit writes: Writes[T]): Future[JsValue] =
+    super.underlyingPatch(Json.toJson(body))(path, requestHook, curlRequestHook).map(_.body).map(Json.parse)
 }
 
 object JsonAhcExecutor {

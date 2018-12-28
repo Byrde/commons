@@ -19,8 +19,7 @@ object WSResponseUtils {
 
       Result(
         ResponseHeader(value.status, headers),
-        HttpEntity.Strict(value.bodyAsBytes, Some(value.contentType))
-      )
+        HttpEntity.Strict(value.bodyAsBytes, Some(value.contentType)))
     }
   }
 }
