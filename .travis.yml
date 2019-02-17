@@ -9,52 +9,49 @@ scala:
 # Install cloudsmit cli, required for publishing artifact.
 install:
   - |
-    if [ ${TRAVIS_BRANCH} == 'master' ]; then
-      # Install cloudsmith.
-      sudo apt-get install python3-pip;
-      sudo python3 -m pip install --upgrade cloudsmith-cli;
+    # Install cloudsmith.
+    sudo apt-get install python3-pip;
+    sudo python3 -m pip install --upgrade cloudsmith-cli;
 
-      # Configure cloudsmith.
-      sudo mkdir -p ~/.config/cloudsmith/;
-      sudo touch  ~/.config/cloudsmith/config.ini;
-      sudo chmod 777  ~/.config/cloudsmith/config.ini;
-      sudo echo "[default] api_key=${CLOUDSMITH_API_KEY}" >> ~/.config/cloudsmith/config.ini;
-    fi
+    # Configure cloudsmith.
+    sudo mkdir -p ~/.config/cloudsmith/;
+    sudo touch  ~/.config/cloudsmith/config.ini;
+    sudo chmod 777  ~/.config/cloudsmith/config.ini;
+    sudo echo "[default] api_key=${CLOUDSMITH_API_KEY}" >> ~/.config/cloudsmith/config.ini;
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-  - sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" clean test
-  - |
-    if [ ${TRAVIS_BRANCH} == 'master' ]; then 
-      sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" package packageSrc makePom;
-    fi
+- sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" clean test
+- sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" package packageSrc makePom;
 
 # Cached dependencies cleanup.
 before_cache:
-  # Cleanup the cached directories to avoid unnecessary cache updates
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
-  - find $HOME/.sbt        -name "*.lock"               -print -delete
+# Cleanup the cached directories to avoid unnecessary cache updates
+- find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+- find $HOME/.sbt        -name "*.lock"               -print -delete
 
 # Cache dependencies.
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt
+  - $HOME/.ivy2/cache
+  - $HOME/.sbt
 
 # On script complete, publish artifact to cloudsmith.
 after_success:
   - |
-    if [ ${TRAVIS_BRANCH} == 'master' ]; then
-      IFS='.';
-      read -ra VERSIONS_DENOTATION <<< "$TRAVIS_SCALA_VERSION";
-      SCALA_MAJOR_VERSION="${VERSIONS_DENOTATION[0]}.${VERSIONS_DENOTATION[1]}";
-      echo "Current Scala version: $SCALA_MAJOR_VERSION";
+    IFS='.';
+    read -ra VERSIONS_DENOTATION <<< "$TRAVIS_SCALA_VERSION";
+    SCALA_MAJOR_VERSION="${VERSIONS_DENOTATION[0]}.${VERSIONS_DENOTATION[1]}";
+    echo "Current Scala version: $SCALA_MAJOR_VERSION";
 
-      declare -a array=("akka-http" "clients" "email" "jwt" "logging" "play" "redis" "service-response" "slick" "uri" "utils")
+    declare -a array=("akka-http" "clients" "email" "jwt" "logging" "play" "redis" "service-response" "slick" "uri" "utils")
 
-      for (( i=0; i<${#array[@]}; i++ ));
-      do
-        cd "$TRAVIS_BUILD_DIR/${array[$i]}/$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
-        cloudsmith push maven byrde/libraries "${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
-      done
-    fi
+    for (( i=0; i<${#array[@]}; i++ ));
+    do
+      cd "$TRAVIS_BUILD_DIR/${array[$i]}/$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
+      cloudsmith push maven byrde/libraries "${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
+    done
+
+branches:
+  only:
+  - master
