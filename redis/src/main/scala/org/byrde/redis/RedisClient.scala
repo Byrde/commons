@@ -6,8 +6,6 @@ import org.byrde.redis.conf.RedisConfig
 
 import biz.source_code.base64Coder.Base64Coder
 
-import akka.Done
-
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -76,12 +74,13 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
         Future.successful(None)
     }
 
-  def remove(key: Key): Future[Done] =
+  def remove(key: Key): Future[Unit] =
     Future {
       pool.withJedisClient(_.del(namespacedKey(key)))
-    }.map(_ => Done)
+      ()
+    }
 
-  def set(_key: Key, value: Any, expiration: Duration = Duration.Inf): Future[Done] = {
+  def set(_key: Key, value: Any, expiration: Duration = Duration.Inf): Future[Unit] = {
     val expirationInSec =
       if (expiration == Duration.Inf)
         0
@@ -162,9 +161,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
             }
           }
 
-      valueF.map { _ =>
-        Done
-      }
+      valueF.map(_ => ())
     } finally {
       if (oos != null)
         oos.close()
@@ -208,6 +205,6 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
 }
 
 object RedisClient {
-  def apply(redisConfig: RedisConfig, classLoader: ClassLoader)(implicit ec: ExecutionContext) =
+  def apply(redisConfig: RedisConfig, classLoader: ClassLoader)(implicit ec: ExecutionContext): RedisClient =
     new RedisClient(redisConfig.namespace, Pool(redisConfig), classLoader)
 }
