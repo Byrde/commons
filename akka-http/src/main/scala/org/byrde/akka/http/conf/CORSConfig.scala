@@ -1,30 +1,30 @@
 package org.byrde.akka.http.conf
 
-import play.api.Configuration
+import com.typesafe.config.Config
 
 case class CORSConfig(origins: Seq[String], methods: Seq[String], headers: Seq[String])
 
 object CORSConfig {
-  def apply(config: Configuration): CORSConfig =
+  def apply(config: Config): CORSConfig =
     apply("origins", "methods", "headers", config)
 
   def apply(_origins: String,
             _methods: String,
             _headers: String,
-            config: Configuration): CORSConfig = {
+            config: Config): CORSConfig = {
     val origins =
       config
-        .get[String](_origins)
+        .getString(_origins)
         .split(", ")
 
     val methods =
       config
-        .get[String](_methods)
+        .getString(_methods)
         .split(", ")
 
     val headers =
       config
-        .get[String](_headers)
+        .getString(_headers)
         .split(", ")
 
     CORSConfig(origins, methods, headers)

@@ -1,7 +1,7 @@
 name := """email"""
 
 libraryDependencies ++=
-  Dependencies.EmailDependencies ++ Dependencies.PlayDependencies
+  Dependencies.EmailDependencies ++ Dependencies.TypesafeConfigDependencies
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath

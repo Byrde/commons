@@ -1,7 +1,7 @@
 name := """uri"""
 
 libraryDependencies ++=
-  Dependencies.PlayDependencies
+  Dependencies.TypesafeConfigDependencies
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath

@@ -9,7 +9,7 @@ import org.byrde.akka.http.support.RequestResponseHandlingSupport
 import org.byrde.service.response.CommonsServiceResponseDictionary.E0200
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.server.Directives.{pathPrefix, _}
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
@@ -22,10 +22,6 @@ trait ServerLike [
   ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
 ] extends RequestResponseHandlingSupport {
   self =>
-
-  type Domain = String
-
-  type Version = String
 
   trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt] {
     override lazy val provider: ModulesExt =
@@ -46,7 +42,7 @@ trait ServerLike [
 
   def builder: RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 
-  def map: Map[Version, Map[Domain, RouteLike]]
+  def routes: Route
 
   implicit def system: ActorSystem =
     provider.akka.system
@@ -67,11 +63,6 @@ trait ServerLike [
       }
     }
 
-  lazy val routes: Route =
-    requestResponseHandler {
-      ping ~ reduceRouteMap(map)
-    }
-
   lazy val RequestLogger: HttpRequestLogging =
     provider.RequestLogger
 
@@ -81,16 +72,8 @@ trait ServerLike [
   lazy val CORSConfig: CORSConfig =
     provider.config.cors
 
-  def reduceRouteMap(pathBindings: Map[Version, Map[Domain, RouteLike]]): Route =
-    pathBindings.map {
-      case (k, v) =>
-        pathPrefix(k) {
-          v.map {
-            case (k2, v2) =>
-              pathPrefix(k2) {
-                v2.route
-              }
-          } reduce (_ ~ _)
-        }
-    } reduce (_ ~ _)
+  lazy val HandledRoutes: Route =
+    requestResponseHandler {
+      ping ~ routes
+    }
 }

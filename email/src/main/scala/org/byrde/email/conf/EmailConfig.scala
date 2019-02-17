@@ -2,9 +2,10 @@ package org.byrde.email.conf
 
 import java.util.Properties
 
+import com.typesafe.config.Config
 import javax.mail.{PasswordAuthentication, Session}
 
-import play.api.Configuration
+import scala.util.Try
 
 case class EmailConfig(email: String, password: String, port: Int, from: String) {
   def propertiesFromConfig: Properties = {
@@ -17,34 +18,35 @@ case class EmailConfig(email: String, password: String, port: Int, from: String)
   }
 
   def sessionFromConfig: Session = {
-    Session.getInstance(propertiesFromConfig, new javax.mail.Authenticator() {
-      override def getPasswordAuthentication =
-        new PasswordAuthentication(email, password)
-    })
+    def authenticator =
+      new javax.mail.Authenticator() {
+        override def getPasswordAuthentication: PasswordAuthentication =
+          new PasswordAuthentication(email, password)
+      }
+
+    Session.getInstance(propertiesFromConfig, authenticator)
   }
 }
 
 object EmailConfig {
-  def apply(config: Configuration): EmailConfig =
+  def apply(config: Config): EmailConfig =
     apply("email", "password", "port", "from")(config)
 
-  def apply(_email: String, _password: String, _port: String, _from: String)(config: Configuration): EmailConfig = {
+  def apply(_email: String, _password: String, _port: String, _from: String)(config: Config): EmailConfig = {
     val email =
       config
-        .get[String](_email)
+        .getString(_email)
 
     val password =
       config
-        .get[String](_password)
+        .getString(_password)
 
     val port =
       config
-        .get[Int](_port)
+        .getInt(_port)
 
     val from =
-      config
-        .getOptional[String](_from)
-        .getOrElse(email)
+      Try(config.getString(_from)).getOrElse(email)
 
     EmailConfig(email, password, port, from)
   }

@@ -14,7 +14,7 @@ object ServiceConfig {
 
   def apply(serviceConfiguration: play.api.Configuration): ServiceConfig =
     ServiceConfig(
-      HostConfig(serviceConfiguration),
+      HostConfig(serviceConfiguration.underlying),
       CircuitBreakerConfig(serviceConfiguration.get[play.api.Configuration]("circuit-breaker")),
       serviceConfiguration.getOptional[ClientId]("client-id"),
       serviceConfiguration.getOptional[ClientToken]("client-token")

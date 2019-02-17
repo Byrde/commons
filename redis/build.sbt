@@ -6,7 +6,7 @@ resolvers ++=
 
 libraryDependencies ++=
   Dependencies.RedisDependencies ++
-    Dependencies.PlayDependencies :+
+    Dependencies.TypesafeConfigDependencies :+
     "biz.source_code" % "base64coder" % "2010-12-19"
 
 unmanagedJars in Compile ++=

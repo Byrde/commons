@@ -2,9 +2,10 @@ package org.byrde.redis.conf
 
 import java.net.URI
 
+import com.typesafe.config.Config
 import redis.clients.jedis.JedisPoolConfig
 
-import play.api.Configuration
+import scala.util.Try
 
 case class RedisConfig(poolConfig: JedisPoolConfig,
                        namespace: String,
@@ -15,27 +16,22 @@ case class RedisConfig(poolConfig: JedisPoolConfig,
                        database: Int)
 
 object RedisConfig {
-  def apply(config: Configuration, namespace: String = "global"): RedisConfig = {
+  def apply(config: Config, namespace: String = "global"): RedisConfig = {
     val redisUri =
-      config
-        .getOptional[String]("redis.uri")
-        .map(new URI(_))
+      Try(config.getString("redis.uri")).map(new URI(_))
 
     val host =
-      config
-        .getOptional[String]("redis.host")
+      Try(config.getString("redis.host"))
         .orElse(redisUri.map(_.getHost))
         .getOrElse("localhost")
 
     val port =
-      config
-        .getOptional[Int]("redis.port")
+      Try(config.getInt("redis.port"))
         .orElse(redisUri.map(_.getPort).filter(_ != -1))
         .getOrElse(6379)
 
     val password =
-      config
-        .getOptional[String]("redis.password")
+      Try(config.getString("redis.password"))
         .orElse {
           redisUri
             .map(_.getUserInfo)
@@ -43,17 +39,13 @@ object RedisConfig {
             .filter(_ contains ":")
             .map(_.split(":", 2)(1))
         }
-        .orNull
+        .getOrElse(null)
 
     val timeout =
-      config
-        .getOptional[Int]("redis.timeout")
-        .getOrElse(2000)
+      Try(config.getInt("redis.timeout")).getOrElse(2000)
 
     val database =
-      config
-        .getOptional[Int]("redis.database")
-        .getOrElse(0)
+      Try(config.getInt("redis.database")).getOrElse(0)
 
     val poolConfig =
       createPoolConfig(config)
@@ -68,23 +60,23 @@ object RedisConfig {
       database)
   }
 
-  private def createPoolConfig(config: Configuration): JedisPoolConfig = {
+  private def createPoolConfig(config: Config): JedisPoolConfig = {
     val poolConfig: JedisPoolConfig =
       new JedisPoolConfig()
 
-    config.getOptional[Int]("redis.pool.maxIdle").foreach(poolConfig.setMaxIdle)
-    config.getOptional[Int]("redis.pool.minIdle").foreach(poolConfig.setMinIdle)
-    config.getOptional[Int]("redis.pool.maxTotal").foreach(poolConfig.setMaxTotal)
-    config.getOptional[Long]("redis.pool.maxWaitMillis").foreach(poolConfig.setMaxWaitMillis)
-    config.getOptional[Boolean]("redis.pool.testOnBorrow").foreach(poolConfig.setTestOnBorrow)
-    config.getOptional[Boolean]("redis.pool.testOnReturn").foreach(poolConfig.setTestOnReturn)
-    config.getOptional[Boolean]("redis.pool.testWhileIdle").foreach(poolConfig.setTestWhileIdle)
-    config.getOptional[Long]("redis.pool.timeBetweenEvictionRunsMillis").foreach(poolConfig.setTimeBetweenEvictionRunsMillis)
-    config.getOptional[Int]("redis.pool.numTestsPerEvictionRun").foreach(poolConfig.setNumTestsPerEvictionRun)
-    config.getOptional[Long]("redis.pool.minEvictableIdleTimeMillis").foreach(poolConfig.setMinEvictableIdleTimeMillis)
-    config.getOptional[Long]("redis.pool.softMinEvictableIdleTimeMillis").foreach(poolConfig.setSoftMinEvictableIdleTimeMillis)
-    config.getOptional[Boolean]("redis.pool.lifo").foreach(poolConfig.setLifo)
-    config.getOptional[Boolean]("redis.pool.blockWhenExhausted").foreach(poolConfig.setBlockWhenExhausted)
+    Try(config.getInt("redis.pool.maxIdle")).foreach(poolConfig.setMaxIdle)
+    Try(config.getInt("redis.pool.minIdle")).foreach(poolConfig.setMinIdle)
+    Try(config.getInt("redis.pool.maxTotal")).foreach(poolConfig.setMaxTotal)
+    Try(config.getLong("redis.pool.maxWaitMillis")).foreach(poolConfig.setMaxWaitMillis)
+    Try(config.getBoolean("redis.pool.testOnBorrow")).foreach(poolConfig.setTestOnBorrow)
+    Try(config.getBoolean("redis.pool.testOnReturn")).foreach(poolConfig.setTestOnReturn)
+    Try(config.getBoolean("redis.pool.testWhileIdle")).foreach(poolConfig.setTestWhileIdle)
+    Try(config.getLong("redis.pool.timeBetweenEvictionRunsMillis")).foreach(poolConfig.setTimeBetweenEvictionRunsMillis)
+    Try(config.getInt("redis.pool.numTestsPerEvictionRun")).foreach(poolConfig.setNumTestsPerEvictionRun)
+    Try(config.getLong("redis.pool.minEvictableIdleTimeMillis")).foreach(poolConfig.setMinEvictableIdleTimeMillis)
+    Try(config.getLong("redis.pool.softMinEvictableIdleTimeMillis")).foreach(poolConfig.setSoftMinEvictableIdleTimeMillis)
+    Try(config.getBoolean("redis.pool.lifo")).foreach(poolConfig.setLifo)
+    Try(config.getBoolean("redis.pool.blockWhenExhausted")).foreach(poolConfig.setBlockWhenExhausted)
 
     poolConfig
   }

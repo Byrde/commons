@@ -1,7 +1,7 @@
 name := """jwt"""
 
 libraryDependencies ++=
-  Dependencies.JwtDependencies ++ Dependencies.PlayDependencies
+  Dependencies.JwtDependencies ++ Dependencies.TypesafeConfigDependencies
 
 unmanagedJars in Compile ++=
   ((baseDirectory.value / "lib") ** "*.jar").classpath

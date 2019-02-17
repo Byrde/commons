@@ -84,10 +84,10 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
 
 object RequestResponseHandlingSupport {
   final case class IdHeader(id: String) extends ModeledCustomHeader[IdHeader] {
-    override val renderInRequests =
+    override val renderInRequests: Boolean =
       true
 
-    override val renderInResponses =
+    override val renderInResponses: Boolean =
       true
 
     override val companion: IdHeader.type =
