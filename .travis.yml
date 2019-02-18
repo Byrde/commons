@@ -4,6 +4,7 @@ sudo: required
 # - CLOUDSMITH_API_KEY
 # - NAME
 # - ORGANIZATION
+# - MINOR_VERSION
 # - MAJOR_VERSION
 
 # Defacto version and lang used in most Byrde projects.

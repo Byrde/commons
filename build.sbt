@@ -8,9 +8,7 @@ name :=
 val commons =
   Seq(
     version :=
-      Option(
-        System.getProperty("version"))
-        .getOrElse("260-SNAPSHOT"),
+      System.getProperty("version"),
     organization :=
       Option(
         System.getProperty("organization"))
