@@ -1,4 +1,4 @@
-# Commons [![Build Status](https://travis-ci.org/Byrde/commons.svg?branch=master)](https://travis-ci.org/Byrde/commons) ![![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/akka-http_2.12/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/akka-http_2.12/latest/)
+# Commons [![Build Status](https://travis-ci.org/Byrde/commons.svg?branch=master)](https://travis-ci.org/Byrde/commons) [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/akka-http_2.12/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/akka-http_2.12/latest/)
 
 Melting pot of useful Scala utilities.
 
