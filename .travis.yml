@@ -15,7 +15,7 @@ scala:
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-- sbt clean test
+- sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.$TRAVIS_BUILD_NUMBER" clean test
 
 # Cached dependencies cleanup.
 before_cache:
