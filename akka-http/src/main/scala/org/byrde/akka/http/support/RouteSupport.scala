@@ -3,17 +3,17 @@ package org.byrde.akka.http.support
 import org.byrde.akka.http.rejections.RejectionException
 import org.byrde.service.response.ServiceResponse
 
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import akka.http.scaladsl.server.Directives.{complete, _}
 import akka.http.scaladsl.server.Route
 
-import play.api.libs.json.Writes
+import io.circe.Encoder
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-trait RouteSupport extends PlayJsonSupport {
+trait RouteSupport extends FailFastCirceSupport {
   def SuccessCode: Int
 
   def asyncJson[T](
@@ -21,7 +21,7 @@ trait RouteSupport extends PlayJsonSupport {
     title: String = "Success",
     code: Int = SuccessCode,
     Err: Throwable => Throwable = identity
-  )(implicit writes: Writes[T]): Route =
+  )(implicit encoder: Encoder[T]): Route =
     async(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
 
   def asyncServiceResponse[T <: ServiceResponse[_]](
@@ -57,6 +57,7 @@ trait RouteSupport extends PlayJsonSupport {
         ex match {
           case ex: RejectionException =>
             reject(ex)
+
           case _ =>
             throw Err(ex)
         }

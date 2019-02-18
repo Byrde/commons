@@ -3,24 +3,25 @@ package org.byrde.akka.http.support
 import org.byrde.akka.http.logging.HttpErrorLogging
 import org.byrde.akka.http.rejections.{JsonParsingRejections, TransientServiceResponseRejections}
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0200, E0405, E0500}
-import org.byrde.service.response.ServiceResponse
+import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
-import org.byrde.utils.JsonUtils
 
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-
+import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.Allow
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, MethodRejection, RejectionHandler}
+import akka.util.ByteString
 
-import play.api.libs.json.{JsNull, JsSuccess, Json}
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import io.circe.Printer
+import io.circe.generic.auto._
+import io.circe.parser._
 
 import scala.annotation.tailrec
-import scala.util.Try
 
-trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
+trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
   import org.byrde.akka.http.logging.HttpLogging._
 
   def ErrorLogger: HttpErrorLogging
@@ -28,6 +29,12 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
   def ErrorCode: Int
 
   def handlers: Set[RejectionHandler]
+
+  private lazy val LocalPrinter =
+    Printer.noSpaces.copy(dropNullValues = true)
+
+  private lazy val MediaType =
+    `application/json`
 
   private lazy val default: RejectionHandler =
     RejectionHandler
@@ -68,37 +75,38 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
               .utf8String
 
           //TODO: Inefficient. We already have the response serialized to Json and ready to go, however we need to re-parse it to log the issue.
-          Try(Json.parse(response))
-            .toOption
-            .getOrElse(JsNull)
-            .validate[TransientServiceResponse[String]](ServiceResponse.reads(JsonUtils.Format.string(ServiceResponse.message))) match {
-              case JsSuccess(transientServiceResponse, _) =>
-                ErrorLogger.error(req, ServiceResponseException(transientServiceResponse))
+          parse(response).flatMap(_.as[TransientServiceResponse[Message]]) match {
+            case Right(transientServiceResponse) =>
+              ErrorLogger.error(req, ServiceResponseException(transientServiceResponse))
 
-                res.copy(
-                  status = transientServiceResponse.status,
-                  entity =
-                    HttpEntity(
-                      ContentTypes.`application/json`,
-                      Json.stringify(transientServiceResponse.toJson)
-                    )
-                )
+              val transformed =
+                LocalPrinter.prettyByteBuffer(transientServiceResponse.toJson, MediaType.charset.nioCharset())
 
-              case _ =>
-                val clientException =
-                  ClientException(normalizeString(response), ErrorCode, status)
+              res.copy(
+                status = transientServiceResponse.status,
+                entity =
+                  HttpEntity(
+                    MediaType,
+                    ByteString(transformed))
+              )
 
-                ErrorLogger.error(req, clientException)
+            case Left(ex) =>
+              val clientException =
+                ClientException(normalizeString(response), ErrorCode, status)
 
-                res.copy(
-                  status = status,
-                  entity =
-                    HttpEntity(
-                      ContentTypes.`application/json`,
-                      Json.stringify(clientException.toJson)
-                    )
-                )
-            }
+              val transformed =
+                LocalPrinter.prettyByteBuffer(clientException.toJson, MediaType.charset.nioCharset())
+
+              ErrorLogger.error(req, clientException)
+
+              res.copy(
+                status = status,
+                entity =
+                  HttpEntity(
+                    MediaType,
+                    ByteString(transformed))
+              )
+          }
 
         case res =>
           res
@@ -119,7 +127,7 @@ trait ExceptionHandlingSupport extends PlayJsonSupport with CORSSupport {
               E0500(exception)
           }
 
-        ctx.complete(Json.toJson(serviceException))
+        ctx.complete(serviceException.toJson)
     }
 
   private def registerHandlers(initialHandlder: RejectionHandler, handlersToBeRegistered: Set[RejectionHandler]): RejectionHandler = {

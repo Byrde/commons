@@ -3,11 +3,11 @@ package org.byrde.akka.http.rejections
 import org.byrde.akka.http.scaladsl.server.directives.RejectionDirective._
 import org.byrde.service.response.CommonsServiceResponseDictionary.E0400
 
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-
 import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 
-object JsonParsingRejections extends PlayJsonSupport {
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
+object JsonParsingRejections extends FailFastCirceSupport {
   case class JsonParsingRejection(errors: String, errorCode: Int) extends Rejection
 
   case class JsonValidationRejection(errors: String, errorCode: Int) extends Rejection

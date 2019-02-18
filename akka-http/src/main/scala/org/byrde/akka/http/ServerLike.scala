@@ -17,9 +17,9 @@ import akka.util.Timeout
 import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
 
-trait ServerLike [
-  RuntimeModulesExt[T] <: RuntimeModulesLike[T],
-  ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
+trait ServerLike[
+RuntimeModulesExt[T] <: RuntimeModulesLike[T],
+ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
 ] extends RequestResponseHandlingSupport {
   self =>
 
@@ -59,7 +59,7 @@ trait ServerLike [
   lazy val ping: Route =
     path("ping") {
       get {
-        complete(E0200("Pong!"))
+        complete(E0200("Pong!").toJson)
       }
     }
 

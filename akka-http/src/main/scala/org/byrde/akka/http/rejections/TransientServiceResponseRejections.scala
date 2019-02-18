@@ -1,12 +1,13 @@
 package org.byrde.akka.http.rejections
-import org.byrde.service.response.exceptions.ServiceResponseException.TransientServiceResponseException
 
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import org.byrde.service.response.exceptions.ServiceResponseException.TransientServiceResponseException
 
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 
-object TransientServiceResponseRejections extends PlayJsonSupport {
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
+object TransientServiceResponseRejections extends FailFastCirceSupport {
   final case class TransientServiceResponseRejection(ex: TransientServiceResponseException)
     extends Rejection
 

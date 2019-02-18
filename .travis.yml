@@ -1,28 +1,20 @@
 sudo: required
 
+# Define the following to reuse:
+# - CLOUDSMITH_API_KEY
+# - NAME
+# - ORGANIZATION
+# - MAJOR_VERSION
+
 # Defacto version and lang used in most Byrde projects.
 language: scala
 jdk: oraclejdk8
 scala:
-  - 2.12.7
-
-# Install cloudsmit cli, required for publishing artifact.
-install:
-  - |
-    # Install cloudsmith.
-    sudo apt-get install python3-pip;
-    sudo python3 -m pip install --upgrade cloudsmith-cli;
-
-    # Configure cloudsmith.
-    sudo mkdir -p ~/.config/cloudsmith/;
-    sudo touch  ~/.config/cloudsmith/config.ini;
-    sudo chmod 777  ~/.config/cloudsmith/config.ini;
-    sudo echo "[default] api_key=${CLOUDSMITH_API_KEY}" >> ~/.config/cloudsmith/config.ini;
+- 2.12.7
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
-- sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" clean test
-- sbt -Dname="$NAME" -Dversion="$TRAVIS_BUILD_NUMBER" -Dorganization="$ORGANIZATION" -DscalaVersion="$TRAVIS_SCALA_VERSION" package packageSrc makePom;
+- sbt clean test
 
 # Cached dependencies cleanup.
 before_cache:
@@ -36,21 +28,20 @@ cache:
   - $HOME/.ivy2/cache
   - $HOME/.sbt
 
+# Dependencies for publishing
+before_deploy:
+- pyenv global 2.7
+- pip install --upgrade pip
+- pip install --upgrade setuptools
+- pip install --upgrade wheel
+- pip install cloudsmith-cli
+- pip install twine
+
 # On script complete, publish artifact to cloudsmith.
-after_success:
-  - |
-    IFS='.';
-    read -ra VERSIONS_DENOTATION <<< "$TRAVIS_SCALA_VERSION";
-    SCALA_MAJOR_VERSION="${VERSIONS_DENOTATION[0]}.${VERSIONS_DENOTATION[1]}";
-    echo "Current Scala version: $SCALA_MAJOR_VERSION";
-
-    declare -a array=("akka-http" "clients" "email" "jwt" "logging" "play" "redis" "service-response" "slick" "uri" "utils")
-
-    for (( i=0; i<${#array[@]}; i++ ));
-    do
-      cd "$TRAVIS_BUILD_DIR/${array[$i]}/$COMPILE_DIRECTORY/scala-$SCALA_MAJOR_VERSION";
-      cloudsmith push maven byrde/libraries "${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.jar" --sources-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER-sources.jar" --pom-file="${array[$i]}_$SCALA_MAJOR_VERSION-$TRAVIS_BUILD_NUMBER.pom";
-    done
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: "./scripts/deploy.sh"
 
 branches:
   only:

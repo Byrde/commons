@@ -1,0 +1,31 @@
+<code_scheme name="Project" version="173">
+  <ScalaCodeStyleSettings>
+    <option name="importLayout">
+      <array>
+        <option value="java" />
+        <option value="_______ blank line _______" />
+        <option value="org.byrde" />
+        <option value="_______ blank line _______" />
+        <option value="org.simplereviews" />
+        <option value="_______ blank line _______" />
+        <option value="org" />
+        <option value="_______ blank line _______" />
+        <option value="com" />
+        <option value="_______ blank line _______" />
+        <option value="all other imports" />
+        <option value="_______ blank line _______" />
+        <option value="akka" />
+        <option value="_______ blank line _______" />
+        <option value="play" />
+        <option value="_______ blank line _______" />
+        <option value="scala" />
+      </array>
+    </option>
+    <option name="sortAsScalastyle" value="true" />
+    <option name="FORMATTER" value="1" />
+    <option name="TYPE_ANNOTATION_STRUCTURAL_TYPE" value="false" />
+    <option name="TYPE_ANNOTATION_EXCLUDE_CONSTANT" value="false" />
+    <option name="TYPE_ANNOTATION_EXCLUDE_WHEN_TYPE_IS_STABLE" value="false" />
+    <option name="REFORMAT_ON_COMPILE" value="true" />
+  </ScalaCodeStyleSettings>
+</code_scheme>

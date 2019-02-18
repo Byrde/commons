@@ -3,6 +3,7 @@ package org.byrde.clients.ahc.impl
 import org.byrde.clients.ahc.AhcExecutor
 import org.byrde.clients.circuitbreaker.CircuitBreakerLike
 import org.byrde.clients.circuitbreaker.impl.ClientCircuitBreaker
+import org.byrde.utils.concurrent.Trampoline
 
 import akka.actor.ActorSystem
 
@@ -17,7 +18,7 @@ abstract class BaseAhcExecutor extends AhcExecutor {
       name,
       system.scheduler,
       config.circuitBreakerConfig
-    )(org.byrde.utils.ThreadPools.Trampoline)
+    )(Trampoline)
 
   implicit def ec: ExecutionContext
 

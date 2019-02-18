@@ -28,13 +28,16 @@ object Dependencies extends DependencyBuilders {
   val SlickVersion: String =
     "3.2.3"
 
+  val CirceVersion: String =
+    "0.10.0"
+
   val AkkaDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-stream"            % AkkaVersion,
-      "de.heikoseeberger"  %% "akka-http-play-json"    % "1.21.0",
+      "de.heikoseeberger"  %% "akka-http-circe"        % "1.24.3",
 
       "com.typesafe.akka" %% "akka-http-testkit"    % AkkaHttpVersion,
       "com.typesafe.akka" %% "akka-testkit"         % AkkaVersion,
@@ -76,4 +79,10 @@ object Dependencies extends DependencyBuilders {
   val TypesafeConfigDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe" % "config" % "1.2.1")
+
+  val CirceDependencies: Seq[ModuleID] =
+    Seq(
+      "io.circe" %% "circe-core"    % CirceVersion,
+      "io.circe" %% "circe-generic" % CirceVersion,
+      "io.circe" %% "circe-parser"  % CirceVersion)
 }
