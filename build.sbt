@@ -1,4 +1,4 @@
-import sbt.Keys.scalacOptions
+import aether.AetherKeys.aetherDeploy
 
 name :=
   Option(
@@ -64,7 +64,8 @@ val commons =
         "Alfapalooza",
         "Martin Allaire",
         "martin@byrde.io",
-        new URL("http://linkedin.com/allama")))
+        new URL("http://linkedin.com/allama")),
+    publish := aetherDeploy.value)
 
 lazy val `akka-http` =
   project
@@ -132,5 +133,3 @@ lazy val utils =
   project
     .dependsOn(uri)
     .settings(commons)
-
-overridePublishSettings
