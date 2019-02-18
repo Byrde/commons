@@ -54,13 +54,13 @@ val commons =
     credentials +=
       Credentials(Path.userHome / ".sbt" / ".credentials"),
     pomIncludeRepository :=
-      (_ => true),
+      (_ => false),
     startYear :=
       Some(2018),
     licenses :=
       Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
     publishTo :=
-      Some("cloudsmith" at "https://maven.cloudsmith.io/byrde/libraries/"),
+      Some("Cloudsmith API" at "https://maven.cloudsmith.io/byrde/libraries/"),
     developers +=
       Developer(
         "Alfapalooza",
