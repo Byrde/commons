@@ -1,6 +1,9 @@
 import sbt.Keys.scalacOptions
 
-val CloudsmithApiUrl = ""
+name :=
+  Option(
+    System.getProperty("name"))
+    .getOrElse("commons")
 
 val commons =
   Seq(
@@ -57,7 +60,7 @@ val commons =
     licenses :=
       Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
     publishTo :=
-      Some("byrdelibraries" at "https://maven.cloudsmith.io/public/byrde/libraries/"),
+      Some("byrde-libraries" at "https://maven.cloudsmith.io/byrde/libraries/"),
     developers +=
       Developer(
         "Alfapalooza",
