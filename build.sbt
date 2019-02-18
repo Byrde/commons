@@ -60,7 +60,7 @@ val commons =
     licenses :=
       Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
     publishTo :=
-      Some("byrde-libraries" at "https://maven.cloudsmith.io/byrde/libraries/"),
+      Some("cloudsmith" at "https://maven.cloudsmith.io/byrde/libraries/"),
     developers +=
       Developer(
         "Alfapalooza",
