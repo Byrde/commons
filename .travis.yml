@@ -22,6 +22,7 @@ before_script:
   user=token
   password=${CLOUDSMITH_API_KEY}
   EOF
+- cd $TRAVIS_BUILD_DIR
 
 # Clean tracked binaries, run unit tests, and package artifact.
 script:
