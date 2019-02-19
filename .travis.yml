@@ -13,8 +13,8 @@ jdk: oraclejdk8
 scala:
 - 2.12.7
 
-# Clean tracked binaries, run unit tests, and package artifact.
-script:
+# Install credentials
+before_script:
 - |
   cat <<EOF >/home/travis/.sbt/.credentials
   realm=Cloudsmith API
@@ -22,6 +22,9 @@ script:
   user=token
   password=${CLOUDSMITH_API_KEY}
   EOF
+
+# Clean tracked binaries, run unit tests, and package artifact.
+script:
 - sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.$TRAVIS_BUILD_NUMBER" 'set credentials += Credentials("Cloudsmith API", "maven.cloudsmith.io", "token", "${CLOUDSMITH_API_KEY}")' clean test
 
 # Cached dependencies cleanup.
