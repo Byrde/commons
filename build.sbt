@@ -53,8 +53,6 @@ val CommonsSettings =
         "Implementation-Vendor-Id" -> organization.value,
         "Implementation-Vendor" -> organization.value
       ),
-    credentials +=
-      Credentials(Path.userHome / ".sbt" / ".credentials"),
     pomIncludeRepository :=
       (_ => false),
     startYear :=
