@@ -6,7 +6,7 @@ import org.byrde.logging.{JsonLoggingFormat, Logging}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpRequest
 
-import play.api.libs.json.{JsObject, JsString, Json}
+import io.circe.Json
 
 trait HttpLogging {
   val logger: LoggingAdapter
@@ -38,29 +38,30 @@ trait HttpLogging {
 
 object HttpLogging {
   implicit object HttpRequestInformationJsonLogginFormat extends JsonLoggingFormat[HttpRequest] {
-    override def format(elem: HttpRequest): JsObject =
+    override def format(elem: HttpRequest): Json =
       Json.obj(
         "id" -> {
           elem
             .headers
             .find(_.name().equalsIgnoreCase(IdHeader.name))
             .map(_.value())
-            .fold(JsString("None"))(JsString.apply)
+            .fold(Json.fromString("None"))(Json.fromString)
         },
-        "uri" -> elem.uri.toString,
-        "method" -> elem.method.value.toString,
-        "headers" -> elem.headers.map(header => s"${header.name}: ${header.value}"),
-        "cookies" -> elem.cookies.map(cookie => s"${cookie.name}: ${cookie.value}")
+        "uri" -> Json.fromString(elem.uri.toString),
+        "method" -> Json.fromString(elem.method.value.toString),
+        "headers" -> Json.fromValues(elem.headers.map(header => s"${header.name}: ${header.value}").map(Json.fromString)),
+        "cookies" -> Json.fromValues(elem.cookies.map(cookie => s"${cookie.name}: ${cookie.value}").map(Json.fromString))
       )
   }
 
   implicit object ExceptionWithHttpRequestJsonLoggingFormat extends JsonLoggingFormat[(HttpRequest, Throwable)] {
-    override def format(elem: (HttpRequest, Throwable)): JsObject = {
+    override def format(elem: (HttpRequest, Throwable)): Json = {
       val (req, ex) =
         elem._1 -> elem._2
 
-      HttpRequestInformationJsonLogginFormat.format(req) ++
-        Logging.ExceptionJsonLoggingFormat.format(ex)
+      Json.obj(
+        "request" -> HttpRequestInformationJsonLogginFormat.format(req),
+        "exception" ->  Logging.ExceptionJsonLoggingFormat.format(ex))
     }
   }
 }

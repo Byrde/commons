@@ -1,9 +1,13 @@
 import aether.AetherKeys.aetherDeploy
 
-name :=
-  Option(
-    System.getProperty("name"))
-    .getOrElse("commons")
+val RootSettings =
+  Seq(
+    name :=
+      Option(
+        System.getProperty("name"))
+        .getOrElse("commons"),
+    publish := (),
+    publishLocal := ())
 
 val commons =
   Seq(
@@ -69,32 +73,53 @@ val commons =
         new URL("http://linkedin.com/allama")),
     publish := aetherDeploy.value)
 
-val root =
-  Project("commons", file("."))
-    .settings(
-      Seq(
-        publish := (),
-        publishLocal := ()): _*)
-    .aggregate(
-      `akka-http`,
-      clients,
-      `clients-circe`,
-      email,
-      jwt,
-      logging,
-      play,
-      redis,
-      `service-response`,
-      `service-response-circe`,
-      slick,
-      uri,
-      utils)
+val jwt =
+  project
+    .settings(commons)
 
-val `akka-http` =
+val logging =
+  project
+    .settings(commons)
+
+val `logging-circe` =
+  project
+    .settings(commons)
+
+val redis =
+  project
+    .settings(commons)
+
+val `service-response` =
+  project
+    .settings(commons)
+
+val `service-response-circe` =
+  project
+    .settings(commons)
+
+val slick =
+  project
+    .settings(commons)
+
+val uri =
+  project
+    .settings(commons)
+
+val email =
+  project
+    .dependsOn(`service-response`)
+    .settings(commons)
+
+val utils =
+  project
+    .dependsOn(uri)
+    .settings(commons)
+
+val play =
   project
     .dependsOn(
-      logging,
-      `service-response-circe`,
+      jwt,
+      `service-response`,
       uri,
       utils
     )
@@ -118,50 +143,30 @@ val `clients-circe` =
     )
     .settings(commons)
 
-val email =
-  project
-    .dependsOn(`service-response`)
-    .settings(commons)
-
-val jwt =
-  project
-    .settings(commons)
-
-val logging =
-  project
-    .settings(commons)
-
-val play =
+val `akka-http` =
   project
     .dependsOn(
-      jwt,
-      `service-response`,
+      `logging-circe`,
+      `service-response-circe`,
       uri,
       utils
     )
     .settings(commons)
 
-val redis =
-  project
-    .settings(commons)
-
-val `service-response` =
-  project
-    .settings(commons)
-
-val `service-response-circe` =
-  project
-    .settings(commons)
-
-val slick =
-  project
-    .settings(commons)
-
-val uri =
-  project
-    .settings(commons)
-
-val utils =
-  project
-    .dependsOn(uri)
-    .settings(commons)
+val root =
+  Project("commons", file("."))
+    .settings(RootSettings)
+    .aggregate(
+      `akka-http`,
+      clients,
+      `clients-circe`,
+      email,
+      jwt,
+      logging,
+      play,
+      redis,
+      `service-response`,
+      `service-response-circe`,
+      slick,
+      uri,
+      utils)

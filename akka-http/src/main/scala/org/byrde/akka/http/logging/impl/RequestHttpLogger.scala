@@ -7,7 +7,7 @@ import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model.HttpRequest
 
-import play.api.libs.json.{JsString, Json}
+import io.circe.Json
 
 class RequestHttpLogger(val system: ActorSystem) extends HttpRequestLogging {
   val name: String =
@@ -19,10 +19,15 @@ class RequestHttpLogger(val system: ActorSystem) extends HttpRequestLogging {
   def request(epoch: Long, status: String, request: HttpRequest)(implicit loggingInformation: JsonLoggingFormat[HttpRequest]): Unit = {
     val innerRequest =
       Json.obj(
-        "status" -> JsString(status),
-        "epoch" -> JsString(s"${epoch}ms")
+        "status" -> Json.fromString(status),
+        "epoch" -> Json.fromString(s"${epoch}ms")
       )
 
-    logger.info((innerRequest ++ loggingInformation.format(request)).toString())
+    val json =
+      Json.obj(
+        "request" -> innerRequest,
+        "info" -> loggingInformation.format(request))
+
+    logger.info(json.toString())
   }
 }
