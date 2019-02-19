@@ -1,13 +1,11 @@
-import aether.AetherKeys.aetherDeploy
-
 val RootSettings =
   Seq(
     name :=
       Option(
         System.getProperty("name"))
         .getOrElse("commons"),
-    publish := (),
-    publishLocal := ())
+    publish := {},
+    publishLocal := {})
 
 val commons =
   Seq(
@@ -71,7 +69,7 @@ val commons =
         "Martin Allaire",
         "martin@byrde.io",
         new URL("http://linkedin.com/allama")),
-    publish := aetherDeploy.value)
+    publishMavenStyle := true)
 
 val jwt =
   project
