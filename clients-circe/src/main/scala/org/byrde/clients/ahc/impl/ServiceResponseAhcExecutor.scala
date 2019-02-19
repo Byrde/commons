@@ -5,6 +5,8 @@ import org.byrde.service.response.ServiceResponseType
 import org.byrde.service.response.utils.ServiceResponseUtils._
 import org.byrde.uri.Path
 
+import com.github.ghik.silencer.silent
+
 import play.api.libs.ws.StandaloneWSRequest
 
 import io.circe.generic.semiauto._
@@ -16,19 +18,19 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
   self =>
   import ServiceResponseAhcExecutor._
 
-  def get[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
+  @silent def get[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
     super.getJson(path, requestHook, curlRequestHook).map(processResponse[T](_)(deriveDecoder[TransientServiceResponse[T]]))(ec)
 
-  def post[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
+  @silent def post[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     super.postJson(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_)(deriveDecoder[TransientServiceResponse[TT]]))(ec)
 
-  def put[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
+  @silent def put[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     super.putJson(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_)(deriveDecoder[TransientServiceResponse[TT]]))(ec)
 
-  def delete[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
+  @silent def delete[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
     super.deleteJson(path, requestHook, curlRequestHook).map(processResponse[T](_)(deriveDecoder[TransientServiceResponse[T]]))(ec)
 
-  def patch[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
+  @silent def patch[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     super.patchJson(body)(path, requestHook, curlRequestHook).map(processResponse[TT](_)(deriveDecoder[TransientServiceResponse[TT]]))(ec)
 
   private def processResponse[T](json: Json)(implicit decoder: Decoder[TransientServiceResponse[T]]): TransientServiceResponse[T] =

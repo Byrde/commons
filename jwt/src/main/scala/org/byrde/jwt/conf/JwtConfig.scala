@@ -2,6 +2,7 @@ package org.byrde.jwt.conf
 
 import org.byrde.jwt.definitions._
 
+import com.github.ghik.silencer.silent
 import com.typesafe.config.Config
 import org.apache.commons.codec.binary.Base64
 import io.igl.jwt._
@@ -51,11 +52,11 @@ object JwtConfig {
     build(token, signature, encryption, claims = claims)
   }
 
-  private def build(token: String,
-                    signature: String,
-                    encryption: String,
-                    headers: Seq[String] = Seq.empty,
-                    claims: Seq[String] = Seq.empty): JwtConfig = {
+  @silent private def build(token: String,
+                            signature: String,
+                            encryption: String,
+                            headers: Seq[String] = Seq.empty,
+                            claims: Seq[String] = Seq.empty): JwtConfig = {
     val resolvedEncryption =
       encryption match {
         case "HS256" =>

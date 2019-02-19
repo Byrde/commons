@@ -7,7 +7,7 @@ val RootSettings =
     publish := {},
     publishLocal := {})
 
-val commons =
+val CommonsSettings =
   Seq(
     version :=
       Option(
@@ -63,55 +63,59 @@ val commons =
       Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
     publishTo :=
       Some("Cloudsmith API" at "https://maven.cloudsmith.io/byrde/libraries/"),
+    publishMavenStyle := true,
     developers +=
       Developer(
         "Alfapalooza",
         "Martin Allaire",
         "martin@byrde.io",
         new URL("http://linkedin.com/allama")),
-    publishMavenStyle := true)
+    libraryDependencies ++=
+      Seq(
+        compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.1"),
+        "com.github.ghik" %% "silencer-lib" % "1.3.1" % Provided))
 
 val jwt =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val logging =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val `logging-circe` =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val redis =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val `service-response` =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val `service-response-circe` =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val slick =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val uri =
   project
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val email =
   project
     .dependsOn(`service-response`)
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val utils =
   project
     .dependsOn(uri)
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val play =
   project
@@ -121,7 +125,7 @@ val play =
       uri,
       utils
     )
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val clients =
   project
@@ -130,7 +134,7 @@ val clients =
       uri,
       utils
     )
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val `clients-circe` =
   project
@@ -139,7 +143,7 @@ val `clients-circe` =
       uri,
       utils
     )
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val `akka-http` =
   project
@@ -149,7 +153,7 @@ val `akka-http` =
       uri,
       utils
     )
-    .settings(commons)
+    .settings(CommonsSettings)
 
 val root =
   Project("commons", file("."))

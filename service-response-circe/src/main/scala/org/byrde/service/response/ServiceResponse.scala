@@ -2,6 +2,7 @@ package org.byrde.service.response
 
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 
+import com.github.ghik.silencer.silent
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
@@ -17,7 +18,7 @@ trait ServiceResponse[T] {
 
   def response: T
 
-  def toJson(implicit encoder: Encoder[T]): Json =
+  @silent def toJson(implicit encoder: Encoder[T]): Json =
     TransientServiceResponse(`type`, msg, status, code, response).asJson
 }
 
