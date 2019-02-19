@@ -69,7 +69,28 @@ val commons =
         new URL("http://linkedin.com/allama")),
     publish := aetherDeploy.value)
 
-lazy val `akka-http` =
+val root =
+  Project("commons", file("."))
+    .settings(
+      Seq(
+        publish := (),
+        publishLocal := ()): _*)
+    .aggregate(
+      `akka-http`,
+      clients,
+      `clients-circe`,
+      email,
+      jwt,
+      logging,
+      play,
+      redis,
+      `service-response`,
+      `service-response-circe`,
+      slick,
+      uri,
+      utils)
+
+val `akka-http` =
   project
     .dependsOn(
       logging,
@@ -79,7 +100,7 @@ lazy val `akka-http` =
     )
     .settings(commons)
 
-lazy val clients =
+val clients =
   project
     .dependsOn(
       `service-response`,
@@ -88,7 +109,7 @@ lazy val clients =
     )
     .settings(commons)
 
-lazy val `clients-circe` =
+val `clients-circe` =
   project
     .dependsOn(
       `service-response-circe`,
@@ -97,20 +118,20 @@ lazy val `clients-circe` =
     )
     .settings(commons)
 
-lazy val email =
+val email =
   project
     .dependsOn(`service-response`)
     .settings(commons)
 
-lazy val jwt =
+val jwt =
   project
     .settings(commons)
 
-lazy val logging =
+val logging =
   project
     .settings(commons)
 
-lazy val play =
+val play =
   project
     .dependsOn(
       jwt,
@@ -120,27 +141,27 @@ lazy val play =
     )
     .settings(commons)
 
-lazy val redis =
+val redis =
   project
     .settings(commons)
 
-lazy val `service-response` =
+val `service-response` =
   project
     .settings(commons)
 
-lazy val `service-response-circe` =
+val `service-response-circe` =
   project
     .settings(commons)
 
-lazy val slick =
+val slick =
   project
     .settings(commons)
 
-lazy val uri =
+val uri =
   project
     .settings(commons)
 
-lazy val utils =
+val utils =
   project
     .dependsOn(uri)
     .settings(commons)

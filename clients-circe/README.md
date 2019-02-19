@@ -1,6 +1,6 @@
-# Clients Libraries [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/clients_2.12/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/clients_2.12/latest/)
+# Clients Circe Libraries
 
-Standalone web service client library.
+Standalone web service client library... but circe.
 
 # How to install
 

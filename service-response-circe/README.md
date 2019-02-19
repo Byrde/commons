@@ -1,5 +1,6 @@
-# Service Response Libraries [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/service-response-circe_2.12/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/service-response-circe_2.12/latest/)
-Library to enrich service request + responses, and serialization utilities.
+# Service Response Circe Libraries
+
+Library to enrich service request + responses, and serialization utilities... but circe.
 
 # How to install
 
