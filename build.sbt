@@ -161,6 +161,7 @@ val root =
       email,
       jwt,
       logging,
+      `logging-circe`,
       play,
       redis,
       `service-response`,
