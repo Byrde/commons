@@ -12,60 +12,39 @@ import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import akka.util.ByteString
 
-import play.api.libs.json._
+import io.circe.{Decoder, jawn}
 
-import scala.reflect.{ClassTag, classTag}
-import scala.util.control.NoStackTrace
+import scala.reflect.ClassTag
 import scala.util.{Failure, Try}
 
 trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestWithRequestDirective {
-  private case class ModelValidationException[A: ClassTag](errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])])
-    extends Throwable(s"Error parsing: ${classTag[A].runtimeClass}, errors: [${formatErrors(errors)}]") with NoStackTrace
-
   private val unmarshallerContentTypes: Seq[ContentTypeRange] =
     List(`application/json`)
 
   private val jsonStringUnmarshaller =
     Unmarshaller.byteStringUnmarshaller
       .forContentTypes(unmarshallerContentTypes: _*)
-      .mapWithCharset {
-        case (ByteString.empty, _) =>
+      .map {
+        case ByteString.empty =>
           throw Unmarshaller.NoContentException
 
-        case (data, charset)       =>
-          data.decodeString(charset.nioCharset.name)
+        case data =>
+          jawn.parseByteBuffer(data.asByteBuffer).fold(throw _, identity)
       }
 
-  private def unmarshaller[T: ClassTag: Reads]: FromEntityUnmarshaller[T] = {
-    def read(json: JsValue) =
-      implicitly[Reads[T]]
-        .reads(json)
-
+  private def unmarshaller[T: ClassTag: Decoder]: FromEntityUnmarshaller[T] =
     jsonStringUnmarshaller
       .map { data =>
-        read(Json.parse(data)) match {
-          case JsSuccess(value, _) =>
+        data.as[T] match {
+          case Right(value) =>
             value
 
-          case JsError(errors) =>
-            throw ModelValidationException[T](errors)
+          case Left(ex) =>
+            throw ex
         }
       }
-  }
 
-  private def formatErrors(errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])]): String =
-    errors.foldLeft("") {
-      case (acc, err) =>
-        val error =
-          s"(path: ${err._1.toString()}, errors: [${err._2.map(_.messages.mkString(" ")).mkString(", ")}])"
-
-        if (acc.isEmpty)
-          error
-        else
-          s"$acc, $error"
-    }
-
-  def requestWithJsonEntity[T: ClassTag](errorCode: Int)(fn: HttpRequestWithEntity[T] => Route)(implicit reads: Reads[T]): Route = {
+  def requestWithJsonEntity[T: ClassTag](errorCode: Int)(fn: HttpRequestWithEntity[T] => Route)(implicit decoder: Decoder[T]): Route = {
     val pf: PartialFunction[Try[(T, HttpRequest)],
                             Directive1[HttpRequestWithEntity[T]]] = {
       case Failure(ex: JsonParseException) =>
@@ -74,7 +53,7 @@ trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestW
       case Failure(ex: JsonMappingException) =>
         reject(JsonParsingRejection(ex.toString, errorCode))
 
-      case Failure(ex: ModelValidationException[_]) =>
+      case Failure(ex) =>
         reject(JsonParsingRejection(ex.getMessage, errorCode))
     }
 
