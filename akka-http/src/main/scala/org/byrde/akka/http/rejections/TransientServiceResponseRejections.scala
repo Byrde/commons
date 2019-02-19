@@ -5,6 +5,8 @@ import org.byrde.service.response.exceptions.ServiceResponseException.TransientS
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 
+import io.circe.generic.auto._
+
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 object TransientServiceResponseRejections extends FailFastCirceSupport {

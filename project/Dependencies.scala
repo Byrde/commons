@@ -70,11 +70,14 @@ object Dependencies extends DependencyBuilders {
       "com.typesafe.slick" %% "slick-hikaricp"      % SlickVersion,
       "com.typesafe.slick" %% "slick"               % SlickVersion)
 
-  val PlayDependencies: Seq[ModuleID] =
+  val PlayWSDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.play" %% "play"                   % PlayVersion,
       "com.typesafe.play" %% "play-ws"                % PlayVersion,
       "com.typesafe.play" %% "play-ahc-ws-standalone" % PlayAhcVersion)
+
+  val PlayDependencies: Seq[ModuleID] =
+    Seq(
+      "com.typesafe.play" %% "play" % PlayVersion) ++ PlayWSDependencies
 
   val TypesafeConfigDependencies: Seq[ModuleID] =
     Seq(

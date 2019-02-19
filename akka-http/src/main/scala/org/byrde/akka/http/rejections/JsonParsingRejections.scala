@@ -5,6 +5,8 @@ import org.byrde.service.response.CommonsServiceResponseDictionary.E0400
 
 import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 
+import io.circe.generic.auto._
+
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 object JsonParsingRejections extends FailFastCirceSupport {

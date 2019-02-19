@@ -1,4 +1,5 @@
 package org.byrde.service.response.utils
+
 import org.byrde.service.response.ServiceResponse
 import org.byrde.service.response.exceptions.ServiceResponseException.TransientServiceResponseException
 

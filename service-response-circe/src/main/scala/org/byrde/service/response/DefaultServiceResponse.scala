@@ -2,14 +2,8 @@ package org.byrde.service.response
 
 import org.byrde.service.response.DefaultServiceResponse.Message
 
-import io.circe.Encoder
-import io.circe.generic.semiauto._
-
 trait DefaultServiceResponse extends ServiceResponse[Message] {
   self =>
-  override implicit def encoder: Encoder[Message] =
-    deriveEncoder[Message]
-
   override def `type`: ServiceResponseType =
     ServiceResponseType.Success
 
@@ -21,9 +15,6 @@ trait DefaultServiceResponse extends ServiceResponse[Message] {
 
   def apply(_msg: String, _code: Int): DefaultServiceResponse =
     new DefaultServiceResponse {
-      override implicit def encoder: Encoder[Message] =
-        self.encoder
-
       override def `type`: ServiceResponseType =
         self.`type`
 
@@ -39,7 +30,5 @@ trait DefaultServiceResponse extends ServiceResponse[Message] {
 }
 
 object DefaultServiceResponse {
-
   case class Message(message: String)
-
 }

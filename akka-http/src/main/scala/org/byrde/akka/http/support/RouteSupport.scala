@@ -24,24 +24,24 @@ trait RouteSupport extends FailFastCirceSupport {
   )(implicit encoder: Encoder[T]): Route =
     async(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
 
-  def asyncServiceResponse[T <: ServiceResponse[_]](
-    fn: Future[T],
+  def asyncServiceResponse[T, TT <: ServiceResponse[T]](
+    fn: Future[TT],
     Err: Throwable => Throwable = identity
-  ): Route =
-    async(fn, (res: T) => complete(res.toJson), Err)
+  )(implicit encoder: Encoder[T]): Route =
+    async(fn, (res: TT) => complete(res.toJson), Err)
 
-  def asyncWithDefaultJsonResponse[T, TT <: ServiceResponse[_]](
+  def asyncWithDefaultJsonResponse[T, TT, TTT <: ServiceResponse[TT]](
     fn: Future[T],
-    Ok: TT,
+    Ok: TTT,
     Err: Throwable => Throwable = identity
-  ): Route =
+  )(implicit encoder: Encoder[TT]): Route =
     async(fn, (_: T) => complete(Ok.toJson), Err)
 
-  def asyncWithCustomJsonResponse[T, TT <: ServiceResponse[_]](
+  def asyncWithCustomJsonResponse[T, TT, TTT <: ServiceResponse[TT]](
     fn: Future[T],
-    Ok: T => TT,
+    Ok: T => TTT,
     Err: Throwable => Throwable = identity
-  ): Route =
+  )(implicit encoder: Encoder[TT]): Route =
     async(fn, (res: T) => complete(Ok(res).toJson), Err)
 
   def async[T](

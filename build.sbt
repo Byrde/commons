@@ -88,6 +88,15 @@ lazy val clients =
     )
     .settings(commons)
 
+lazy val `clients-circe` =
+  project
+    .dependsOn(
+      `service-response-circe`,
+      uri,
+      utils
+    )
+    .settings(commons)
+
 lazy val email =
   project
     .dependsOn(`service-response`)
