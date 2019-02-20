@@ -1,12 +1,12 @@
 package org.byrde.clients.ahc.impl
 
+import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.ServiceResponseType
 import org.byrde.service.response.utils.ServiceResponseUtils._
 import org.byrde.uri.Path
 
 import com.github.ghik.silencer.silent
-
 import play.api.libs.ws.StandaloneWSRequest
 
 import io.circe.generic.semiauto._
@@ -35,7 +35,7 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
 
   private def processResponse[T](json: Json)(implicit decoder: Decoder[TransientServiceResponse[T]]): TransientServiceResponse[T] =
     json
-      .errorHook(deriveDecoder[TransientServiceResponse[String]])
+      .errorHook(deriveDecoder[TransientServiceResponse[Message]])
       .as[TransientServiceResponse[T]] match {
         case Right(validated: TransientServiceResponse[T]) =>
           validated
@@ -47,9 +47,9 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
 
 object ServiceResponseAhcExecutor {
   implicit class JsValue2ServiceResponseError(value: Json) {
-    @inline def errorHook(implicit decoder: Decoder[TransientServiceResponse[String]]): Json =
+    @inline def errorHook(implicit decoder: Decoder[TransientServiceResponse[Message]]): Json =
       value
-        .as[TransientServiceResponse[String]] match {
+        .as[TransientServiceResponse[Message]] match {
           case Right(validated) if validated.`type` == ServiceResponseType.Error =>
             throw validated.toException
 

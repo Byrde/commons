@@ -1,14 +1,16 @@
 package org.byrde.akka.http.support
 
 import org.byrde.akka.http.rejections.RejectionException
+import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
+import io.circe.Encoder
+import io.circe.generic.semiauto._
+
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-
-import io.circe.Encoder
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -24,19 +26,19 @@ trait RouteSupport extends FailFastCirceSupport {
   )(implicit encoder: Encoder[T]): Route =
     async(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
 
-  def asyncWithDefaultJsonResponse[T, TT <: ServiceResponse[String]](
+  def asyncWithDefaultJsonResponse[T, TT <: ServiceResponse[Message]](
     fn: Future[T],
     Ok: TT,
     Err: Throwable => Throwable = identity
   ): Route =
-    async(fn, (_: T) => complete(Ok.toJson), Err)
+    async(fn, (_: T) => complete(Ok.toJson(deriveEncoder[Message])), Err)
 
-  def asyncWithCustomJsonResponse[T, TT <: ServiceResponse[String]](
+  def asyncWithCustomJsonResponse[T, TT <: ServiceResponse[Message]](
     fn: Future[T],
     Ok: T => TT,
     Err: Throwable => Throwable = identity
   ): Route =
-    async(fn, (res: T) => complete(Ok(res).toJson), Err)
+    async(fn, (res: T) => complete(Ok(res).toJson(deriveEncoder[Message])), Err)
 
   def async[T](
     fn: Future[T],

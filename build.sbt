@@ -122,7 +122,6 @@ val play =
     .dependsOn(
       jwt,
       `service-response`,
-      uri,
       utils
     )
     .settings(CommonsSettings)
@@ -131,7 +130,6 @@ val clients =
   project
     .dependsOn(
       `service-response`,
-      uri,
       utils
     )
     .settings(CommonsSettings)
@@ -140,7 +138,6 @@ val `clients-circe` =
   project
     .dependsOn(
       `service-response-circe`,
-      uri,
       utils
     )
     .settings(CommonsSettings)
@@ -150,7 +147,6 @@ val `akka-http` =
     .dependsOn(
       `logging-circe`,
       `service-response-circe`,
-      uri,
       utils
     )
     .settings(CommonsSettings)
