@@ -7,10 +7,8 @@ import scala.language.implicitConversions
 trait DefaultServiceResponse extends ServiceResponse[String] {
   self =>
     private implicit def string(key: String): OWrites[String] =
-      new OWrites[String] {
-        override def writes(o: String): JsObject =
-          Json.obj(key -> JsString(o))
-      }
+      (o: String) =>
+        Json.obj(key -> JsString(o))
 
     override implicit def writes: OWrites[String] =
       ServiceResponse.message

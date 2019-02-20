@@ -35,7 +35,7 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
 
   private def processResponse[T](json: Json)(implicit decoder: Decoder[TransientServiceResponse[T]]): TransientServiceResponse[T] =
     json
-      .errorHook(deriveDecoder[TransientServiceResponse[Message]])
+      .errorHook(deriveDecoder[Message])
       .as[TransientServiceResponse[T]] match {
         case Right(validated: TransientServiceResponse[T]) =>
           validated
@@ -47,9 +47,9 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
 
 object ServiceResponseAhcExecutor {
   implicit class JsValue2ServiceResponseError(value: Json) {
-    @inline def errorHook(implicit decoder: Decoder[TransientServiceResponse[Message]]): Json =
+    @silent @inline def errorHook(implicit decoder: Decoder[Message]): Json =
       value
-        .as[TransientServiceResponse[Message]] match {
+        .as[TransientServiceResponse[Message]](deriveDecoder[TransientServiceResponse[Message]]) match {
           case Right(validated) if validated.`type` == ServiceResponseType.Error =>
             throw validated.toException
 

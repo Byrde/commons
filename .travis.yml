@@ -25,8 +25,8 @@ before_script:
 - cd $TRAVIS_BUILD_DIR
 
 # Clean tracked binaries, run unit tests, and package artifact.
-script:
-- sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.$TRAVIS_BUILD_NUMBER" 'set credentials += Credentials("Cloudsmith API", "maven.cloudsmith.io", "token", "${CLOUDSMITH_API_KEY}")' clean test
+# script:
+# - sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.$TRAVIS_BUILD_NUMBER" 'set credentials += Credentials("Cloudsmith API", "maven.cloudsmith.io", "token", "${CLOUDSMITH_API_KEY}")' clean test
 
 # Cached dependencies cleanup.
 before_cache:
