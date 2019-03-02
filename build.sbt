@@ -20,7 +20,7 @@ val CommonsSettings =
     scalaVersion :=
       Option(
         System.getProperty("scalaVersion"))
-        .getOrElse("2.12.6"),
+        .getOrElse("2.12.8"),
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers +=
