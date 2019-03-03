@@ -1,30 +1,31 @@
 package org.byrde.clients.circuitbreaker.conf
 
-import play.api.Configuration
+import com.typesafe.config.Config
 
 import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
 case class CircuitBreakerConfig(maxFailures: Int, callTimeout: FiniteDuration, resetTimeout: FiniteDuration)
 
 object CircuitBreakerConfig {
-  def apply(config: Configuration): CircuitBreakerConfig =
+  private implicit def asFiniteDuration(d: java.time.Duration): FiniteDuration =
+    scala.concurrent.duration.Duration.fromNanos(d.toNanos)
+
+  def apply(config: Config): CircuitBreakerConfig =
     apply("max-failures", "call-timeout", "reset-timeout", config)
 
   def apply(_maxFailures: String,
             _callTimeout: String,
             _resetTimeout: String,
-            config: Configuration): CircuitBreakerConfig = {
+            config: Config): CircuitBreakerConfig = {
     val maxFailures =
-      config
-        .get[Int](_maxFailures)
+      config.getInt(_maxFailures)
 
     val callTimeout =
-      config
-        .get[FiniteDuration](_callTimeout)
+      config.getDuration(_callTimeout)
 
     val resetTimeout =
-      config
-        .get[FiniteDuration](_resetTimeout)
+      config.getDuration(_resetTimeout)
 
     CircuitBreakerConfig(maxFailures, callTimeout, resetTimeout)
   }

@@ -1,6 +1,6 @@
 package org.byrde.service.response
 
-import play.api.libs.json.{JsObject, JsString, Json, OWrites}
+import play.api.libs.json.{JsString, Json, OWrites}
 
 import scala.language.implicitConversions
 

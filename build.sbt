@@ -75,6 +75,10 @@ val CommonsSettings =
         compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.1"),
         "com.github.ghik" %% "silencer-lib" % "1.3.1" % Provided))
 
+val auth =
+  project
+    .settings(CommonsSettings)
+
 val jwt =
   project
     .settings(CommonsSettings)
@@ -156,6 +160,7 @@ val root =
     .settings(RootSettings)
     .aggregate(
       `akka-http`,
+      auth,
       clients,
       `clients-circe`,
       email,
