@@ -15,7 +15,7 @@ abstract class ServiceResponseException[T <: ServiceResponseException[T]](_msg: 
   override def `type`: ServiceResponseType =
     ServiceResponseType.Error
 
-  override def msg: String =
+  override def message: String =
     _msg
 
   override def status: Int =
@@ -32,5 +32,5 @@ object ServiceResponseException {
   }
 
   def apply(serviceResponse: ServiceResponse[Message]): TransientServiceResponseException =
-    TransientServiceResponseException(serviceResponse.msg, serviceResponse.code, serviceResponse.status)
+    TransientServiceResponseException(serviceResponse.message, serviceResponse.code, serviceResponse.status)
 }

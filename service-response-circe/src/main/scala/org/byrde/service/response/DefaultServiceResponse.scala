@@ -8,7 +8,7 @@ trait DefaultServiceResponse extends ServiceResponse[Message] {
     ServiceResponseType.Success
 
   override def response: Message =
-    Message(msg)
+    Message(message)
 
   def apply(_msg: String): DefaultServiceResponse =
     apply(_msg, self.code)
@@ -18,7 +18,7 @@ trait DefaultServiceResponse extends ServiceResponse[Message] {
       override def `type`: ServiceResponseType =
         self.`type`
 
-      override def msg: String =
+      override def message: String =
         _msg
 
       override def code: Int =

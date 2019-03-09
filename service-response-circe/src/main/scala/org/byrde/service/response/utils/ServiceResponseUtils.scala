@@ -7,6 +7,6 @@ import org.byrde.service.response.exceptions.ServiceResponseException.TransientS
 object ServiceResponseUtils {
   implicit class ServiceResponse2ServiceResponseException(value: ServiceResponse[Message]) {
     @inline def toException: TransientServiceResponseException =
-      TransientServiceResponseException(value.msg, value.code, value.status)
+      TransientServiceResponseException(value.message, value.code, value.status)
   }
 }

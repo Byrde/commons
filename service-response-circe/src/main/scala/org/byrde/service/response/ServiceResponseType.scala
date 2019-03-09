@@ -1,6 +1,6 @@
 package org.byrde.service.response
 
-import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.{Decoder, Encoder, Json}
 
 sealed trait ServiceResponseType {
   def value: String
@@ -8,12 +8,11 @@ sealed trait ServiceResponseType {
 
 object ServiceResponseType {
   implicit def encoder: Encoder[ServiceResponseType] =
-    (a: ServiceResponseType) =>
-      Json.fromString(a.value)
+    (`type`: ServiceResponseType) =>
+      Json.fromString(`type`.value)
 
   implicit def decoder: Decoder[ServiceResponseType] =
-    (c: HCursor) =>
-      c.downField("type").as[String].map(fromString)
+    Decoder.decodeString.map(`type` => fromString(`type`))
 
   private val success: String =
     "Success"

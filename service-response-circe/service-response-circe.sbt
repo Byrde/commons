@@ -1,4 +1,5 @@
 name := """service-response-circe"""
 
 libraryDependencies ++=
-  Dependencies.CirceDependencies
+  Dependencies.CirceDependencies :+
+    "org.scalatest" %% "scalatest" % "3.0.4" % Test

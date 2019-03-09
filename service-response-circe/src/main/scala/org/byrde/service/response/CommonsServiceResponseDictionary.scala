@@ -6,7 +6,7 @@ import org.byrde.service.response.exceptions.{ClientException, ServerException}
 object CommonsServiceResponseDictionary {
   // OK
   object E0200 extends DefaultServiceResponse {
-    override def msg: String =
+    override def message: String =
       "Ok"
 
     override def status: Int =

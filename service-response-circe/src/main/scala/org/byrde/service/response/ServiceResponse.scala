@@ -10,7 +10,7 @@ import io.circe.{Encoder, Json}
 trait ServiceResponse[T] {
   def `type`: ServiceResponseType
 
-  def msg: String
+  def message: String
 
   def status: Int
 
@@ -19,31 +19,15 @@ trait ServiceResponse[T] {
   def response: T
 
   @silent def toJson(implicit encoder: Encoder[T]): Json =
-    TransientServiceResponse(`type`, msg, status, code, response).asJson
+    TransientServiceResponse(`type`, message, status, code, response).asJson
 }
 
 object ServiceResponse {
-  val `type`: String =
-    "type"
-
-  val message: String =
-    "message"
-
-  val status: String =
-    "status"
-
-  val code: String =
-    "code"
-
-  val response: String =
-    "response"
-
   case class TransientServiceResponse[T](override val `type`: ServiceResponseType,
-                                         override val msg: String,
+                                         override val message: String,
                                          override val status: Int,
                                          override val code: Int,
                                          override val response: T) extends ServiceResponse[T]
-
   def apply[T](response: T): TransientServiceResponse[T] =
     apply("Success", response)
 
