@@ -2,9 +2,11 @@ package org.byrde.clients.ahc.impl
 
 import org.byrde.uri.Path
 
-import play.api.libs.ws.{BodyWritable, StandaloneWSRequest}
+import akka.util.ByteString
 
-import io.circe.{Encoder, Json}
+import play.api.libs.ws.{BodyWritable, InMemoryBody, StandaloneWSRequest}
+
+import io.circe.{Encoder, Json, Printer}
 import io.circe.parser._
 import io.circe.syntax._
 
@@ -31,6 +33,11 @@ abstract class JsonAhcExecutor extends BaseAhcExecutor {
 }
 
 object JsonAhcExecutor {
-  implicit def circeJsonBodyWriteable: BodyWritable[Json] =
-    ???
+  private val defaultPrinter =
+    Printer.noSpaces
+
+  implicit def circeJsonBodyWriteable(implicit printer: Printer = defaultPrinter): BodyWritable[Json] =
+    BodyWritable(
+      json => InMemoryBody(ByteString.fromString(json.pretty(printer))),
+      "application/json")
 }
