@@ -2,10 +2,10 @@ import sbt.librarymanagement.{DependencyBuilders, ModuleID}
 
 object Dependencies extends DependencyBuilders {
   val AkkaHttpVersion: String =
-    "10.1.0"
+    "10.1.7"
 
   val AkkaVersion: String =
-    "2.5.11"
+    "2.5.21"
 
   val CompressorVersion: String =
     "1.5.2"
@@ -37,7 +37,7 @@ object Dependencies extends DependencyBuilders {
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-stream"            % AkkaVersion,
-      "de.heikoseeberger"  %% "akka-http-circe"        % "1.24.3",
+      "de.heikoseeberger"  %% "akka-http-circe"        % "1.25.2",
 
       "com.typesafe.akka" %% "akka-http-testkit"    % AkkaHttpVersion,
       "com.typesafe.akka" %% "akka-testkit"         % AkkaVersion,
