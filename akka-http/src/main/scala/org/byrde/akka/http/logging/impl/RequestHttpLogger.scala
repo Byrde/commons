@@ -28,6 +28,6 @@ class RequestHttpLogger(val system: ActorSystem) extends HttpRequestLogging {
         "request" -> innerRequest,
         "info" -> loggingInformation.format(request))
 
-    logger.info(json.toString())
+    logger.info(json.pretty(printer))
   }
 }

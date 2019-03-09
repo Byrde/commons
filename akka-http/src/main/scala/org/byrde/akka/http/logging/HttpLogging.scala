@@ -6,34 +6,37 @@ import org.byrde.logging.{JsonLoggingFormat, Logging}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpRequest
 
-import io.circe.Json
+import io.circe.{Json, Printer}
 
 trait HttpLogging {
+  protected val printer: Printer =
+    Printer.noSpaces.copy(dropNullValues = true)
+
   val logger: LoggingAdapter
 
   def debug[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.debug(loggingInformation.format(elem).toString)
+    logger.debug(loggingInformation.format(elem).pretty(printer))
 
   def debug[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.debug(loggingInformation.format(msg, elem).toString)
+    logger.debug(loggingInformation.format(msg, elem).pretty(printer))
 
   def info[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.info(loggingInformation.format(elem).toString)
+    logger.info(loggingInformation.format(elem).pretty(printer))
 
   def info[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.info(loggingInformation.format(msg, elem).toString)
+    logger.info(loggingInformation.format(msg, elem).pretty(printer))
 
   def warning[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.warning(loggingInformation.format(elem).toString)
+    logger.warning(loggingInformation.format(elem).pretty(printer))
 
   def warning[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.warning(loggingInformation.format(msg, elem).toString)
+    logger.warning(loggingInformation.format(msg, elem).pretty(printer))
 
   def error[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.error(loggingInformation.format(elem).toString)
+    logger.error(loggingInformation.format(elem).pretty(printer))
 
   def error[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.error(loggingInformation.format(msg, elem).toString)
+    logger.error(loggingInformation.format(msg, elem).pretty(printer))
 }
 
 object HttpLogging {
