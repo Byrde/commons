@@ -31,11 +31,13 @@ object Dependencies extends DependencyBuilders {
   val CirceVersion: String =
     "0.10.0"
 
-  val AkkaDependencies: Seq[ModuleID] =
+  val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
+      "com.typesafe.akka"  %% "akka-actor"             % AkkaVersion,
+      "com.typesafe.akka"  %% "akka-slf4j"             % AkkaVersion,
       "com.typesafe.akka"  %% "akka-stream"            % AkkaVersion,
       "de.heikoseeberger"  %% "akka-http-circe"        % "1.25.2",
 

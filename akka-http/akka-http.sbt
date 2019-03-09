@@ -1,4 +1,4 @@
 name := """akka-http"""
 
 libraryDependencies ++=
-  Dependencies.AkkaDependencies ++ Dependencies.GuiceDependencies
+  Dependencies.AkkaHttpDependencies ++ Dependencies.GuiceDependencies
