@@ -16,7 +16,7 @@ import scala.util.{Failure, Success}
 trait RouteSupport extends FailFastCirceSupport {
   def SuccessCode: Int
 
-  private implicit val printer: Printer =
+  private implicit lazy val LocalPrinter: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
 
   def asyncJson[T](

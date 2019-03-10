@@ -30,7 +30,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
 
   def handlers: Set[RejectionHandler]
 
-  private lazy val LocalPrinter =
+  private implicit lazy val LocalPrinter: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
 
   private lazy val MediaType =
