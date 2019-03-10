@@ -5,10 +5,8 @@ import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-
-import io.circe.Encoder
+import io.circe.{Encoder, Printer}
 import io.circe.generic.semiauto._
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
@@ -17,6 +15,9 @@ import scala.util.{Failure, Success}
 
 trait RouteSupport extends FailFastCirceSupport {
   def SuccessCode: Int
+
+  private implicit val printer: Printer =
+    Printer.noSpaces.copy(dropNullValues = true)
 
   def asyncJson[T](
     fn: Future[T],
