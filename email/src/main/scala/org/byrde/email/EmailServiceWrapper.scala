@@ -4,17 +4,14 @@ import java.sql.Timestamp
 
 import org.byrde.email.conf.EmailConfig
 import org.byrde.email.response.EmailResponse
-import org.byrde.service.response.ServiceResponse
 
 import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
 import javax.mail.{Message, Transport}
 
-import play.twirl.api.Html
-
 class EmailServiceWrapper(emailConfig: EmailConfig) {
   def sendMessage(recipient: String,
                   subject: String,
-                  content: Html): ServiceResponse[EmailResponse] = {
+                  content: String): EmailResponse = {
     val message =
       new MimeMessage(emailConfig.sessionFromConfig)
 
@@ -28,7 +25,7 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
     message.setRecipients(Message.RecipientType.TO, recipient)
     message.setSubject(subject)
 
-    messageBodyPart.setContent(content.body, "text/html;charset=utf-8")
+    messageBodyPart.setContent(content, "text/html;charset=utf-8")
 
     multipart.addBodyPart(messageBodyPart)
 

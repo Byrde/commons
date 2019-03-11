@@ -113,7 +113,6 @@ val uri =
 
 val email =
   project
-    .dependsOn(`service-response`)
     .settings(CommonsSettings)
 
 val utils =
