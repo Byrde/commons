@@ -3,6 +3,7 @@ package org.byrde.service.response
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 
 import com.github.ghik.silencer.silent
+
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.{Encoder, Json}

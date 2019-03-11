@@ -20,13 +20,13 @@ trait ServiceResponse[T] {
   def toResult: Result =
     Results.Status(status)(toJson)
 
-  def toJson: JsObject = Json.obj(
-    ServiceResponse.`type` -> `type`.value,
-    ServiceResponse.message  -> msg,
-    ServiceResponse.status   -> status,
-    ServiceResponse.code     -> code,
-    ServiceResponse.response -> Json.toJson(response)
-  )
+  def toJson: JsObject =
+    Json.obj(
+      ServiceResponse.`type`   -> `type`.value,
+      ServiceResponse.message  -> msg,
+      ServiceResponse.status   -> status,
+      ServiceResponse.code     -> code,
+      ServiceResponse.response -> Json.toJson(response))
 }
 
 object ServiceResponse {

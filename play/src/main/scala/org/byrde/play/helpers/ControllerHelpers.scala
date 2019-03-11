@@ -3,6 +3,9 @@ package org.byrde.play.helpers
 import play.api.libs.json.{JsError, JsPath, JsSuccess, Reads}
 import play.api.mvc.{BodyParser, ControllerComponents}
 
+import io.circe.Decoder
+import io.circe.parser._
+
 import scala.concurrent.ExecutionContext
 import scala.reflect.{ClassTag, classTag}
 import scala.util.control.NoStackTrace
@@ -28,6 +31,17 @@ trait ControllerHelpers {
           case JsError(errors) =>
             throw ModelValidationException[T](errors)
         }
+      }
+
+  def circeJsonBodyParser[T](implicit decoder: Decoder[T], controllerComponents: ControllerComponents): BodyParser[T] =
+    controllerComponents
+      .parsers
+      .byteString
+      .map(_.utf8String)
+      .map { value =>
+        parse(value)
+          .flatMap(_.as[T])
+          .fold(throw _, identity)
       }
 
   private def formatErrors(errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])]): String =
