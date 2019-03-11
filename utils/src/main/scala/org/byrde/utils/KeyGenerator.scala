@@ -27,12 +27,12 @@ object KeyGenerator {
     generateKey.toSecretKeyString
 
   implicit class SecretKey2String(value: SecretKey) {
-    def toSecretKeyString =
+    def toSecretKeyString: String =
       Base64.getEncoder.encodeToString(value.getEncoded)
   }
 
   implicit class String2SecretKey(value: String) {
-    def toSecretKey = {
+    def toSecretKey: SecretKeySpec = {
       val decodedKey =
         Base64.getDecoder.decode(value)
 

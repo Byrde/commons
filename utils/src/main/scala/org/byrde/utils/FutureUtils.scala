@@ -9,6 +9,7 @@ object FutureUtils {
       value.flatMap {
         case Success(res) =>
           Future.successful(res)
+
         case Failure(ex) =>
           Future.failed(ex)
       }

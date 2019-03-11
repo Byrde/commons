@@ -3,7 +3,7 @@ package org.byrde.clients.ahc.impl
 import org.byrde.clients.ahc.AhcExecutor
 import org.byrde.clients.circuitbreaker.CircuitBreakerLike
 import org.byrde.clients.circuitbreaker.impl.ClientCircuitBreaker
-import org.byrde.utils.concurrent.Trampoline
+import org.byrde.concurrent.Trampoline
 
 import akka.actor.ActorSystem
 

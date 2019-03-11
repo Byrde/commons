@@ -1,5 +1,6 @@
-package org.byrde.utils
+package org.byrde.clients.utils
 
+import org.byrde.clients.Headers
 import org.byrde.uri.Host
 import org.byrde.utils.OptionUtils._
 
@@ -7,7 +8,9 @@ import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, WSCookie}
 
 object RequestUtils {
   implicit class Request2WSRequest[T](value: play.api.mvc.Request[T]) {
-    @inline def toWSRequest(base: StandaloneWSRequest, newHost: Option[Host] = None)(implicit bodyWritable: BodyWritable[T]): StandaloneWSRequest =
+    @inline def toWSRequest(base: StandaloneWSRequest, newHost: Option[Host] = None)(
+      implicit bodyWritable: BodyWritable[T]
+    ): StandaloneWSRequest =
       base
         .withBody(value.body)
         .withMethod(value.method)
@@ -16,19 +19,17 @@ object RequestUtils {
   }
 
   implicit class Headers2HeaderSeq(value: play.api.mvc.Headers) {
-    @inline def toHeaderSeq(newHost: Option[Host] = None): Seq[(String, String)]  =
-      value
-        .headers
-        .flatMap {
-          case (headerKey, _) if Headers.proxyHeadersFilter.contains(headerKey.toLowerCase) =>
-            None
+    @inline def toHeaderSeq(newHost: Option[Host] = None): Seq[(String, String)] =
+      value.headers.flatMap {
+        case (headerKey, _) if Headers.proxyHeadersFilter.contains(headerKey.toLowerCase) =>
+          None
 
-          case (headerKey, _) if newHost.nonEmpty && headerKey.equalsIgnoreCase(Headers.Host) =>
-            Some(headerKey -> newHost.get.host.toString)
+        case (headerKey, _) if newHost.nonEmpty && headerKey.equalsIgnoreCase(Headers.Host) =>
+          Some(headerKey -> newHost.get.host.toString)
 
-          case (headerKey, headerValue) =>
-            Some(headerKey -> headerValue)
-        }
+        case (headerKey, headerValue) =>
+          Some(headerKey -> headerValue)
+      }
   }
 
   implicit class Cookie2WSCookie(value: play.api.mvc.Cookie) {

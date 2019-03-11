@@ -13,7 +13,7 @@ object CountryCodesUtils {
   def findByCountry(country: String): Option[Locale] =
     countries.get(normalizeKey(country))
 
-  def findByCountryCode(countryCode: String) =
+  def findByCountryCode(countryCode: String): Locale =
     new Locale(Locale.getDefault.getLanguage, countryCode)
 
   private def normalizeKey(value: String) =

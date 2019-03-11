@@ -1,4 +1,4 @@
-package org.byrde.utils
+package org.byrde.clients
 
 object Headers {
   type HeaderName = String

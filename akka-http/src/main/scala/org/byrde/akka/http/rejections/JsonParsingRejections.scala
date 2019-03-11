@@ -12,17 +12,11 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 object JsonParsingRejections extends FailFastCirceSupport {
   case class JsonParsingRejection(errors: String, errorCode: Int) extends Rejection
 
-  case class JsonValidationRejection(errors: String, errorCode: Int) extends Rejection
-
   val handler: RejectionHandler =
     RejectionHandler
       .newBuilder()
       .handle {
         case JsonParsingRejection(errors, errorCode) =>
-          rejectRequestEntityAndComplete(E0400(errors, errorCode).toJson)
-      }
-      .handle {
-        case JsonValidationRejection(errors, errorCode) =>
           rejectRequestEntityAndComplete(E0400(errors, errorCode).toJson)
       }
       .result()

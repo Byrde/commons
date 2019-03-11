@@ -1,5 +1,4 @@
-package org.byrde.utils.concurrent
-
+package org.byrde.concurrent
 import java.util
 
 import scala.annotation.tailrec

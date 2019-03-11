@@ -2,9 +2,6 @@ package org.byrde.akka.http.scaladsl.server.directives
 
 import org.byrde.akka.http.rejections.JsonParsingRejections.JsonParsingRejection
 
-import com.fasterxml.jackson.core.JsonParseException
-import com.fasterxml.jackson.databind.JsonMappingException
-
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.{ContentTypeRange, HttpRequest}
 import akka.http.scaladsl.server._
@@ -47,12 +44,6 @@ trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestW
   def requestWithJsonEntity[T: ClassTag](errorCode: Int)(fn: HttpRequestWithEntity[T] => Route)(implicit decoder: Decoder[T]): Route = {
     val pf: PartialFunction[Try[(T, HttpRequest)],
                             Directive1[HttpRequestWithEntity[T]]] = {
-      case Failure(ex: JsonParseException) =>
-        reject(JsonParsingRejection(ex.toString, errorCode))
-
-      case Failure(ex: JsonMappingException) =>
-        reject(JsonParsingRejection(ex.toString, errorCode))
-
       case Failure(ex) =>
         reject(JsonParsingRejection(ex.getMessage, errorCode))
     }

@@ -1,8 +1,8 @@
 package org.byrde.clients.ahc.impl
 
 import org.byrde.clients.ahc.impl.JsonAhcExecutor.JsParsingError
+import org.byrde.clients.utils.exceptions.ModelValidationException
 import org.byrde.uri.Path
-import org.byrde.utils.exceptions.ModelValidationException
 
 import play.api.libs.json._
 import play.api.libs.ws.StandaloneWSRequest

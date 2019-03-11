@@ -1,4 +1,4 @@
-package org.byrde.utils.exceptions
+package org.byrde.clients.utils.exceptions
 
 import play.api.libs.json.JsPath
 

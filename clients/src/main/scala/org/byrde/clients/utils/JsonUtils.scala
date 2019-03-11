@@ -1,4 +1,4 @@
-package org.byrde.utils
+package org.byrde.clients.utils
 
 import play.api.libs.json._
 
@@ -16,19 +16,12 @@ object JsonUtils {
 
   object Reads {
     implicit def string(key: String): Reads[String] =
-      new Reads[String] {
-        override def reads(json: JsValue): JsResult[String] =
-          (json \ key)
-            .validate[String]
-      }
+      (json: JsValue) => (json \ key).validate[String]
   }
 
   object Writes {
     implicit def string(key: String): OWrites[String] =
-      new OWrites[String] {
-        override def writes(o: String): JsObject =
-          Json.obj(key -> JsString(o))
-      }
+      (o: String) => Json.obj(key -> JsString(o))
   }
 
   object Format {

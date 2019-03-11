@@ -1,4 +1,4 @@
-package org.byrde.utils
+package org.byrde.play.utils
 
 import play.api.libs.ws.{BodyWritable, EmptyBody}
 

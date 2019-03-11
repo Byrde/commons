@@ -121,15 +121,6 @@ val utils =
     .dependsOn(uri)
     .settings(CommonsSettings)
 
-val play =
-  project
-    .dependsOn(
-      jwt,
-      `service-response`,
-      utils
-    )
-    .settings(CommonsSettings)
-
 val clients =
   project
     .dependsOn(
@@ -142,6 +133,14 @@ val `clients-circe` =
   project
     .dependsOn(
       `service-response-circe`,
+      utils
+    )
+    .settings(CommonsSettings)
+
+val play =
+  project
+    .dependsOn(
+      jwt,
       utils
     )
     .settings(CommonsSettings)
