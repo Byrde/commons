@@ -20,7 +20,7 @@ object Dependencies extends DependencyBuilders {
     "1.2.2"
 
   val PlayVersion: String =
-    "2.6.20"
+    "2.7.0"
 
   val PlayAhcVersion: String =
     "2.0.0-M2"
