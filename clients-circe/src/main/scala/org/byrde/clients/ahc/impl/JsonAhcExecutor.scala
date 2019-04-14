@@ -1,5 +1,6 @@
 package org.byrde.clients.ahc.impl
 
+import org.byrde.clients.ahc.BoxedTypedServiceResponseException
 import org.byrde.uri.Path
 
 import akka.util.ByteString
@@ -16,20 +17,29 @@ abstract class JsonAhcExecutor extends BaseAhcExecutor {
   self =>
   import JsonAhcExecutor._
 
-  def getJson(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[Json] =
-    super.underlyingGet(path, requestHook, curlRequestHook).map(_.body).map(parse).map(_.fold(throw _, identity))
+  def getJson(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity): Future[Json] =
+    super.underlyingGet(path, requestHook).map(_.body).map(processResponse("GET", path.toString))
 
-  def postJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T]): Future[Json] =
-    super.underlyingPost(body.asJson)(path, requestHook, curlRequestHook).map(_.body).map(parse).map(_.fold(throw _, identity))
+  def postJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T]): Future[Json] =
+    super.underlyingPost(body.asJson)(path, requestHook).map(_.body).map(processResponse("POST", path.toString))
 
-  def putJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T]): Future[Json] =
-    super.underlyingPut(body.asJson)(path, requestHook, curlRequestHook).map(_.body).map(parse).map(_.fold(throw _, identity))
+  def putJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T]): Future[Json] =
+    super.underlyingPut(body.asJson)(path, requestHook).map(_.body).map(processResponse("PUT", path.toString))
 
-  def deleteJson(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ()): Future[Json] =
-    super.underlyingDelete(path, requestHook, curlRequestHook).map(_.body).map(parse).map(_.fold(throw _, identity))
+  def deleteJson(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity): Future[Json] =
+    super.underlyingDelete(path, requestHook).map(_.body).map(processResponse("DELETE", path.toString))
 
-  def patchJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T]): Future[Json] =
-    super.underlyingPatch(body.asJson)(path, requestHook, curlRequestHook).map(_.body).map(parse).map(_.fold(throw _, identity))
+  def patchJson[T](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T]): Future[Json] =
+    super.underlyingPatch(body.asJson)(path, requestHook).map(_.body).map(processResponse("PATCH", path.toString))
+
+  private def processResponse(method: String, path: String)(body: String): Json =
+    parse(body) match {
+      case Right(response) =>
+        response
+
+      case Left(exception) =>
+        throw BoxedTypedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
+    }
 }
 
 object JsonAhcExecutor {
@@ -39,5 +49,6 @@ object JsonAhcExecutor {
   implicit def circeJsonBodyWriteable(implicit printer: Printer = defaultPrinter): BodyWritable[Json] =
     BodyWritable(
       json => InMemoryBody(ByteString.fromString(json.pretty(printer))),
-      "application/json")
+      "application/json"
+    )
 }

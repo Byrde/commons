@@ -8,8 +8,7 @@ import org.byrde.clients.circuitbreaker.conf.CircuitBreakerConfig
 import akka.actor.Scheduler
 import akka.pattern.{CircuitBreaker, CircuitBreakerOpenException}
 
-import scala.concurrent.{ExecutionContext, Future, TimeoutException}
-import scala.util.control.NoStackTrace
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Try}
 
 class ClientCircuitBreaker(serviceName: String, scheduler: Scheduler, circuitBreakerConfig: CircuitBreakerConfig)(implicit ec: ExecutionContext) extends CircuitBreaker(ec, scheduler, circuitBreakerConfig.maxFailures, circuitBreakerConfig.callTimeout, circuitBreakerConfig.resetTimeout) with CircuitBreakerLike {
@@ -21,7 +20,7 @@ class ClientCircuitBreaker(serviceName: String, scheduler: Scheduler, circuitBre
 
   override def withCircuitBreaker[T](fn: => Future[T]): Future[T] =
     withCircuitBreaker(fn, defineFailureFn)
-      .transform(identity, {
+      .recoverWith {
         case ex: CircuitBreakerOpenException =>
           val elapsedTime =
             System.currentTimeMillis - closedTime.get
@@ -29,20 +28,11 @@ class ClientCircuitBreaker(serviceName: String, scheduler: Scheduler, circuitBre
           val msg =
             s"$serviceName ${ex.getMessage} (${elapsedTime}ms)"
 
-          new CircuitBreakerOpenException(ex.remainingDuration, msg)
+          Future.failed(new CircuitBreakerOpenException(ex.remainingDuration, msg))
 
-        case ex: TimeoutException =>
-          val callTimeout =
-            circuitBreakerConfig.callTimeout
-
-          val msg =
-            s"$serviceName ${ex.getMessage} (${callTimeout.toMillis}ms)"
-
-          new TimeoutException(msg) with NoStackTrace
-
-        case throwable =>
-          throwable
-      })
+        case _ =>
+          withCircuitBreaker(fn)
+      }
 
   private def defineFailureFn[T]: Try[T] => Boolean = {
     case Failure(_) =>
