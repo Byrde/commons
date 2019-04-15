@@ -1,6 +1,6 @@
 package org.byrde.clients.ahc.impl
 
-import org.byrde.clients.ahc.BoxedTypedServiceResponseException
+import org.byrde.clients.ahc.BoxedServiceResponseException
 import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.ServiceResponseType
@@ -8,6 +8,7 @@ import org.byrde.service.response.utils.ServiceResponseUtils._
 import org.byrde.uri.{Host, Path}
 
 import com.github.ghik.silencer.silent
+
 import play.api.libs.ws.StandaloneWSRequest
 
 import io.circe.generic.auto._
@@ -20,19 +21,19 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
   self =>
   import ServiceResponseAhcExecutor._
 
-  @silent def get[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
+  @silent def get[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
     super.getJson(path, requestHook).map(processResponse[T]("GET", path.toString)(_))(ec)
 
-  @silent def post[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
+  @silent def post[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     super.postJson(body)(path, requestHook).map(processResponse[TT]("POST", path.toString))(ec)
 
-  @silent def put[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
+  @silent def put[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     super.putJson(body)(path, requestHook).map(processResponse[TT]("PUT", path.toString))(ec)
 
-  @silent def delete[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
+  @silent def delete[T: ClassTag](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
     super.deleteJson(path, requestHook).map(processResponse[T]("DELETE", path.toString)(_))(ec)
 
-  @silent def patch[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity, curlRequestHook: CurlRequest => Unit = _ => ())(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
+  @silent def patch[T, TT: ClassTag](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     super.patchJson(body)(path, requestHook).map(processResponse[TT]("PATCH", path.toString))(ec)
 
   private def processResponse[T: ClassTag](method: String, path: String)(json: Json)(implicit decoder: Decoder[TransientServiceResponse[T]]): TransientServiceResponse[T] =
@@ -43,7 +44,7 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
           validated
 
         case Left(exception) =>
-          throw BoxedTypedServiceResponseException[T](host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
+          throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
       }
 }
 
@@ -53,7 +54,7 @@ object ServiceResponseAhcExecutor {
       value
         .as[TransientServiceResponse[Message]] match {
           case Right(validated) if validated.`type` == ServiceResponseType.Error =>
-            throw BoxedTypedServiceResponseException[T](host.protocol.toString, host.host, host.port.map(_.toString), method, path)(validated.toException)
+            throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(validated.toException)
 
           case _ =>
             value
