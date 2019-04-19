@@ -99,7 +99,7 @@ object RequestResponseHandlingSupport {
 
   object IdHeader extends ModeledCustomHeaderCompanion[IdHeader] {
     override def name: String =
-      "X-Correlation-Id"
+      "X-Request-Id"
 
     override def parse(value: String): Try[IdHeader] =
       Success(new IdHeader(value))
