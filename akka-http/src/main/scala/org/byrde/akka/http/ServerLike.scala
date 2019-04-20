@@ -5,7 +5,7 @@ import org.byrde.akka.http.logging.{HttpErrorLogging, HttpRequestLogging}
 import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
 import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
 import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
-import org.byrde.akka.http.support.{RequestResponseHandlingSupport, RouteSupport}
+import org.byrde.akka.http.support.{RequestResponseHandlingSupport, RejectionSupport}
 import org.byrde.service.response.CommonsServiceResponseDictionary.E0200
 
 import akka.actor.ActorSystem
@@ -33,7 +33,7 @@ ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
       self.builder
   }
 
-  trait RouteMixin extends RouteSupport {
+  trait RouteMixin extends RejectionSupport {
     override lazy val SuccessCode: Int =
       self.SuccessCode
   }

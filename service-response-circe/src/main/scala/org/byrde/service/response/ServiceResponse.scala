@@ -21,6 +21,12 @@ trait ServiceResponse[T] {
 
   @silent def toJson(implicit encoder: Encoder[T]): Json =
     TransientServiceResponse(`type`, message, status, code, response).asJson
+
+  def isClientError: Boolean =
+    `type` == ServiceResponseType.Error && status <= 500 && status >= 400
+
+  def isServerError: Boolean =
+    `type` == ServiceResponseType.Error && status >= 500
 }
 
 object ServiceResponse {

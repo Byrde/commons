@@ -27,7 +27,7 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
                 System.currentTimeMillis
 
               bagAndTag(start, request) {
-                handleRejections(rejectionHandler(request)) {
+                handleRejections(rejectionHandler) {
                   handleExceptions(exceptionHandler) {
                     route
                   }
@@ -39,7 +39,7 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
       }
     }
 
-  private def requestId: Directive1[IdHeader] =
+  private val requestId: Directive1[IdHeader] =
     extractRequestContext.flatMap[Tuple1[IdHeader]] { ctx =>
       provide {
         ctx

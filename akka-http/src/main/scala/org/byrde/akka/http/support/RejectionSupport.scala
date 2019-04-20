@@ -1,19 +1,27 @@
 package org.byrde.akka.http.support
 
+import org.byrde.akka.http.logging.HttpErrorLogging
+import org.byrde.akka.http.logging.HttpLogging.ExceptionWithHttpRequestJsonLoggingFormat
 import org.byrde.akka.http.rejections.RejectionException
 import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse
+import org.byrde.service.response.exceptions.ClientException
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import io.circe.{Encoder, Printer}
-import io.circe.generic.semiauto._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+
+import io.circe.{Encoder, Printer}
+import io.circe.generic.semiauto._
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-trait RouteSupport extends FailFastCirceSupport {
+trait RejectionSupport extends FailFastCirceSupport {
+  import org.byrde.akka.http.rejections.ClientExceptionRejections._
+
+  def ErrorLogger: HttpErrorLogging
+
   def SuccessCode: Int
 
   private implicit lazy val LocalPrinter: Printer =
@@ -52,8 +60,17 @@ trait RouteSupport extends FailFastCirceSupport {
 
       case Failure(ex) =>
         ex match {
+          case ex: ClientException =>
+            extractRequest { req =>
+              ErrorLogger.error(req, ex)
+              reject(ex.toRejection)
+            }
+
           case ex: RejectionException =>
-            reject(ex)
+            extractRequest { req =>
+              ErrorLogger.error(req, ex)
+              reject(ex)
+            }
 
           case _ =>
             throw Err(ex)

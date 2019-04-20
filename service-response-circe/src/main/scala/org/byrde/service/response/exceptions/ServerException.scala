@@ -9,4 +9,7 @@ case class ServerException(_msg: String, _code: Int, _status: Int) extends Servi
 
   override def apply(throwable: Throwable): ServerException =
     ServerException(throwable.getMessage, _code, _status)
+
+  override def isServerError: Boolean =
+    true
 }

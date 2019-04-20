@@ -16,4 +16,7 @@ case class ClientException(_msg: String, _code: Int, _status: Int) extends Servi
 
   override def apply(throwable: Throwable): ClientException =
     ClientException(throwable.getMessage, _code, _status)
+
+  override def isClientError: Boolean =
+    true
 }
