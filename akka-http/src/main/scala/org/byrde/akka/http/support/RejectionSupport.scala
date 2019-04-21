@@ -8,14 +8,15 @@ import org.byrde.service.response.ServiceResponse
 import org.byrde.service.response.exceptions.ClientException
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
 import io.circe.{Encoder, Printer}
-import io.circe.generic.semiauto._
+import io.circe.generic.auto._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait RejectionSupport extends FailFastCirceSupport {
   import org.byrde.akka.http.rejections.ClientExceptionRejections._
@@ -27,53 +28,87 @@ trait RejectionSupport extends FailFastCirceSupport {
   private implicit lazy val LocalPrinter: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
 
-  def asyncJson[T](
+  def handleRejectionJson[T](
+    result: T,
+    title: String = "Success",
+    code: Int = SuccessCode,
+    Err: Throwable => Throwable = identity
+  )(implicit encoder: Encoder[T]): Route =
+    handleRejection(result, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
+
+  def handleRejectionDefaultJsonResponse[T, TT <: ServiceResponse[Message]](
+    result: T,
+    Ok: TT,
+    Err: Throwable => Throwable = identity
+  ): Route =
+    handleRejection(result, (_: T) => complete(Ok.toJson), Err)
+
+  def handleRejectionCustomJsonResponse[T, TT <: ServiceResponse[Message]](
+    result: T,
+    Ok: T => TT,
+    Err: Throwable => Throwable = identity
+  ): Route =
+    handleRejection(result, (res: T) => complete(Ok(res).toJson), Err)
+
+  def handleRejection[T](
+    result: T,
+    Ok: T => Route,
+    Err: Throwable => Throwable = identity
+  ): Route =
+    handle(Ok, Err)(Try(result))
+
+  def handleRejectionAsyncJson[T](
     fn: Future[T],
     title: String = "Success",
     code: Int = SuccessCode,
     Err: Throwable => Throwable = identity
   )(implicit encoder: Encoder[T]): Route =
-    async(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
+    handleRejectionAsync(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
 
-  def asyncWithDefaultJsonResponse[T, TT <: ServiceResponse[Message]](
+  def handleRejectionAsyncDefaultJsonResponse[T, TT <: ServiceResponse[Message]](
     fn: Future[T],
     Ok: TT,
     Err: Throwable => Throwable = identity
   ): Route =
-    async(fn, (_: T) => complete(Ok.toJson(deriveEncoder[Message])), Err)
+    handleRejectionAsync(fn, (_: T) => complete(Ok.toJson), Err)
 
-  def asyncWithCustomJsonResponse[T, TT <: ServiceResponse[Message]](
+  def handleRejectionAsyncCustomJsonResponse[T, TT <: ServiceResponse[Message]](
     fn: Future[T],
     Ok: T => TT,
     Err: Throwable => Throwable = identity
   ): Route =
-    async(fn, (res: T) => complete(Ok(res).toJson(deriveEncoder[Message])), Err)
+    handleRejectionAsync(fn, (res: T) => complete(Ok(res).toJson), Err)
 
-  def async[T](
+  def handleRejectionAsync[T](
     fn: Future[T],
     Ok: T => Route,
     Err: Throwable => Throwable = identity
   ): Route =
-    onComplete(fn) {
-      case Success(res) =>
-        Ok(res)
+    onComplete(fn)(handle(Ok, Err))
 
-      case Failure(ex) =>
-        ex match {
-          case ex: ClientException =>
-            extractRequest { req =>
-              ErrorLogger.error(req, ex)
-              reject(ex.toRejection)
-            }
+  private def handle[T](
+    Ok: T => Route,
+    Err: Throwable => Throwable
+  ): PartialFunction[Try[T], Route] = {
+    case Success(res) =>
+      Ok(res)
 
-          case ex: RejectionException =>
-            extractRequest { req =>
-              ErrorLogger.error(req, ex)
-              reject(ex)
-            }
+    case Failure(ex) =>
+      ex match {
+        case ex: ClientException =>
+          extractRequest { req =>
+            ErrorLogger.error(req, ex)
+            reject(ex.toRejection)
+          }
 
-          case _ =>
-            throw Err(ex)
-        }
-    }
+        case ex: RejectionException =>
+          extractRequest { req =>
+            ErrorLogger.error(req, ex)
+            reject(ex)
+          }
+
+        case _ =>
+          throw Err(ex)
+      }
+  }
 }

@@ -7,13 +7,15 @@ import org.byrde.akka.http.support.RequestResponseHandlingSupport.IdHeader
 
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.headers.{ModeledCustomHeader, ModeledCustomHeaderCompanion}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.{handleExceptions, _}
 import akka.http.scaladsl.server.{Directive0, Directive1, Route}
 
 import scala.util.{Success, Try}
 
 trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
   import org.byrde.akka.http.logging.HttpLogging._
+
+  def isRequestLoggingEnabled: Boolean
 
   def RequestLogger: HttpRequestLogging
 
@@ -22,22 +24,29 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
       requestId { id =>
         addRequestId(id) {
           addResponseId(id) {
-            extractRequest { request =>
-              val start =
-                System.currentTimeMillis
+            if (isRequestLoggingEnabled) {
+              extractRequest { request =>
+                val start =
+                  System.currentTimeMillis
 
-              bagAndTag(start, request) {
-                handleRejections(rejectionHandler) {
-                  handleExceptions(exceptionHandler) {
+                bagAndTag(start, request) {
+                  handleRejectionsAndException {
                     route
                   }
                 }
+              }
+            } else {
+              handleRejectionsAndException {
+                route
               }
             }
           }
         }
       }
     }
+
+  private val handleRejectionsAndException: Route => Route =
+    (handleExceptions(exceptionHandler) & handleRejections(rejectionHandler)).apply(_)
 
   private val requestId: Directive1[IdHeader] =
     extractRequestContext.flatMap[Tuple1[IdHeader]] { ctx =>

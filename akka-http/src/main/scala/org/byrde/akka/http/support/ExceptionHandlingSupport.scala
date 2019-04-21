@@ -1,7 +1,7 @@
 package org.byrde.akka.http.support
 
 import org.byrde.akka.http.logging.HttpErrorLogging
-import org.byrde.akka.http.rejections.{JsonParsingRejections, TransientServiceResponseRejections}
+import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0200, E0405, E0500}
 import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
@@ -58,8 +58,8 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
 
   private lazy val cachedHandler: RejectionHandler =
     registerHandlers(default, handlers)
+      .withFallback(ClientExceptionRejections.handler)
       .withFallback(JsonParsingRejections.handler)
-      .withFallback(TransientServiceResponseRejections.handler)
       .withFallback(RejectionHandler.default)
 
   lazy val rejectionHandler: RejectionHandler =
@@ -118,7 +118,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
         ctx.complete(serviceException.toJson)
     }
 
-  private def registerHandlers(initialHandlder: RejectionHandler, handlersToBeRegistered: Set[RejectionHandler]): RejectionHandler = {
+  private def registerHandlers(initialHandler: RejectionHandler, handlersToBeRegistered: Set[RejectionHandler]): RejectionHandler = {
     @tailrec
     def innerRegisterHandlers(iterator: Iterator[RejectionHandler], innerHandler: RejectionHandler): RejectionHandler =
       if (iterator.hasNext)
@@ -126,7 +126,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
       else
         innerHandler
 
-    innerRegisterHandlers(handlersToBeRegistered.toIterator, initialHandlder)
+    innerRegisterHandlers(handlersToBeRegistered.toIterator, initialHandler)
   }
 
   private def stripLeadingAndTrailingQuotes(value: String): String = {
