@@ -20,8 +20,8 @@ import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
 
 trait ServerLike[
-RuntimeModulesExt[T] <: RuntimeModulesLike[T],
-ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
+  RuntimeModulesExt[T] <: RuntimeModulesLike[T],
+  ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
 ] extends RequestResponseHandlingSupport {
   self =>
 
@@ -34,8 +34,11 @@ ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
   }
 
   trait RouteMixin extends RejectionSupport {
-    override lazy val SuccessCode: Int =
+    override def SuccessCode: Int =
       self.SuccessCode
+
+    override def ErrorLogger: HttpErrorLogging =
+      provider.ErrorLogger
   }
 
   implicit def global: ExecutionContext
