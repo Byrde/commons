@@ -1,24 +1,19 @@
-
-/*
- * Copyright (C) 2009-2019 Lightbend Inc. <https://www.lightbend.com>
- */
-
-package org.byrde.play.utils
+package org.byrde.clients.utils
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import play.api.libs.ws.{EmptyBody, _}
-import play.shaded.ahc.org.asynchttpclient.util.HttpUtils
+import play.api.libs.ws.{EmptyBody, InMemoryBody, StandaloneWSRequest, WSAuthScheme}
+
+import org.slf4j.Logger
 
 /**
  * Logs StandaloneWSRequest and pulls information into Curl format to an SLF4J logger.
  *
  * @param logger an SLF4J logger
- *
- * @see <a href="https://curl.haxx.se/">https://curl.haxx.se/</a>
+  * @see <a href="https://curl.haxx.se/">https://curl.haxx.se/</a>
  */
-case class AhcCurlRequestLogger(logger: ApplicationLogger) {
+case class AhcCurlRequestLogger(logger: Logger) {
   def apply(request: StandaloneWSRequest): StandaloneWSRequest = {
     logger.info(toCurl(request))
     request
@@ -62,7 +57,7 @@ case class AhcCurlRequestLogger(logger: ApplicationLogger) {
     // body (note that this has only been checked for text, not binary)
     request.body match {
       case InMemoryBody(byteString) =>
-        val charset = findCharset(request)
+        val charset = StandardCharsets.UTF_8
         val bodyString = byteString.decodeString(charset)
         // XXX Need to escape any quotes within the body of the string.
         b.append(s"  --data '${quote(bodyString)}'")
@@ -85,13 +80,6 @@ case class AhcCurlRequestLogger(logger: ApplicationLogger) {
     val curlOptions = b.toString()
     curlOptions
   }
-
-  private def findCharset(request: StandaloneWSRequest): String =
-    request.contentType.map { ct =>
-      Option(HttpUtils.extractContentTypeCharsetAttribute(ct)).getOrElse {
-        StandardCharsets.UTF_8
-      }.name()
-    }.getOrElse(HttpUtils.extractContentTypeCharsetAttribute("UTF-8").name())
 
   private def quote(unsafe: String): String = unsafe.replace("'", "'\\''")
 }

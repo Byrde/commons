@@ -1,7 +1,6 @@
 package org.byrde.clients.ahc
 
 import org.byrde.clients.ahc.conf.ServiceConfig
-import org.byrde.clients.ahc.filters.AhcCurlRequestFilter
 import org.byrde.uri.{Host, Path, Url}
 import org.byrde.clients.utils.RequestUtils._
 
@@ -51,5 +50,5 @@ trait AhcExecutor {
     executeRequest(requestHook(request.toWSRequest(buildWSRequest(path, curlRequestHook), Some(host))))
 
   private def buildWSRequest(path: Path, curlRequestHook: CurlRequest => Unit): StandaloneWSRequest =
-    client.url(Url(host, path).toString).withRequestFilter(new AhcCurlRequestFilter(curlRequestHook))
+    client.url(Url(host, path).toString)
 }

@@ -11,7 +11,7 @@ class Pool(val underlying: JedisPool) {
     try
       body(Dress.up(jedis))
     finally
-      underlying.returnResourceObject(jedis)
+      underlying.close()
   }
 
   def withJedisClient[T](body: Jedis => T): T = {
@@ -21,7 +21,7 @@ class Pool(val underlying: JedisPool) {
     try
       body(jedis)
     finally
-      underlying.returnResourceObject(jedis)
+      underlying.close()
   }
 }
 

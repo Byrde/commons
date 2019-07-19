@@ -1,7 +1,6 @@
 package org.byrde.utils
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 trait FutureUtils {
