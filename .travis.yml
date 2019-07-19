@@ -42,7 +42,6 @@ cache:
 
 # Dependencies for publishing
 before_deploy:
-- cd /opt/pyenv/plugins/python-build/../.. && git pull && cd -
 - pyenv install --list
 - pyenv global 2.7
 - pip install --upgrade pip
