@@ -38,6 +38,7 @@ before_deploy:
   user=token
   password=${CLOUDSMITH_API_KEY}
   EOF
+- cd $TRAVIS_BUILD_DIR
 - pyenv install --list
 - pyenv install -v 2.7
 - pyenv global 2.7
