@@ -7,13 +7,14 @@ import javax.mail.{PasswordAuthentication, Session}
 
 import scala.util.Try
 
-case class EmailConfig(email: String, password: String, port: Int, from: String) {
-  def propertiesFromConfig: Properties = {
+case class EmailConfig(host: String, email: String, password: String, port: Int, from: String) {
+  def properties: Properties = {
     val props = new Properties()
-    props.put("mail.smtp.auth", "true")
-    props.put("mail.smtp.starttls.enable", "true")
-    props.put("mail.smtp.host", "smtp.gmail.com")
+    props.put("mail.smtp.host", host)
     props.put("mail.smtp.port", port.toString)
+    props.put("mail.smtp.socketFactory.port", port.toString)
+    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory")
+    props.put("mail.smtp.auth", "true")
     props
   }
 
@@ -24,15 +25,19 @@ case class EmailConfig(email: String, password: String, port: Int, from: String)
           new PasswordAuthentication(email, password)
       }
 
-    Session.getInstance(propertiesFromConfig, authenticator)
+    Session.getInstance(properties, authenticator)
   }
 }
 
 object EmailConfig {
   def apply(config: Config): EmailConfig =
-    apply("email", "password", "port", "from")(config)
+    apply("host", "email", "password", "port", "from")(config)
 
-  def apply(_email: String, _password: String, _port: String, _from: String)(config: Config): EmailConfig = {
+  def apply(_host: String, _email: String, _password: String, _port: String, _from: String)(config: Config): EmailConfig = {
+    val host =
+      config
+        .getString(_host)
+
     val email =
       config
         .getString(_email)
@@ -48,6 +53,6 @@ object EmailConfig {
     val from =
       Try(config.getString(_from)).getOrElse(email)
 
-    EmailConfig(email, password, port, from)
+    EmailConfig(host, email, password, port, from)
   }
 }

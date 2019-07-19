@@ -1,41 +1,52 @@
 package org.byrde.email
 
-import java.sql.Timestamp
+import java.util.Date
 
 import org.byrde.email.conf.EmailConfig
-import org.byrde.email.response.EmailResponse
 
 import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
 import javax.mail.{Message, Transport}
 
+import scala.util.{Failure, Success, Try}
+
 class EmailServiceWrapper(emailConfig: EmailConfig) {
-  def sendMessage(recipient: String,
-                  subject: String,
-                  content: String): EmailResponse = {
-    val message =
-      new MimeMessage(emailConfig.sessionFromConfig)
+  def sendMessage(recipient: String, subject: String, content: String): Unit =
+    Try(Transport.send(buildMessage(recipient, subject, content))) match {
+      case Success(_) =>
+        ()
 
-    val multipart =
-      new MimeMultipart()
+      case Failure(ex) =>
+        ex.printStackTrace()
+        ()
+    }
 
+  private def buildBody(content: String): MimeMultipart = {
     val messageBodyPart =
       new MimeBodyPart()
 
-    message.setFrom(new InternetAddress(emailConfig.from))
-    message.setRecipients(Message.RecipientType.TO, recipient)
-    message.setSubject(subject)
+    val multipart =
+      new MimeMultipart()
 
     messageBodyPart.setContent(content, "text/html;charset=utf-8")
 
     multipart.addBodyPart(messageBodyPart)
 
-    message.setContent(multipart)
+    multipart
+  }
 
-    Transport.send(message)
+  private def buildMessage(recipient: String, subject: String, content: String): MimeMessage =
+    buildMessage(recipient, subject)(buildBody(content))
 
-    EmailResponse(subject,
-                  recipient,
-                  content,
-                  new Timestamp(System.currentTimeMillis))
+  private def buildMessage(recipient: String, subject: String)(mimeMultipart: MimeMultipart): MimeMessage = {
+    val message =
+      new MimeMessage(emailConfig.sessionFromConfig)
+
+    message.setContent(mimeMultipart)
+    message.setFrom(new InternetAddress(emailConfig.from))
+    message.setRecipients(Message.RecipientType.TO, recipient)
+    message.setSentDate(new Date())
+    message.setSubject(subject, "utf-8")
+
+    message
   }
 }
