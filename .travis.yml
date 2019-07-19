@@ -43,6 +43,7 @@ scala:
 # Dependencies for publishing
 before_deploy:
 - pyenv install --list
+- pyenv install -v 2.7
 - pyenv global 2.7
 - pip install --upgrade pip
 - pip install --upgrade setuptools
