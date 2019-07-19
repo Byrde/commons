@@ -9,7 +9,7 @@ sudo: required
 
 # Defacto version and lang used in most Byrde projects.
 language: scala
-jdk: openjdk8
+jdk: oraclejdk9
 scala:
 - 2.12.8
 
