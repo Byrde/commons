@@ -42,6 +42,7 @@ cache:
 
 # Dependencies for publishing
 before_deploy:
+- pyenv install -v 2.7.16
 - pyenv global 2.7
 - pip install --upgrade pip
 - pip install --upgrade setuptools
