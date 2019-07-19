@@ -13,17 +13,6 @@ jdk: oraclejdk9
 scala:
 - 2.12.8
 
-# Install credentials
-# before_script:
-# - |
-#   cat <<EOF >/home/travis/.sbt/.credentials
-#   realm=Cloudsmith API
-#   host=maven.cloudsmith.io
-#   user=token
-#   password=${CLOUDSMITH_API_KEY}
-#   EOF
-# - cd $TRAVIS_BUILD_DIR
-
 # Clean tracked binaries, run unit tests, and package artifact.
 # script:
 # - sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.$TRAVIS_BUILD_NUMBER" 'set credentials += Credentials("Cloudsmith API", "maven.cloudsmith.io", "token", "${CLOUDSMITH_API_KEY}")' clean test
@@ -42,6 +31,13 @@ scala:
 
 # Dependencies for publishing
 before_deploy:
+- |
+  cat <<EOF >/home/travis/.sbt/.credentials
+  realm=Cloudsmith API
+  host=maven.cloudsmith.io
+  user=token
+  password=${CLOUDSMITH_API_KEY}
+  EOF
 - pyenv install --list
 - pyenv install -v 2.7
 - pyenv global 2.7
