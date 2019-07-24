@@ -41,10 +41,10 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
     val textBodyPart =
       new MimeBodyPart()
 
-    textBodyPart.setText(request.textContent)
+    textBodyPart.setContent(request.textContent,"text/plain")
 
     val multipart =
-      new MimeMultipart()
+      new MimeMultipart("alternative")
 
     multipart.addBodyPart(textBodyPart)
 
@@ -52,7 +52,7 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
       val htmlBodyPart =
         new MimeBodyPart()
 
-      textBodyPart.setContent(htmlContent, "text/html;charset=utf-8")
+      textBodyPart.setContent(htmlContent,"text/html")
 
       multipart.addBodyPart(htmlBodyPart)
     }
