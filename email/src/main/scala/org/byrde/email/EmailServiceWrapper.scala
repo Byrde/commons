@@ -41,7 +41,7 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
     val textBodyPart =
       new MimeBodyPart()
 
-    textBodyPart.setContent(request.textContent, "text/plain;charset=utf-8")
+    textBodyPart.setText(request.textContent)
 
     val multipart =
       new MimeMultipart()
