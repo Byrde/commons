@@ -30,7 +30,7 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
 
     message.setContent(mimeMultipart)
     message.setFrom(new InternetAddress(emailConfig.from))
-    message.setReplyTo(new InternetAddress(emailConfig.from))
+    message.setReplyTo(Array(new InternetAddress(emailConfig.from)))
     message.setRecipients(Message.RecipientType.TO, recipient)
     message.setSubject(subject)
     message.setSentDate(new Date())
