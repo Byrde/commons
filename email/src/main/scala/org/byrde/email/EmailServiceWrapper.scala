@@ -30,32 +30,25 @@ class EmailServiceWrapper(emailConfig: EmailConfig) {
 
     message.setContent(mimeMultipart)
     message.setFrom(new InternetAddress(emailConfig.from))
+    message.setReplyTo(new InternetAddress(emailConfig.from))
     message.setRecipients(Message.RecipientType.TO, recipient)
+    message.setSubject(subject)
     message.setSentDate(new Date())
-    message.setSubject(subject, "utf-8")
 
     message
   }
 
   private def buildBody(request: EmailRequest): MimeMultipart = {
-    val textBodyPart =
-      new MimeBodyPart()
+    val textBodyPart = new MimeBodyPart()
+    textBodyPart.setText(request.textContent, "utf-8")
 
-    textBodyPart.setContent(request.textContent,"text/plain")
+    val htmlBodyPart = new MimeBodyPart()
+    htmlBodyPart.setContent(request.htmlContent,"text/html; charset=utf-8")
 
-    val multipart =
-      new MimeMultipart("alternative")
+    val multipart = new MimeMultipart("alternative")
 
     multipart.addBodyPart(textBodyPart)
-
-    request.htmlContent.foreach { htmlContent =>
-      val htmlBodyPart =
-        new MimeBodyPart()
-
-      textBodyPart.setContent(htmlContent,"text/html")
-
-      multipart.addBodyPart(htmlBodyPart)
-    }
+    multipart.addBodyPart(htmlBodyPart)
 
     multipart
   }
