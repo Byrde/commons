@@ -8,23 +8,14 @@ import org.byrde.email.request.EmailRequest
 import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
 import javax.mail.{Message, Transport}
 
-import scala.util.{Failure, Success, Try}
-
 class EmailServiceWrapper(emailConfig: EmailConfig) {
   def sendMessage(request: EmailRequest): Unit =
-    Try(Transport.send(buildMessage(request))) match {
-      case Success(_) =>
-        ()
+    Transport.send(buildEmail(request))
 
-      case Failure(ex) =>
-        ex.printStackTrace()
-        ()
-    }
+  private def buildEmail(request: EmailRequest): MimeMessage =
+    buildEmail(request.recipient, request.subject)(buildBody(request))
 
-  private def buildMessage(request: EmailRequest): MimeMessage =
-    buildMessage(request.recipient, request.subject)(buildBody(request))
-
-  private def buildMessage(recipient: String, subject: String)(mimeMultipart: MimeMultipart): MimeMessage = {
+  private def buildEmail(recipient: String, subject: String)(mimeMultipart: MimeMultipart): MimeMessage = {
     val message =
       new MimeMessage(emailConfig.sessionFromConfig)
 
