@@ -23,8 +23,10 @@ val CommonsSettings =
         .getOrElse("2.12.8"),
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
-    resolvers +=
-      Resolver.bintrayRepo("hseeberger", "maven"),
+    resolvers ++=
+      Seq(
+        Resolver.bintrayRepo("hseeberger", "maven"),
+        Resolver.jcenterRepo),
     javacOptions ++=
       Seq(
         "-source", "1.8",

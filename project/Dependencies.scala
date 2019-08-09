@@ -26,10 +26,13 @@ object Dependencies extends DependencyBuilders {
     "2.0.0-M2"
 
   val SlickVersion: String =
-    "3.2.3"
+    "3.3.2"
 
   val CirceVersion: String =
     "0.10.0"
+
+  val SlickMigrationVersion: String =
+    "0.7.0"
 
   val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
@@ -43,43 +46,53 @@ object Dependencies extends DependencyBuilders {
 
       "com.typesafe.akka" %% "akka-http-testkit"    % AkkaHttpVersion,
       "com.typesafe.akka" %% "akka-testkit"         % AkkaVersion,
-      "com.typesafe.akka" %% "akka-stream-testkit"  % AkkaVersion)
+      "com.typesafe.akka" %% "akka-stream-testkit"  % AkkaVersion
+    )
 
   val CompressorDependencies: Seq[ModuleID] =
     Seq(
-      "com.googlecode.htmlcompressor" % "htmlcompressor" % CompressorVersion)
+      "com.googlecode.htmlcompressor" % "htmlcompressor" % CompressorVersion
+    )
 
   val EmailDependencies: Seq[ModuleID] =
     Seq(
       "javax"       % "javaee-api"  % "7.0",
-      "javax.mail"  % "mail"        % "1.4")
+      "javax.mail"  % "mail"        % "1.4"
+    )
 
   val GuiceDependencies: Seq[ModuleID] =
     Seq(
       "com.google.inject.extensions"  % "guice-assistedinject"  % GuiceVersion,
-      "net.codingwell"                %% "scala-guice"          % GuiceVersion)
+      "net.codingwell"                %% "scala-guice"          % GuiceVersion
+    )
 
   val JwtDependencies: Seq[ModuleID] =
     Seq(
-      "io.igl" %% "jwt" % JwtVersion)
+      "io.igl" %% "jwt" % JwtVersion
+    )
 
   val RedisDependencies: Seq[ModuleID] =
     Seq(
-      "redis.clients" % "jedis" % JedisVersion)
+      "redis.clients" % "jedis" % JedisVersion
+    )
 
   val SlickDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.slick" %% "slick-hikaricp"      % SlickVersion,
-      "com.typesafe.slick" %% "slick"               % SlickVersion)
+      "io.github.nafg"     %% "slick-migration-api" % SlickMigrationVersion,
+      "com.typesafe.slick" %% "slick"               % SlickVersion
+    )
 
   val PlayWSDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.play" %% "play-ws"                % PlayVersion,
-      "com.typesafe.play" %% "play-ahc-ws-standalone" % PlayAhcVersion)
+      "com.typesafe.play" %% "play-ahc-ws-standalone" % PlayAhcVersion
+    )
 
   val PlayDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.play" %% "play" % PlayVersion) ++ PlayWSDependencies
+      "com.typesafe.play" %% "play" % PlayVersion
+    ) ++ PlayWSDependencies
 
   val TypesafeConfigDependencies: Seq[ModuleID] =
     Seq(
@@ -89,5 +102,6 @@ object Dependencies extends DependencyBuilders {
     Seq(
       "io.circe" %% "circe-core"    % CirceVersion,
       "io.circe" %% "circe-generic" % CirceVersion,
-      "io.circe" %% "circe-parser"  % CirceVersion)
+      "io.circe" %% "circe-parser"  % CirceVersion
+    )
 }
