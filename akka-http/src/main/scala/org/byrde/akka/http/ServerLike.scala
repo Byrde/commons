@@ -13,11 +13,11 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
-
 import io.circe.generic.auto._
 
 import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
+import scala.util.Try
 
 trait ServerLike[
   RuntimeModulesExt[T] <: RuntimeModulesLike[T],

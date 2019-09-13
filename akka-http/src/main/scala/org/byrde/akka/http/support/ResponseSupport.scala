@@ -26,39 +26,39 @@ trait ResponseSupport extends FailFastCirceSupport {
   private implicit lazy val LocalPrinter: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
 
-  def json[T](
+  def handleJson[T](
     result: T,
     title: String = "Success",
     code: Int = SuccessCode,
-    Err: Throwable => Throwable = identity
+    Err: Throwable => Route = throw _
   )(implicit encoder: Encoder[T]): Route =
     handle(result, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
 
   def handle[T](
     result: T,
     Ok: T => Route,
-    Err: Throwable => Throwable = identity
+    Err: Throwable => Route =  throw _
   ): Route =
     innerHandle(Ok, Err)(Try(result))
 
-  def asyncJson[T](
+  def handleAsyncJson[T](
     fn: Future[T],
     title: String = "Success",
     code: Int = SuccessCode,
-    Err: Throwable => Throwable = identity
+    Err: Throwable => Route = throw _
   )(implicit encoder: Encoder[T]): Route =
     handleAsync(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
 
   def handleAsync[T](
     fn: Future[T],
     Ok: T => Route,
-    Err: Throwable => Throwable = identity
+    Err: Throwable => Route = throw _
   ): Route =
     onComplete(fn)(innerHandle(Ok, Err))
 
-  private def innerHandle[T](
+  protected def innerHandle[T](
     Ok: T => Route,
-    Err: Throwable => Throwable
+    Err: Throwable => Route = throw _
   ): PartialFunction[Try[T], Route] = {
     case Success(res) =>
       Ok(res)
@@ -78,7 +78,7 @@ trait ResponseSupport extends FailFastCirceSupport {
           }
 
         case _ =>
-          throw Err(ex)
+          Err(ex)
       }
   }
 }
