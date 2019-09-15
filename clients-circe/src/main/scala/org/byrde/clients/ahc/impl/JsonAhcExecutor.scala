@@ -43,12 +43,9 @@ abstract class JsonAhcExecutor extends BaseAhcExecutor {
 }
 
 object JsonAhcExecutor {
-  private val defaultPrinter =
-    Printer.noSpaces
-
-  implicit def circeJsonBodyWriteable(implicit printer: Printer = defaultPrinter): BodyWritable[Json] =
+  implicit def circeJsonBodyWriteable: BodyWritable[Json] =
     BodyWritable(
-      json => InMemoryBody(ByteString.fromString(json.pretty(printer))),
+      json => InMemoryBody(ByteString.fromString(json.pretty(Printer.noSpaces.copy(dropNullValues = true)))),
       "application/json"
     )
 }

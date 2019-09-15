@@ -3,7 +3,7 @@ package org.byrde.akka.http.support
 import org.byrde.akka.http.logging.HttpErrorLogging
 import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0200, E0405, E0500}
-import org.byrde.service.response.DefaultServiceResponse.Message
+import org.byrde.service.response.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
 
@@ -15,6 +15,7 @@ import akka.http.scaladsl.server.{ExceptionHandler, MethodRejection, RejectionHa
 import akka.util.ByteString
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
 import io.circe.Printer
 import io.circe.generic.auto._
 import io.circe.parser.parse
@@ -43,16 +44,11 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
         val methods =
           rejections.map(_.supported)
 
-        val names =
-          methods
-            .map(_.name)
-            .mkString(", ")
-
         respondWithHeader(Allow(methods)) {
           options {
-            complete(E0200(s"Supported methods: $names").toJson)
+            complete(E0200.toJson)
           }
-        } ~ complete(E0405(s"HTTP method not allowed, supported methods: $names", ErrorCode).toJson)
+        } ~ complete(E0405(ErrorCode).toJson)
       }
       .result()
 
@@ -92,7 +88,8 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
                 entity =
                   HttpEntity(
                     MediaType,
-                    ByteString(transformed))
+                    ByteString(transformed)
+                  )
               )
             }
 

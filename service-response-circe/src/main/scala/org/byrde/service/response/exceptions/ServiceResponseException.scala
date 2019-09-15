@@ -1,22 +1,18 @@
 package org.byrde.service.response.exceptions
 
-import org.byrde.service.response.DefaultServiceResponse.Message
-import org.byrde.service.response.{DefaultServiceResponse, ServiceResponse, ServiceResponseType}
+import org.byrde.service.response.{EmptyServiceResponse, Message, ServiceResponse, ServiceResponseType}
 
 import scala.util.control.NoStackTrace
 
 abstract class ServiceResponseException[T <: ServiceResponseException[T]](_msg: String, _code: Int, _status: Int)
     extends Throwable(_msg)
-    with DefaultServiceResponse {
+    with EmptyServiceResponse {
   self =>
 
   def apply(throwable: Throwable): T
 
   override def `type`: ServiceResponseType =
     ServiceResponseType.Error
-
-  override def message: String =
-    _msg
 
   override def status: Int =
     _status
@@ -32,5 +28,5 @@ object ServiceResponseException {
   }
 
   def apply(serviceResponse: ServiceResponse[Message]): TransientServiceResponseException =
-    TransientServiceResponseException(serviceResponse.message, serviceResponse.code, serviceResponse.status)
+    TransientServiceResponseException(serviceResponse.response.message, serviceResponse.code, serviceResponse.status)
 }

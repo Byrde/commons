@@ -1,34 +1,34 @@
 package org.byrde.service.response
 
-import org.byrde.service.response.DefaultServiceResponse.Message
-
 trait DefaultServiceResponse extends ServiceResponse[Message] {
   self =>
   override def `type`: ServiceResponseType =
     ServiceResponseType.Success
 
-  override def response: Message =
-    Message(message)
+  def apply(_code: Int): DefaultServiceResponse =
+    apply(_code, response)
 
-  def apply(_msg: String): DefaultServiceResponse =
-    apply(_msg, self.code)
+  def apply(_response: String): DefaultServiceResponse =
+    apply(Message(_response))
 
-  def apply(_msg: String, _code: Int): DefaultServiceResponse =
+  def apply(_response: Message): DefaultServiceResponse =
+    apply(_response)
+
+  def apply(_code: Int, _response: String): DefaultServiceResponse =
+    apply(_code, Message(_response))
+
+  def apply(_code: Int, _response: Message): DefaultServiceResponse =
     new DefaultServiceResponse {
-      override def `type`: ServiceResponseType =
-        self.`type`
-
-      override def message: String =
-        _msg
-
       override def code: Int =
         _code
 
       override def status: Int =
         self.status
-    }
-}
 
-object DefaultServiceResponse {
-  case class Message(message: String)
+      override def `type`: ServiceResponseType =
+        self.`type`
+
+      override def response: Message =
+        _response
+    }
 }

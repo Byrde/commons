@@ -1,16 +1,14 @@
 package org.byrde.clients.ahc.impl
 
 import org.byrde.clients.ahc.BoxedServiceResponseException
-import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
-import org.byrde.service.response.ServiceResponseType
+import org.byrde.service.response.{Message, ServiceResponseType}
 import org.byrde.service.response.utils.ServiceResponseUtils._
 import org.byrde.uri.{Host, Path}
 
 import com.github.ghik.silencer.silent
 
 import play.api.libs.ws.StandaloneWSRequest
-
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder, Json}
 
@@ -50,11 +48,11 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
 
 object ServiceResponseAhcExecutor {
   implicit class JsValue2ServiceResponseError(value: Json) {
-    @silent @inline def errorHook[T: ClassTag](method: String, host: Host, path: String)(implicit decoder: Decoder[Message]): Json =
+    @silent @inline def errorHook[T: ClassTag](method: String, host: Host, path: String)(implicit decoder: Decoder[Option[Message]]): Json =
       value
-        .as[TransientServiceResponse[Message]] match {
+        .as[TransientServiceResponse[Option[Message]]] match {
           case Right(validated) if validated.`type` == ServiceResponseType.Error =>
-            throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(validated.toException)
+            throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(validated.toException("BoxedServiceResponseException"))
 
           case _ =>
             value

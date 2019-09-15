@@ -1,6 +1,5 @@
 package org.byrde.service.response
 
-import org.byrde.service.response.DefaultServiceResponse.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 
 import io.circe.Printer
@@ -14,15 +13,14 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
     "\\s+"
 
   private val printer =
-    Printer.spaces2
+    Printer.spaces2.copy(dropNullValues = true)
 
   "ServiceResponse" - {
-    "should serialize to expected service response" in {
+    "should deserialize to expected service response (e.g 1)" in {
       val json =
         """
           |{
           |  "type": "Success",
-          |  "message": "Test",
           |  "status": 200,
           |  "code": 1000,
           |  "response": {
@@ -37,12 +35,27 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
       serialized should be ('right)
     }
 
-    "should deserialize to expected service response" in {
+    "should deserialize to expected service response (e.g 2)" in {
+      val json =
+        """
+          |{
+          |  "type": "Success",
+          |  "status": 200,
+          |  "code": 1000
+          |}
+        """.stripMargin
+
+      val serialized =
+        parse(json).flatMap(_.as[TransientServiceResponse[Option[Message]]])
+
+      serialized should be ('right)
+    }
+
+    "should serialize to expected service response (e.g 1)" in {
       val expected =
         """
           |{
           |  "type": "Success",
-          |  "message": "Success",
           |  "status": 200,
           |  "code": 200,
           |  "response": {
@@ -53,6 +66,22 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
 
       val serialized =
         ServiceResponse(Message("Test")).toJson.pretty(printer).replaceAll(MostlyEqualRegex, "")
+
+      assert(serialized == expected)
+    }
+
+    "should serialize to expected service response (e.g 2)" in {
+      val expected =
+        """
+          |{
+          |  "type": "Success",
+          |  "status": 200,
+          |  "code": 200
+          |}
+        """.stripMargin.replaceAll(MostlyEqualRegex, "")
+
+      val serialized =
+        ServiceResponse(Option.empty[Message]).toJson.pretty(printer).replaceAll(MostlyEqualRegex, "")
 
       assert(serialized == expected)
     }

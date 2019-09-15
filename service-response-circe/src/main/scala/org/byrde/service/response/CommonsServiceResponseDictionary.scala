@@ -5,10 +5,7 @@ import org.byrde.service.response.exceptions.{ClientException, ServerException}
 // Commons codes are between 1 - 1000;
 object CommonsServiceResponseDictionary {
   // OK
-  object E0200 extends DefaultServiceResponse {
-    override def message: String =
-      "Ok"
-
+  object E0200 extends EmptyServiceResponse {
     override def status: Int =
       200
 

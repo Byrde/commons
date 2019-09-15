@@ -28,11 +28,10 @@ trait ResponseSupport extends FailFastCirceSupport {
 
   def handleJson[T](
     result: T,
-    title: String = "Success",
     code: Int = SuccessCode,
     Err: Throwable => Route = throw _
   )(implicit encoder: Encoder[T]): Route =
-    handle(result, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
+    handle(result, (res: T) => complete(ServiceResponse(code, res).toJson), Err)
 
   def handle[T](
     result: T,
@@ -43,11 +42,10 @@ trait ResponseSupport extends FailFastCirceSupport {
 
   def handleAsyncJson[T](
     fn: Future[T],
-    title: String = "Success",
     code: Int = SuccessCode,
     Err: Throwable => Route = throw _
   )(implicit encoder: Encoder[T]): Route =
-    handleAsync(fn, (res: T) => complete(ServiceResponse(title, code, res).toJson), Err)
+    handleAsync(fn, (res: T) => complete(ServiceResponse(code, res).toJson), Err)
 
   def handleAsync[T](
     fn: Future[T],

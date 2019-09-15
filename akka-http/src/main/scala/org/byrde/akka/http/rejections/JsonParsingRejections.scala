@@ -16,8 +16,8 @@ object JsonParsingRejections extends FailFastCirceSupport {
     RejectionHandler
       .newBuilder()
       .handle {
-        case JsonParsingRejection(errors, errorCode) =>
-          rejectRequestEntityAndComplete(E0400(errors, errorCode).toJson)
+        case JsonParsingRejection(_, errorCode) =>
+          rejectRequestEntityAndComplete(E0400(errorCode).toJson)
       }
       .result()
 }

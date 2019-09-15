@@ -17,7 +17,6 @@ import io.circe.generic.auto._
 
 import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
-import scala.util.Try
 
 trait ServerLike[
   RuntimeModulesExt[T] <: RuntimeModulesLike[T],
@@ -64,7 +63,7 @@ trait ServerLike[
   lazy val ping: Route =
     path("ping") {
       get {
-        complete(E0200("Pong!").toJson)
+        complete(E0200.toJson)
       }
     }
 

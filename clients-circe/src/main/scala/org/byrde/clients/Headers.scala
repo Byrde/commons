@@ -15,5 +15,6 @@ object Headers {
   val proxyHeadersFilter: Seq[HeaderName] =
     Seq(
       TLSSessionInfo,
-      RemoteAddress)
+      RemoteAddress
+    )
 }

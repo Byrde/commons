@@ -97,10 +97,6 @@ val redis =
   project
     .settings(CommonsSettings)
 
-val `service-response` =
-  project
-    .settings(CommonsSettings)
-
 val `service-response-circe` =
   project
     .settings(CommonsSettings)
@@ -120,14 +116,6 @@ val email =
 val utils =
   project
     .dependsOn(uri)
-    .settings(CommonsSettings)
-
-val clients =
-  project
-    .dependsOn(
-      `service-response`,
-      utils
-    )
     .settings(CommonsSettings)
 
 val `clients-circe` =
@@ -161,7 +149,6 @@ val root =
     .aggregate(
       `akka-http`,
       auth,
-      clients,
       `clients-circe`,
       email,
       jwt,
@@ -169,8 +156,8 @@ val root =
       `logging-circe`,
       play,
       redis,
-      `service-response`,
       `service-response-circe`,
       slick,
       uri,
-      utils)
+      utils
+    )
