@@ -14,7 +14,7 @@ import slick.migration.api.Dialect
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class MigrationEngine(override val config: DatabaseConfig[Master], migrations: Migrations)(implicit val ec: ExecutionContext, migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
+class MigrationEngine(override val config: DatabaseConfig[Master], migrations: DatabaseConfig[Master] => Seq[NamedMigration])(implicit val ec: ExecutionContext, migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
   self: Db[Master] with Profile[Master] =>
 
   import profile.api._
@@ -39,10 +39,13 @@ class MigrationEngine(override val config: DatabaseConfig[Master], migrations: M
           prev.flatMap(_ => runMigration(next))
       }
       .andThen {
-        case _ => shutdown
+        case _ =>
+          shutdown
       }
       .recover {
-        case _ => shutdown
+        case ex =>
+          shutdown
+          throw ex
       }
 
   private def createTable(retry: Int, limit: Int)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
