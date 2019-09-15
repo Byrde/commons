@@ -7,9 +7,7 @@ import org.byrde.slick.HasPrivilege
 import org.byrde.slick.conf.{MigrationEngineConfig, Profile}
 import org.byrde.slick.db.Db
 
-import slick.jdbc.JdbcProfile
 import slick.jdbc.meta.MTable
-import slick.migration.api.Dialect
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +30,7 @@ class MigrationEngine(migrations: Migrations)(implicit val ec: ExecutionContext,
 
   private val MigrationTable = TableQuery[MigrationTable]
 
-  def migrate[P <: JdbcProfile](implicit dialect: Dialect[P], ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
+  def migrate(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
     migrations(config)
       .foldLeft(createTable(0, 10)) {
         (prev, next) =>
