@@ -3,7 +3,7 @@ package org.byrde.slick.migrations
 import java.util.UUID
 
 import org.byrde.slick.{HasPrivilege, Role}
-import org.byrde.slick.conf.{MigrationEngineConfig, Profile}
+import org.byrde.slick.conf.{DatabaseConfig, MigrationEngineConfig, Profile}
 import org.byrde.slick.db.Db
 
 import slick.jdbc.meta.MTable
@@ -11,7 +11,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: ExecutionContext, val config: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
+class MigrationEngine[R <: Role](migrations: DatabaseConfig[R] => Seq[NamedMigration])(implicit val ec: ExecutionContext, val migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
   self: Db[R] with Profile[R] =>
 
   import profile.api._
@@ -30,7 +30,7 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
   private val MigrationTable = TableQuery[MigrationTable]
 
   def migrate(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
-    migrations
+    migrations(config)
       .foldLeft(createTable(0, 10)) {
         (prev, next) =>
           prev.flatMap(_ => runMigration(next))
@@ -52,7 +52,7 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
     }
     .recoverWith {
       case _ if retry < limit =>
-        delay[Unit](config.createMigrationTableRetryDelay.toMillis, createTable(retry + 1, limit))
+        delay[Unit](migrationEngineConfig.createMigrationTableRetryDelay.toMillis, createTable(retry + 1, limit))
 
       case ex =>
         throw ex
@@ -99,7 +99,7 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
         Future.successful(AlreadyCompleted)
 
       case Some(MigrationRow(innerName, _, "Requested", _)) if innerName == name =>
-        delay(config.checkClusteredMigrationCompleteDelay.toMillis, checkClaimedOrCompleted(id, migration))
+        delay(migrationEngineConfig.checkClusteredMigrationCompleteDelay.toMillis, checkClaimedOrCompleted(id, migration))
 
       case x =>
         Future.failed(new IllegalStateException(s"By now someone should have claimed the migration: $x"))
