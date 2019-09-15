@@ -18,6 +18,7 @@ object CommonsServiceResponseDictionary {
   object E0403 extends ClientException("Forbidden", 403, 403)
   object E0404 extends ClientException("Not Found", 404, 404)
   object E0405 extends ClientException("Method Not Allowed", 405, 405)
+  object E0409 extends ClientException("Conflict", 409, 409)
   object E0415 extends ClientException("Unsupported Media Type", 415, 415)
 
   // Server errors (500 - 999)
