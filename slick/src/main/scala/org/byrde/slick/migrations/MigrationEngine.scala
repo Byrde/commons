@@ -14,7 +14,7 @@ import slick.migration.api.Dialect
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class MigrationEngine(override val config: DatabaseConfig[Master], migrations: DatabaseConfig[Master] => Seq[NamedMigration])(implicit val ec: ExecutionContext, migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
+class MigrationEngine(migrations: Seq[NamedMigration])(implicit val ec: ExecutionContext, migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
   self: Db[Master] with Profile[Master] =>
 
   import profile.api._
@@ -33,7 +33,7 @@ class MigrationEngine(override val config: DatabaseConfig[Master], migrations: D
   private val MigrationTable = TableQuery[MigrationTable]
 
   def migrate[P <: JdbcProfile](implicit ev: Master HasPrivilege profile.api.Effect.All, dialect: Dialect[P]): Future[Unit] =
-    migrations(config)
+    migrations
       .foldLeft(createTable(0, 10)) {
         (prev, next) =>
           prev.flatMap(_ => runMigration(next))
