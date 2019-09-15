@@ -4,7 +4,7 @@ import java.util.UUID
 
 import org.byrde.slick.Role.Master
 import org.byrde.slick.HasPrivilege
-import org.byrde.slick.conf.{MigrationEngineConfig, Profile}
+import org.byrde.slick.conf.{DatabaseConfig, MigrationEngineConfig, Profile}
 import org.byrde.slick.db.Db
 
 import slick.jdbc.meta.MTable
@@ -12,7 +12,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class MigrationEngine(migrations: Migrations)(implicit val ec: ExecutionContext, val migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
+class MigrationEngine(override val config: DatabaseConfig[Master], migrations: DatabaseConfig[Master] => Seq[NamedMigration])(implicit val ec: ExecutionContext, val migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
   self: Db[Master] with Profile[Master] =>
 
   import profile.api._
@@ -35,6 +35,12 @@ class MigrationEngine(migrations: Migrations)(implicit val ec: ExecutionContext,
       .foldLeft(createTable(0, 10)) {
         (prev, next) =>
           prev.flatMap(_ => runMigration(next))
+      }
+      .andThen {
+        case _ => shutdown
+      }
+      .recover {
+        case _ => shutdown
       }
 
   private def createTable(retry: Int, limit: Int)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
