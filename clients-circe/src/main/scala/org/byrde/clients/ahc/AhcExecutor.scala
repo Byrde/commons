@@ -2,7 +2,7 @@ package org.byrde.clients.ahc
 
 import org.byrde.clients.ahc.conf.ServiceConfig
 import org.byrde.uri.{Host, Path, Url}
-import org.byrde.clients.utils.RequestUtils._
+import org.byrde.clients.utils.RequestSupport._
 
 import play.api.libs.ws.{BodyWritable, StandaloneWSClient, StandaloneWSRequest, StandaloneWSResponse}
 import play.api.mvc.Request

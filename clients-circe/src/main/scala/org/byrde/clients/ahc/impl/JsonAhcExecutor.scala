@@ -1,6 +1,6 @@
 package org.byrde.clients.ahc.impl
 
-import org.byrde.clients.ahc.BoxedServiceResponseException
+import org.byrde.clients.ahc.BoxedResponseException
 import org.byrde.uri.Path
 
 import akka.util.ByteString
@@ -38,7 +38,7 @@ abstract class JsonAhcExecutor extends BaseAhcExecutor {
         response
 
       case Left(exception) =>
-        throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
+        throw new BoxedResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
     }
 }
 

@@ -1,6 +1,6 @@
 package org.byrde.clients.ahc.impl
 
-import org.byrde.clients.ahc.BoxedServiceResponseException
+import org.byrde.clients.ahc.BoxedResponseException
 import org.byrde.uri.{Host, Path}
 
 import akka.util.ByteString
@@ -42,7 +42,7 @@ abstract class CustomResponseAhcExecutor extends BaseAhcExecutor {
         validated
 
       case Left(exception) =>
-        throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
+        throw new BoxedResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
     }
 }
 
@@ -50,7 +50,7 @@ object CustomResponseAhcExecutor {
   private val Error = 400
 
   private val defaultPrinter =
-    Printer.noSpaces
+    Printer.noSpaces.copy(dropNullValues = true)
 
   private case class CustomResponseException(response: String) extends Exception(response)
 
@@ -63,7 +63,7 @@ object CustomResponseAhcExecutor {
   implicit class StandaloneWSResponse2ServiceResponseError(value: StandaloneWSResponse) {
     @silent @inline def errorHook[T: ClassTag](method: String, host: Host, path: String): StandaloneWSResponse =
       if (value.status >= Error)
-        throw BoxedServiceResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(CustomResponseException(value.body))
+        throw new BoxedResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(CustomResponseException(value.body))
       else
         value
   }

@@ -16,5 +16,6 @@ object ServiceConfig {
       HostConfig(serviceConfiguration),
       CircuitBreakerConfig(serviceConfiguration.getConfig("circuit-breaker")),
       Try(serviceConfiguration.getString("client-id")).toOption,
-      Try(serviceConfiguration.getString("client-token")).toOption)
+      Try(serviceConfiguration.getString("client-token")).toOption
+    )
 }

@@ -42,8 +42,7 @@ trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestW
       }
 
   def requestWithJsonEntity[T: ClassTag](errorCode: Int)(fn: HttpRequestWithEntity[T] => Route)(implicit decoder: Decoder[T]): Route = {
-    val pf: PartialFunction[Try[(T, HttpRequest)],
-                            Directive1[HttpRequestWithEntity[T]]] = {
+    val pf: PartialFunction[Try[(T, HttpRequest)], Directive1[HttpRequestWithEntity[T]]] = {
       case Failure(ex) =>
         reject(JsonParsingRejection(ex.getMessage, errorCode))
     }
