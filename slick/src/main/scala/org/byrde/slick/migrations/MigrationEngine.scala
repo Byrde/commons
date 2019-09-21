@@ -2,17 +2,20 @@ package org.byrde.slick.migrations
 
 import java.util.UUID
 
-import org.byrde.slick.{HasPrivilege, Role}
-import org.byrde.slick.conf.{MigrationEngineConfig, Profile}
+import org.byrde.slick.Role.Master
+import org.byrde.slick.HasPrivilege
+import org.byrde.slick.conf.{DatabaseConfig, MigrationEngineConfig, Profile}
 import org.byrde.slick.db.Db
 
+import slick.jdbc.JdbcProfile
 import slick.jdbc.meta.MTable
+import slick.migration.api.Dialect
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: ExecutionContext, val config: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
-  self: Db[R] with Profile[R] =>
+class MigrationEngine(migrations: Seq[NamedMigration])(implicit val ec: ExecutionContext, migrationEngineConfig: MigrationEngineConfig = MigrationEngineConfig(1.second, 1.second)) {
+  self: Db[Master] with Profile[Master] =>
 
   import profile.api._
 
@@ -29,14 +32,23 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
 
   private val MigrationTable = TableQuery[MigrationTable]
 
-  def migrate(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
+  def migrate[P <: JdbcProfile](implicit ev: Master HasPrivilege profile.api.Effect.All, dialect: Dialect[P]): Future[Unit] =
     migrations
       .foldLeft(createTable(0, 10)) {
         (prev, next) =>
           prev.flatMap(_ => runMigration(next))
       }
+      .andThen {
+        case _ =>
+          shutdown
+      }
+      .recover {
+        case ex =>
+          shutdown
+          throw ex
+      }
 
-  private def createTable(retry: Int, limit: Int)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
+  private def createTable(retry: Int, limit: Int)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
     run {
       MTable
         .getTables
@@ -52,7 +64,7 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
     }
     .recoverWith {
       case _ if retry < limit =>
-        delay[Unit](config.createMigrationTableRetryDelay.toMillis, createTable(retry + 1, limit))
+        delay[Unit](migrationEngineConfig.createMigrationTableRetryDelay.toMillis, createTable(retry + 1, limit))
 
       case ex =>
         throw ex
@@ -61,10 +73,10 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
   private def delay[T](millis: Long, next: => Future[T]): Future[T] =
     Future(Thread.sleep(millis)).flatMap(_ => next)
 
-  private def runMigration(migration: NamedMigration)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
+  private def runMigration(migration: NamedMigration)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
     runMigration(UUID.randomUUID(), migration)
 
-  private def runMigration(id: UUID, migration: NamedMigration)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
+  private def runMigration(id: UUID, migration: NamedMigration)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
     for {
       _ <- claimMigration(migration, id).recover { case _ => () }
       check <- checkClaimedOrCompleted(id, migration)
@@ -84,13 +96,13 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
       }
     } yield ()
 
-  private def claimMigration(migration: NamedMigration, id: UUID)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
+  private def claimMigration(migration: NamedMigration, id: UUID)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
     run(MigrationTable += MigrationRow(migration.name, id, "Requested", System.currentTimeMillis())).map(_ => ())
 
-  private def checkClaimedOrCompleted(id: UUID, migration: NamedMigration)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[ClaimStatus] =
+  private def checkClaimedOrCompleted(id: UUID, migration: NamedMigration)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[ClaimStatus] =
     checkClaimedOrCompleted(id, migration.name, migration)
 
-  private def checkClaimedOrCompleted(id: UUID, name: String, migration: NamedMigration)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[ClaimStatus] =
+  private def checkClaimedOrCompleted(id: UUID, name: String, migration: NamedMigration)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[ClaimStatus] =
     run(MigrationTable.filter(_.migrationName === name).result.headOption).flatMap {
       case Some(MigrationRow(innerName, `id`, "Requested", _)) if innerName == name =>
         Future.successful(Claimed)
@@ -99,13 +111,13 @@ class MigrationEngine[R <: Role](migrations: NamedMigration*)(implicit val ec: E
         Future.successful(AlreadyCompleted)
 
       case Some(MigrationRow(innerName, _, "Requested", _)) if innerName == name =>
-        delay(config.checkClusteredMigrationCompleteDelay.toMillis, checkClaimedOrCompleted(id, migration))
+        delay(migrationEngineConfig.checkClusteredMigrationCompleteDelay.toMillis, checkClaimedOrCompleted(id, migration))
 
       case x =>
         Future.failed(new IllegalStateException(s"By now someone should have claimed the migration: $x"))
     }
 
-  private def markAsCompleted(migration: NamedMigration, id: UUID)(implicit ev: R HasPrivilege profile.api.Effect.All): Future[Unit] =
+  private def markAsCompleted(migration: NamedMigration, id: UUID)(implicit ev: Master HasPrivilege profile.api.Effect.All): Future[Unit] =
     run {
       MigrationTable
         .filter(r => r.migrationName === migration.name && r.applicationId === id)

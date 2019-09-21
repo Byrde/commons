@@ -25,4 +25,7 @@ object HasPrivilege {
 
   implicit def MasterCanPerformTransactions(implicit profile: Profile[Master]): Master HasPrivilege profile.api.Effect.Write with profile.api.Effect.Transactional =
     null
+
+  implicit def MasterCanAll(implicit profile: Profile[Master]): Master HasPrivilege profile.api.Effect.All =
+    null
 }
