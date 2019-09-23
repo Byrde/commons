@@ -32,15 +32,15 @@ object ServiceResponse {
                                          override val status: Int,
                                          override val code: Int,
                                          override val response: T) extends ServiceResponse[T]
-  def apply[T](response: T): TransientServiceResponse[T] =
-    apply(200, response)
+  def apply[T](_response: T): TransientServiceResponse[T] =
+    apply(200, _response)
 
-  def apply[T](code: Int, response: T): TransientServiceResponse[T] =
-    apply(ServiceResponseType.Success, code, response)
+  def apply[T](_code: Int, _response: T): TransientServiceResponse[T] =
+    apply(ServiceResponseType.Success, _code, _response)
 
-  def apply[T](`type`: ServiceResponseType, code: Int, response: T): TransientServiceResponse[T] =
-    apply(`type`, 200, code, response)
+  def apply[T](_type: ServiceResponseType, _code: Int, _response: T): TransientServiceResponse[T] =
+    apply(_type, 200, _code, _response)
 
-  def apply[T](`type`: ServiceResponseType, status: Int, code: Int, response: T): TransientServiceResponse[T] =
-    TransientServiceResponse[T](`type`, status, code, response)
+  def apply[T](_type: ServiceResponseType, _status: Int, _code: Int, _response: T): TransientServiceResponse[T] =
+    TransientServiceResponse[T](_type, _status, _code, _response)
 }

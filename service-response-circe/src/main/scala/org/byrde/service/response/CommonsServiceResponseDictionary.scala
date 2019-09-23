@@ -5,13 +5,8 @@ import org.byrde.service.response.exceptions.{ClientException, ServerException}
 // Commons codes are between 1 - 1000;
 object CommonsServiceResponseDictionary {
   // OK
-  object E0200 extends EmptyServiceResponse {
-    override def status: Int =
-      200
+  object E0200 extends DefaultEmptyServiceResponse(200, 200)
 
-    override def code: Int   =
-      200
-  }
   // Client errors (1 - 499)
   object E0400 extends ClientException("Bad Request", 400, 400)
   object E0401 extends ClientException("Unauthorized", 401, 401)
@@ -23,5 +18,6 @@ object CommonsServiceResponseDictionary {
 
   // Server errors (500 - 999)
   object E0500 extends ServerException("Internal Server Error", 500, 500)
+  object E0502 extends ServerException("Bad Gateway", 500, 500)
   object E0504 extends ServerException("Service Timeout", 504, 504)
 }

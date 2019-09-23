@@ -1,6 +1,6 @@
 package org.byrde.service.response
 
-trait EmptyServiceResponse extends ServiceResponse[Option[Message]] {
+trait EmptyServiceResponse[T <: EmptyServiceResponse[T]] extends ServiceResponse[Option[Message]] {
   self =>
   override def `type`: ServiceResponseType =
     ServiceResponseType.Success
@@ -8,12 +8,5 @@ trait EmptyServiceResponse extends ServiceResponse[Option[Message]] {
   override def response: Option[Message] =
     Option.empty
 
-  def apply(_code: Int): EmptyServiceResponse =
-    new EmptyServiceResponse {
-      override def code: Int =
-        _code
-
-      override def status: Int =
-        self.status
-    }
+  def apply(_code: Int): T
 }

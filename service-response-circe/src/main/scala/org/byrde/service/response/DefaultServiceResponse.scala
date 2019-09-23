@@ -1,6 +1,6 @@
 package org.byrde.service.response
 
-trait DefaultServiceResponse extends ServiceResponse[Message] {
+class DefaultServiceResponse(override val status: Int, override val code: Int, override val response: Message) extends ServiceResponse[Message] {
   self =>
   override def `type`: ServiceResponseType =
     ServiceResponseType.Success
@@ -12,23 +12,11 @@ trait DefaultServiceResponse extends ServiceResponse[Message] {
     apply(Message(_response))
 
   def apply(_response: Message): DefaultServiceResponse =
-    apply(_response)
+    apply(code, _response)
 
   def apply(_code: Int, _response: String): DefaultServiceResponse =
     apply(_code, Message(_response))
 
   def apply(_code: Int, _response: Message): DefaultServiceResponse =
-    new DefaultServiceResponse {
-      override def code: Int =
-        _code
-
-      override def status: Int =
-        self.status
-
-      override def `type`: ServiceResponseType =
-        self.`type`
-
-      override def response: Message =
-        _response
-    }
+    new DefaultServiceResponse(status, _code, _response)
 }
