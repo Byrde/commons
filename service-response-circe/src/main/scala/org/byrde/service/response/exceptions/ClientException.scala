@@ -2,7 +2,7 @@ package org.byrde.service.response.exceptions
 
 import scala.util.control.NoStackTrace
 
-case class ClientException(msg: String, override val code: Int, override val status: Int) extends ServiceResponseException[ClientException](msg, code, status) with NoStackTrace {
+case class ClientException(msg: String, override val status: Int, override val code: Int) extends ServiceResponseException[ClientException](msg, status, code) with NoStackTrace {
   override def apply(throwable: Throwable): ClientException =
     ClientException(throwable.getMessage, status, code)
 
