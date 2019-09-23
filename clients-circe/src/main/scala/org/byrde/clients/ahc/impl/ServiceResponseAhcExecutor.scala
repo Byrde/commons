@@ -22,34 +22,34 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
   @silent def get[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
     getEither(path, requestHook).map(_.fold(throw _, identity))
 
-  @silent def getEither[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[Either[BoxedResponseException, TransientServiceResponse[T]]] =
+  @silent def getEither[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[Either[BoxedServiceResponseException, TransientServiceResponse[T]]] =
     super.getJson(path, requestHook).map(processResponse[T]("GET", path.toString))(ec)
 
   @silent def post[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     postEither(body)(path, requestHook).map(_.fold(throw _, identity))
 
-  @silent def postEither[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[Either[BoxedResponseException, TransientServiceResponse[TT]]] =
+  @silent def postEither[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[Either[BoxedServiceResponseException, TransientServiceResponse[TT]]] =
     super.postJson(body)(path, requestHook).map(processResponse[TT]("POST", path.toString))(ec)
 
   @silent def put[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     putEither(body)(path, requestHook).map(_.fold(throw _, identity))
 
-  @silent def putEither[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[Either[BoxedResponseException, TransientServiceResponse[TT]]] =
+  @silent def putEither[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[Either[BoxedServiceResponseException, TransientServiceResponse[TT]]] =
     super.putJson(body)(path, requestHook).map(processResponse[TT]("PUT", path.toString))(ec)
 
   @silent def delete[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[TransientServiceResponse[T]] =
     deleteEither(path, requestHook).map(_.fold(throw _, identity))
 
-  @silent def deleteEither[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[Either[BoxedResponseException, TransientServiceResponse[T]]] =
+  @silent def deleteEither[T](path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit decoder: Decoder[T]): Future[Either[BoxedServiceResponseException, TransientServiceResponse[T]]] =
     super.deleteJson(path, requestHook).map(processResponse[T]("DELETE", path.toString))(ec)
 
   @silent def patch[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[TransientServiceResponse[TT]] =
     patchEither(body)(path, requestHook).map(_.fold(throw _, identity))
 
-  @silent def patchEither[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[Either[BoxedResponseException, TransientServiceResponse[TT]]] =
+  @silent def patchEither[T, TT](body: T)(path: Path, requestHook: StandaloneWSRequest => StandaloneWSRequest = identity)(implicit encoder: Encoder[T], decoder: Decoder[TT]): Future[Either[BoxedServiceResponseException, TransientServiceResponse[TT]]] =
     super.patchJson(body)(path, requestHook).map(processResponse[TT]("PATCH", path.toString))(ec)
 
-  private def processResponse[T](method: String, path: String)(json: Json)(implicit decoder: Decoder[TransientServiceResponse[T]]): Either[BoxedResponseException, TransientServiceResponse[T]] =
+  private def processResponse[T](method: String, path: String)(json: Json)(implicit decoder: Decoder[TransientServiceResponse[T]]): Either[BoxedServiceResponseException, TransientServiceResponse[T]] =
     json
       .errorHook(method, host, path)
       .flatMap { json =>
@@ -58,7 +58,7 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
             Right(validated)
 
           case Left(exception) =>
-            Left(new BoxedResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception))
+            throw new BoxedResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(exception)
         }
       }
 }
