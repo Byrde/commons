@@ -3,9 +3,15 @@ package org.byrde.akka.http.support
 import org.byrde.akka.http.logging.HttpErrorLogging
 import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0200, E0405, E0500}
-import org.byrde.service.response.Message
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
+import org.byrde.service.response.{Message, Status}
+
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
+import io.circe.Printer
+import io.circe.generic.auto._
+import io.circe.parser.parse
 
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.Allow
@@ -13,12 +19,6 @@ import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, MethodRejection, RejectionHandler}
 import akka.util.ByteString
-
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-
-import io.circe.Printer
-import io.circe.generic.auto._
-import io.circe.parser.parse
 
 import scala.annotation.tailrec
 
@@ -74,13 +74,13 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
             .flatMap(_.as[TransientServiceResponse[Message]])
             .map(_.status)
             .map { status =>
-              res.copy(status = status)
+              res.copy(status = status.value)
             }
             .getOrElse {
-              val clientException =
-                ClientException(normalizeString(response), ErrorCode, status)
+              def clientException =
+                ClientException(normalizeString(response), Status.fromInt(status), ErrorCode)
 
-              val transformed =
+              def transformed =
                 LocalPrinter.prettyByteBuffer(clientException.toJson, MediaType.charset.nioCharset())
 
               res.copy(

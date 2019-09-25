@@ -1,6 +1,6 @@
 package org.byrde.clients.ahc
 
-import org.byrde.service.response.ServiceResponseType
+import org.byrde.service.response.{ServiceResponseType, Status}
 import org.byrde.service.response.exceptions.ServiceResponseException.TransientServiceResponseException
 
 class BoxedServiceResponseException(
@@ -14,7 +14,7 @@ class BoxedServiceResponseException(
   def message: String =
     exception.toString
 
-  def status: Int =
+  def status: Status =
     exception.status
 
   def code: Int =
@@ -24,8 +24,8 @@ class BoxedServiceResponseException(
     exception.`type`
 
   def isClientException: Boolean =
-    status >= 400 && status < 500
+    exception.isClientError
 
   def isServerException: Boolean =
-    status >= 500
+    exception.isServerError
 }

@@ -1,6 +1,6 @@
 package org.byrde.service.response
 
-class DefaultServiceResponse(override val status: Int, override val code: Int, override val response: Message) extends ServiceResponse[Message] {
+class DefaultServiceResponse(override val status: Status, override val code: Int, override val response: Message) extends ServiceResponse[Message] {
   self =>
   override def `type`: ServiceResponseType =
     ServiceResponseType.Success

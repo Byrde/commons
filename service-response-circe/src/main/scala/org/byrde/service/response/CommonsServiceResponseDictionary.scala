@@ -3,7 +3,7 @@ package org.byrde.service.response
 import org.byrde.service.response.exceptions.{ClientException, ServerException}
 
 // Commons codes are between 1 - 1000;
-object CommonsServiceResponseDictionary {
+object CommonsServiceResponseDictionary extends StatusHelpers {
   // OK
   object E0200 extends DefaultEmptyServiceResponse(200, 200)
 
