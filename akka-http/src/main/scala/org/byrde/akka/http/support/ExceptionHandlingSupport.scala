@@ -2,16 +2,16 @@ package org.byrde.akka.http.support
 
 import org.byrde.akka.http.logging.HttpErrorLogging
 import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
-import org.byrde.service.response.CommonsServiceResponseDictionary.{E0200, E0405, E0500}
+import org.byrde.service.response.CommonsServiceResponseDictionary.{E0405, E0500}
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
 import org.byrde.service.response.{Message, Status}
 
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
-import io.circe.Printer
 import io.circe.generic.auto._
 import io.circe.parser.parse
+import io.circe.{Json, Printer}
 
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.Allow
@@ -24,6 +24,8 @@ import scala.annotation.tailrec
 
 trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
   import org.byrde.akka.http.logging.HttpLogging._
+
+  def Ack: Json
 
   def ErrorLogger: HttpErrorLogging
 
@@ -46,7 +48,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
 
         respondWithHeader(Allow(methods)) {
           options {
-            complete(E0200.toJson)
+            complete(Ack)
           }
         } ~ complete(E0405(ErrorCode).toJson)
       }
@@ -109,7 +111,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
 
             case _ =>
               ErrorLogger.error(ctx.request, exception)
-              E0500(exception)
+              E0500(exception)(ErrorCode)
           }
 
         ctx.complete(serviceException.toJson)
