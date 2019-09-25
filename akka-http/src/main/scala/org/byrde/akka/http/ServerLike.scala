@@ -6,14 +6,17 @@ import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
 import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
 import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
 import org.byrde.akka.http.support.{RequestResponseHandlingSupport, ResponseSupport}
-import org.byrde.service.response.CommonsServiceResponseDictionary.E0200
+import org.byrde.service.response.DefaultEmptyServiceResponse
+import org.byrde.service.response.Status.S0200
+
+import io.circe.Json
+import io.circe.generic.auto._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
-import io.circe.generic.auto._
 
 import scala.concurrent.ExecutionContext
 import scala.language.higherKinds
@@ -23,6 +26,8 @@ trait ServerLike[
   ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
 ] extends RequestResponseHandlingSupport {
   self =>
+
+  val Ack: Json = new DefaultEmptyServiceResponse(S0200, self.SuccessCode).toJson
 
   trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt] {
     override lazy val provider: ModulesExt =
@@ -38,6 +43,8 @@ trait ServerLike[
 
     override def ErrorLogger: HttpErrorLogging =
       provider.ErrorLogger
+
+    def Ack: Json = self.Ack
   }
 
   implicit def global: ExecutionContext
@@ -63,7 +70,7 @@ trait ServerLike[
   lazy val ping: Route =
     path("ping") {
       get {
-        complete(E0200.toJson)
+        complete(Ack)
       }
     }
 
