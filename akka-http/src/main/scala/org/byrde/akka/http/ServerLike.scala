@@ -27,8 +27,6 @@ trait ServerLike[
 ] extends RequestResponseHandlingSupport {
   self =>
 
-  val Ack: Json = new DefaultEmptyServiceResponse(S0200, self.SuccessCode).toJson
-
   trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt] {
     override lazy val provider: ModulesExt =
       self.provider
@@ -44,7 +42,8 @@ trait ServerLike[
     override def ErrorLogger: HttpErrorLogging =
       provider.ErrorLogger
 
-    def Ack: Json = self.Ack
+    override def Ack: Json =
+      self.Ack
   }
 
   implicit def global: ExecutionContext
@@ -66,6 +65,9 @@ trait ServerLike[
 
   lazy val ErrorCode: Int =
     provider.ErrorCode
+
+  lazy val Ack: Json =
+    new DefaultEmptyServiceResponse(S0200, self.SuccessCode).toJson
 
   lazy val ping: Route =
     path("ping") {
