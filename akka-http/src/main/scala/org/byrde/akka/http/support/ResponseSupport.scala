@@ -10,14 +10,15 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-
-import io.circe.{Encoder, Printer}
+import io.circe.{Encoder, Json, Printer}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait ResponseSupport extends FailFastCirceSupport {
   import org.byrde.akka.http.rejections.ClientExceptionRejections._
+
+  def Ack: Json
 
   def ErrorLogger: HttpErrorLogging
 
