@@ -1,7 +1,7 @@
-package org.byrde.clients.ahc
+package org.byrde.service.response.exceptions
 
-import org.byrde.service.response.{ServiceResponseType, Status}
 import org.byrde.service.response.exceptions.ServiceResponseException.TransientServiceResponseException
+import org.byrde.service.response.{ServiceResponseType, Status}
 
 class BoxedServiceResponseException(
   override val protocol: String,

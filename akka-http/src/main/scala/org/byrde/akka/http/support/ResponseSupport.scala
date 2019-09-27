@@ -1,7 +1,7 @@
 package org.byrde.akka.http.support
 
 import org.byrde.akka.http.logging.HttpErrorLogging
-import org.byrde.akka.http.logging.HttpLogging.ExceptionWithHttpRequestJsonLoggingFormat
+import org.byrde.akka.http.logging.HttpLogging.ExceptionWithHttpRequestLoggingFormatter$
 import org.byrde.akka.http.rejections.RejectionException
 import org.byrde.service.response.ServiceResponse
 import org.byrde.service.response.exceptions.ClientException
@@ -10,6 +10,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+
 import io.circe.{Encoder, Json, Printer}
 
 import scala.concurrent.Future

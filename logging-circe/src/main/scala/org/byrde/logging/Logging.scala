@@ -1,55 +1,36 @@
 package org.byrde.logging
 
-import io.circe.Json
+import org.byrde.service.response.exceptions.{BoxedResponseException, BoxedServiceResponseException}
 
 trait Logging {
-  def debug[T](elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
+  def debug[T](elem: T)(implicit loggingInformation: LoggingFormatter[T]): Unit
 
-  def debug[T](msg: String, elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
+  def info[T](elem: T)(implicit loggingInformation: LoggingFormatter[T]): Unit
 
-  def info[T](elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
+  def warning[T](elem: T)(implicit loggingInformation: LoggingFormatter[T]): Unit
 
-  def info[T](msg: String, elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
-
-  def warning[T](elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
-
-  def warning[T](msg: String, elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
-
-  def error[T](elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
-
-  def error[T](msg: String, elem: T)(implicit loggingInformation: JsonLoggingFormat[T]): Unit
+  def error[T](elem: T)(implicit loggingInformation: LoggingFormatter[T]): Unit
 }
 
 object Logging {
-  implicit object ExceptionJsonLoggingFormat extends JsonLoggingFormat[Throwable] {
-    override def format(elem: Throwable): Json = {
-      def serializeException(ex: Throwable): Json = {
-        def loop(throwable: Throwable): Json = {
-          val causedBy =
-            Option(throwable) match {
-              case Some(cause) =>
-                Json.obj("causedBy" -> loop(cause.getCause))
-              case None =>
-                Json.obj()
-            }
+  implicit object ExceptionLoggingFormat$ extends LoggingFormatter[Throwable] {
+    override def format(elem: Throwable): String =
+      elem match {
+        case ex: BoxedServiceResponseException =>
+          formatBoxedResponse(ex) +
+            s"service_status=${ex.status.value} " +
+            s"service_code=${ex.code} "
 
-          Json.obj(
-            "class" -> Json.fromString(ex.getClass.getName),
-            "message" -> Json.fromString(ex.getMessage),
-            "stackTrace" -> Json.fromValues(ex.getStackTrace.map(_.toString).map(Json.fromString)),
-            "causedBy" -> causedBy)
-        }
+        case ex: BoxedResponseException =>
+          formatBoxedResponse(ex)
 
-        Json.obj(
-          "class" -> Json.fromString(ex.getClass.getName),
-          "message" -> Json.fromString(ex.getMessage),
-          "stackTrace" -> Json.fromValues(ex.getStackTrace.map(_.toString).map(Json.fromString)),
-          "causedBy" -> loop(ex.getCause))
+        case _ =>
+          ""
       }
-
-      Json.obj(
-        "message" -> Json.fromString(elem.getMessage),
-        "exception" -> serializeException(elem))
-    }
   }
+
+  private def formatBoxedResponse(ex: BoxedResponseException): String =
+    s"service_host=${ex.protocol + ex.host + ex.port.fold("")(port => s":$port")} " +
+      s"service_method=${ex.method} " +
+      s"""service_path="${ex.path}" """
 }

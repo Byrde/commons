@@ -1,4 +1,4 @@
-package org.byrde.clients.ahc
+package org.byrde.service.response.exceptions
 
 import scala.util.control.NoStackTrace
 

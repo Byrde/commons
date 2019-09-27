@@ -1,7 +1,7 @@
 package org.byrde.akka.http.logging.impl
 
 import org.byrde.akka.http.logging.HttpErrorLogging
-import org.byrde.logging.JsonLoggingFormat
+import org.byrde.logging.LoggingFormatter
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
@@ -14,6 +14,6 @@ class ErrorHttpLogger(val system: ActorSystem) extends HttpErrorLogging {
   override val logger: LoggingAdapter =
     Logging(system, name)
 
-  def error[T](request: HttpRequest, throwable: Throwable)(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, Throwable)]): Unit =
-    logger.error(loggingInformation.format(throwable.getMessage, request -> throwable).pretty(printer))
+  def error[T](request: HttpRequest, throwable: Throwable)(implicit formatter: LoggingFormatter[(HttpRequest, Throwable)]): Unit =
+    logger.error(formatter.format(request -> throwable), throwable)
 }

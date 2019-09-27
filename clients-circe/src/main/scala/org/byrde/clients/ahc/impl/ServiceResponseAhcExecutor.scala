@@ -1,7 +1,7 @@
 package org.byrde.clients.ahc.impl
 
-import org.byrde.clients.ahc.{BoxedResponseException, BoxedServiceResponseException}
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
+import org.byrde.service.response.exceptions.{BoxedResponseException, BoxedServiceResponseException}
 import org.byrde.service.response.{Message, ServiceResponseType}
 import org.byrde.service.response.utils.ServiceResponseUtils._
 import org.byrde.uri.{Host, Path}
@@ -9,7 +9,6 @@ import org.byrde.uri.{Host, Path}
 import com.github.ghik.silencer.silent
 
 import play.api.libs.ws.StandaloneWSRequest
-
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder, Json}
 

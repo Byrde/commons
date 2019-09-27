@@ -1,13 +1,11 @@
 package org.byrde.akka.http.logging.impl
 
 import org.byrde.akka.http.logging.HttpRequestLogging
-import org.byrde.logging.JsonLoggingFormat
+import org.byrde.logging.LoggingFormatter
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model.HttpRequest
-
-import io.circe.Json
 
 class RequestHttpLogger(val system: ActorSystem) extends HttpRequestLogging {
   val name: String =
@@ -16,18 +14,11 @@ class RequestHttpLogger(val system: ActorSystem) extends HttpRequestLogging {
   override val logger: LoggingAdapter =
     Logging(system, name)
 
-  def request(epoch: Long, status: String, request: HttpRequest)(implicit loggingInformation: JsonLoggingFormat[HttpRequest]): Unit = {
-    val innerRequest =
-      Json.obj(
-        "status" -> Json.fromString(status),
-        "epoch" -> Json.fromString(s"${epoch}ms")
-      )
+  def request(epoch: Long, status: String, request: HttpRequest)(implicit formatter: LoggingFormatter[HttpRequest]): Unit = {
+    val extras =
+      s"status=$status "+
+      s"epoch=${epoch}ms "
 
-    val json =
-      Json.obj(
-        "request" -> innerRequest,
-        "info" -> loggingInformation.format(request))
-
-    logger.info(json.pretty(printer))
+    logger.info(formatter.format(request) + extras)
   }
 }

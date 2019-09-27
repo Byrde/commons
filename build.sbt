@@ -85,14 +85,6 @@ val jwt =
   project
     .settings(CommonsSettings)
 
-val logging =
-  project
-    .settings(CommonsSettings)
-
-val `logging-circe` =
-  project
-    .settings(CommonsSettings)
-
 val redis =
   project
     .settings(CommonsSettings)
@@ -111,6 +103,11 @@ val uri =
 
 val email =
   project
+    .settings(CommonsSettings)
+
+val `logging-circe` =
+  project
+    .dependsOn(`service-response-circe`)
     .settings(CommonsSettings)
 
 val utils =
@@ -152,7 +149,6 @@ val root =
       `clients-circe`,
       email,
       jwt,
-      logging,
       `logging-circe`,
       play,
       redis,

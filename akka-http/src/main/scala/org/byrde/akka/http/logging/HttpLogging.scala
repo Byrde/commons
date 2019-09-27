@@ -1,70 +1,53 @@
 package org.byrde.akka.http.logging
 
+import java.util.UUID
+
 import org.byrde.akka.http.support.RequestResponseHandlingSupport.IdHeader
-import org.byrde.logging.{JsonLoggingFormat, Logging}
+import org.byrde.logging.{Logging, LoggingFormatter}
 
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpRequest
 
-import io.circe.{Json, Printer}
-
 trait HttpLogging {
-  protected val printer: Printer =
-    Printer.noSpaces.copy(dropNullValues = true)
-
   val logger: LoggingAdapter
 
-  def debug[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.debug(loggingInformation.format(elem).pretty(printer))
+  def debug[T](elem: (HttpRequest, T))(implicit formatter: LoggingFormatter[(HttpRequest, T)]): Unit =
+    logger.debug(formatter.format(elem))
 
-  def debug[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.debug(loggingInformation.format(msg, elem).pretty(printer))
+  def info[T](elem: (HttpRequest, T))(implicit formatter: LoggingFormatter[(HttpRequest, T)]): Unit =
+    logger.info(formatter.format(elem))
 
-  def info[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.info(loggingInformation.format(elem).pretty(printer))
+  def warning[T](elem: (HttpRequest, T))(implicit formatter: LoggingFormatter[(HttpRequest, T)]): Unit =
+    logger.warning(formatter.format(elem))
 
-  def info[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.info(loggingInformation.format(msg, elem).pretty(printer))
-
-  def warning[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.warning(loggingInformation.format(elem).pretty(printer))
-
-  def warning[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.warning(loggingInformation.format(msg, elem).pretty(printer))
-
-  def error[T](elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.error(loggingInformation.format(elem).pretty(printer))
-
-  def error[T](msg: String, elem: (HttpRequest, T))(implicit loggingInformation: JsonLoggingFormat[(HttpRequest, T)]): Unit =
-    logger.error(loggingInformation.format(msg, elem).pretty(printer))
+  def error[T](elem: (HttpRequest, T))(implicit formatter: LoggingFormatter[(HttpRequest, T)]): Unit =
+    logger.error(formatter.format(elem))
 }
 
 object HttpLogging {
-  implicit object HttpRequestInformationJsonLogginFormat extends JsonLoggingFormat[HttpRequest] {
-    override def format(elem: HttpRequest): Json =
-      Json.obj(
-        "id" -> {
-          elem
-            .headers
-            .find(_.name().equalsIgnoreCase(IdHeader.name))
-            .map(_.value())
-            .fold(Json.fromString("None"))(Json.fromString)
-        },
-        "uri" -> Json.fromString(elem.uri.toString),
-        "method" -> Json.fromString(elem.method.value.toString),
-        "headers" -> Json.fromValues(elem.headers.map(header => s"${header.name}: ${header.value}").map(Json.fromString)),
-        "cookies" -> Json.fromValues(elem.cookies.map(cookie => s"${cookie.name}: ${cookie.value}").map(Json.fromString))
-      )
+  implicit object HttpRequestInformationLoggingFormat$ extends LoggingFormatter[HttpRequest] {
+    override def format(elem: HttpRequest): String = {
+      def requestId =
+        elem
+          .headers
+          .find(_.name.equalsIgnoreCase(IdHeader.name))
+          .map(_.value)
+          .map(UUID.fromString)
+          .getOrElse(UUID.randomUUID)
+          .toString
+
+      "level=error " +
+        s"request_id=$requestId " +
+        s"""path="${elem.uri.path.toString}" """
+    }
   }
 
-  implicit object ExceptionWithHttpRequestJsonLoggingFormat extends JsonLoggingFormat[(HttpRequest, Throwable)] {
-    override def format(elem: (HttpRequest, Throwable)): Json = {
+  implicit object ExceptionWithHttpRequestLoggingFormatter$ extends LoggingFormatter[(HttpRequest, Throwable)] {
+    override def format(elem: (HttpRequest, Throwable)): String = {
       val (req, ex) =
         elem._1 -> elem._2
 
-      Json.obj(
-        "request" -> HttpRequestInformationJsonLogginFormat.format(req),
-        "exception" ->  Logging.ExceptionJsonLoggingFormat.format(ex))
+      HttpRequestInformationLoggingFormat$.format(req) + Logging.ExceptionLoggingFormat$.format(ex)
     }
   }
 }

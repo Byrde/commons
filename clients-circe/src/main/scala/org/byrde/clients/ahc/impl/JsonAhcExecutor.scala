@@ -1,12 +1,10 @@
 package org.byrde.clients.ahc.impl
 
-import org.byrde.clients.ahc.BoxedResponseException
+import org.byrde.service.response.exceptions.BoxedResponseException
 import org.byrde.uri.Path
 
 import akka.util.ByteString
-
 import play.api.libs.ws.{BodyWritable, InMemoryBody, StandaloneWSRequest}
-
 import io.circe.{Encoder, Json, Printer}
 import io.circe.parser._
 import io.circe.syntax._
