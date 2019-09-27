@@ -73,7 +73,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
               .utf8String
 
           parse(response)
-            .flatMap(_.as[TransientServiceResponse[Message]])
+            .flatMap(_.as[TransientServiceResponse[Option[Message]]])
             .map(_.status)
             .map { status =>
               res.copy(status = status.value)
