@@ -36,6 +36,12 @@ trait ResponseSupport extends FailFastCirceSupport {
   )(implicit encoder: Encoder[T]): Route =
     handle(result, (res: T) => complete(ServiceResponse(code, res).toJson))
 
+  def handleAck[T](
+    result: T,
+    code: Int = SuccessCode,
+  ): Route =
+    handle(result, _ => complete(Ack))
+
   def handle[T](
     result: T,
     Ok: T => Route,
@@ -47,6 +53,12 @@ trait ResponseSupport extends FailFastCirceSupport {
     code: Int = SuccessCode,
   )(implicit encoder: Encoder[T]): Route =
     handleAsync(fn, (res: T) => complete(ServiceResponse(code, res).toJson))
+
+  def handleAck[T](
+    fn: Future[T],
+    code: Int = SuccessCode,
+  ): Route =
+    handleAsync(fn, _ => complete(Ack))
 
   def handleAsync[T](
     fn: Future[T],
