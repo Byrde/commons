@@ -28,8 +28,7 @@ trait ResponseSupport extends FailFastCirceSupport {
   def HandleThrowable: Throwable => Route =
     throw _
 
-  private implicit lazy val LocalPrinter: Printer =
-    Printer.noSpaces.copy(dropNullValues = true)
+  implicit def printer: Printer
 
   def handleJson[T](
     result: T,

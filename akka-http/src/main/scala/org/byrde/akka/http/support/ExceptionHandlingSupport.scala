@@ -33,11 +33,10 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
 
   def handlers: Set[RejectionHandler]
 
+  implicit def printer: Printer
+
   private lazy val MediaType =
     `application/json`
-
-  private implicit lazy val LocalPrinter: Printer =
-    Printer.noSpaces.copy(dropNullValues = true)
 
   private lazy val default: RejectionHandler =
     RejectionHandler
@@ -83,7 +82,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
                 ClientException(normalizeString(response), Status.fromInt(status), ErrorCode)
 
               def transformed =
-                LocalPrinter.prettyByteBuffer(clientException.toJson, MediaType.charset.nioCharset())
+                printer.prettyByteBuffer(clientException.toJson, MediaType.charset.nioCharset())
 
               res.copy(
                 status = status,

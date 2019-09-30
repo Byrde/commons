@@ -9,7 +9,7 @@ import org.byrde.akka.http.support.{RequestResponseHandlingSupport, ResponseSupp
 import org.byrde.service.response.DefaultEmptyServiceResponse
 import org.byrde.service.response.Status.S0200
 
-import io.circe.Json
+import io.circe.{Json, Printer}
 import io.circe.generic.auto._
 
 import akka.actor.ActorSystem
@@ -27,11 +27,14 @@ trait ServerLike[
 ] extends RequestResponseHandlingSupport {
   self =>
 
+  override implicit lazy val printer: Printer =
+    Printer.noSpaces.copy(dropNullValues = true)
+
   trait RuntimeModulesMixin extends UnmarshallingRuntimeModulesDirective[RuntimeModulesExt, ModulesExt] {
-    override lazy val provider: ModulesExt =
+    override def provider: ModulesExt =
       self.provider
 
-    override lazy val builder: RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt] =
+    override def builder: RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt] =
       self.builder
   }
 
@@ -44,6 +47,9 @@ trait ServerLike[
 
     override def Ack: Json =
       self.Ack
+
+    override implicit def printer: Printer =
+      self.printer
   }
 
   implicit def global: ExecutionContext
