@@ -15,5 +15,5 @@ class ErrorHttpLogger(val system: ActorSystem) extends HttpErrorLogging {
     Logging(system, name)
 
   def error[T](request: HttpRequest, throwable: Throwable)(implicit formatter: LoggingFormatter[(HttpRequest, Throwable)]): Unit =
-    logger.error(formatter.format(request -> throwable), throwable)
+    logger.error(throwable, formatter.format(request -> throwable))
 }
