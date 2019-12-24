@@ -6,9 +6,11 @@ import io.circe.Printer
 import io.circe.generic.auto._
 import io.circe.parser._
 
-import org.scalatest.{EitherValues, FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.EitherValues
+import org.scalatest.matchers.should.Matchers
 
-class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
+class ServiceResponseSpec extends AnyFreeSpec with Matchers with EitherValues {
   private val MostlyEqualRegex =
     "\\s+"
 
@@ -32,7 +34,7 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
       val serialized =
         parse(json).flatMap(_.as[TransientServiceResponse[Message]])
 
-      serialized should be ('right)
+      serialized should be ("right")
     }
 
     "should deserialize to expected service response (e.g 2)" in {
@@ -48,7 +50,7 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
       val serialized =
         parse(json).flatMap(_.as[TransientServiceResponse[Option[Message]]])
 
-      serialized should be ('right)
+      serialized should be ("right")
     }
 
     "should serialize to expected service response (e.g 1)" in {
@@ -65,7 +67,7 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
         """.stripMargin.replaceAll(MostlyEqualRegex, "")
 
       val serialized =
-        ServiceResponse(Message("Test")).toJson.pretty(printer).replaceAll(MostlyEqualRegex, "")
+        ServiceResponse(Message("Test")).toJson.printWith(printer).replaceAll(MostlyEqualRegex, "")
 
       assert(serialized == expected)
     }
@@ -81,7 +83,7 @@ class ServiceResponseSpec extends FreeSpec with Matchers with EitherValues {
         """.stripMargin.replaceAll(MostlyEqualRegex, "")
 
       val serialized =
-        ServiceResponse(Option.empty[Message]).toJson.pretty(printer).replaceAll(MostlyEqualRegex, "")
+        ServiceResponse(Option.empty[Message]).toJson.printWith(printer).replaceAll(MostlyEqualRegex, "")
 
       assert(serialized == expected)
     }
