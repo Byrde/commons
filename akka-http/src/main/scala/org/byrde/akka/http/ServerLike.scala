@@ -19,7 +19,6 @@ import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
-import scala.language.higherKinds
 
 trait ServerLike[
   RuntimeModulesExt[T] <: RuntimeModulesLike[T],

@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 object ExpandUtils {
   implicit class ExpandAny[A, B](val value: A) extends AnyVal {
-    final def expand(expandFn: A => A, untilFn: A => Boolean): TraversableOnce[A] = {
+    final def expand(expandFn: A => A, untilFn: A => Boolean): IterableOnce[A] = {
       @tailrec
       def innerExpand(acc: Seq[A], expandedValue: A): Seq[A] =
         expandedValue match {

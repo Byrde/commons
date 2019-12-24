@@ -15,5 +15,5 @@ object BodyWritableUtils {
     new BodyWritable(_ => EmptyBody, "text/plain")
 
   implicit def writeableOf_Json(implicit printer: Printer = Printer.noSpaces): BodyWritable[Json] =
-    BodyWritable(json => InMemoryBody(ByteString.fromString(json.pretty(printer))), "application/json")
+    BodyWritable(json => InMemoryBody(ByteString.fromString(json.printWith(printer))), "application/json")
 }

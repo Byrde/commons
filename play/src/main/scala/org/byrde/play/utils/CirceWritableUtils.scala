@@ -13,5 +13,5 @@ object CirceWritableUtils {
     ContentTypeOf[io.circe.Json](Some(ContentTypes.JSON))
 
   implicit def writeableOf_CirceJson(implicit codec: Codec): Writeable[io.circe.Json] =
-    Writeable(obj => codec.encode(LocalPrinter.pretty(obj)))
+    Writeable(obj => codec.encode(LocalPrinter.print(obj)))
 }

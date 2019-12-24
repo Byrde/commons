@@ -2,8 +2,6 @@ package org.byrde.akka.http.modules
 
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
 
-import scala.language.higherKinds
-
 trait RuntimeModulesLike[Req]
 
 object RuntimeModulesLike {

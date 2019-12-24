@@ -34,6 +34,6 @@ trait CORSSupport {
       origins ++
         allowedMethods ++
         allowHeaders ++
-        exposeHeaders: _*
+        exposeHeaders
     )(route)
 }

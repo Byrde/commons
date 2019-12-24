@@ -2,37 +2,19 @@ import sbt.librarymanagement.{DependencyBuilders, ModuleID}
 
 object Dependencies extends DependencyBuilders {
   val AkkaHttpVersion: String =
-    "10.1.7"
+    "10.1.11"
 
   val AkkaVersion: String =
-    "2.5.21"
-
-  val CompressorVersion: String =
-    "1.5.2"
-
-  val GuiceVersion: String =
-    "4.1.0"
-
-  val JedisVersion: String =
-    "2.9.0"
-
-  val JwtVersion: String =
-    "1.2.2"
+    "2.6.1"
 
   val PlayVersion: String =
-    "2.7.0"
-
-  val PlayAhcVersion: String =
-    "2.0.0-M2"
+    "2.8.0"
 
   val SlickVersion: String =
     "3.3.2"
 
   val CirceVersion: String =
-    "0.10.0"
-
-  val SlickMigrationVersion: String =
-    "0.7.0"
+    "0.12.3"
 
   val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
@@ -42,7 +24,7 @@ object Dependencies extends DependencyBuilders {
       "com.typesafe.akka"  %% "akka-actor"             % AkkaVersion,
       "com.typesafe.akka"  %% "akka-slf4j"             % AkkaVersion,
       "com.typesafe.akka"  %% "akka-stream"            % AkkaVersion,
-      "de.heikoseeberger"  %% "akka-http-circe"        % "1.25.2",
+      "de.heikoseeberger"  %% "akka-http-circe"        % "1.30.0",
 
       "com.typesafe.akka" %% "akka-http-testkit"    % AkkaHttpVersion,
       "com.typesafe.akka" %% "akka-testkit"         % AkkaVersion,
@@ -51,7 +33,7 @@ object Dependencies extends DependencyBuilders {
 
   val CompressorDependencies: Seq[ModuleID] =
     Seq(
-      "com.googlecode.htmlcompressor" % "htmlcompressor" % CompressorVersion
+      "com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2"
     )
 
   val EmailDependencies: Seq[ModuleID] =
@@ -62,31 +44,31 @@ object Dependencies extends DependencyBuilders {
 
   val GuiceDependencies: Seq[ModuleID] =
     Seq(
-      "com.google.inject.extensions"  % "guice-assistedinject"  % GuiceVersion,
-      "net.codingwell"                %% "scala-guice"          % GuiceVersion
+      "com.google.inject.extensions"  % "guice-assistedinject"  % "4.2.2",
+      "net.codingwell"                %% "scala-guice"          % "4.2.6"
     )
 
   val JwtDependencies: Seq[ModuleID] =
     Seq(
-      "io.igl" %% "jwt" % JwtVersion
+      "com.pauldijou" %% "jwt-circe" % "4.2.0"
     )
 
   val RedisDependencies: Seq[ModuleID] =
     Seq(
-      "redis.clients" % "jedis" % JedisVersion
+      "redis.clients" % "jedis" % "2.9.0"
     )
 
   val SlickDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.slick" %% "slick-hikaricp"      % SlickVersion,
-      "io.github.nafg"     %% "slick-migration-api" % SlickMigrationVersion,
+      "io.github.nafg"     %% "slick-migration-api" % "0.7.0",
       "com.typesafe.slick" %% "slick"               % SlickVersion
     )
 
   val PlayWSDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.play" %% "play-ws"                % PlayVersion,
-      "com.typesafe.play" %% "play-ahc-ws-standalone" % PlayAhcVersion
+      "com.typesafe.play" %% "play-ahc-ws"            % PlayVersion
     )
 
   val PlayDependencies: Seq[ModuleID] =
@@ -96,7 +78,8 @@ object Dependencies extends DependencyBuilders {
 
   val TypesafeConfigDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe" % "config" % "1.2.1")
+      "com.typesafe" % "config" % "1.2.1"
+    )
 
   val CirceDependencies: Seq[ModuleID] =
     Seq(
@@ -104,4 +87,7 @@ object Dependencies extends DependencyBuilders {
       "io.circe" %% "circe-generic" % CirceVersion,
       "io.circe" %% "circe-parser"  % CirceVersion
     )
+
+  val ScalaTest: ModuleID =
+    "org.scalatest" %% "scalatest" % "3.1.0" % "test"
 }

@@ -20,7 +20,7 @@ val CommonsSettings =
     scalaVersion :=
       Option(
         System.getProperty("scalaVersion"))
-        .getOrElse("2.12.8"),
+        .getOrElse("2.13.1"),
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers ++=
@@ -71,11 +71,7 @@ val CommonsSettings =
         "Alfapalooza",
         "Martin Allaire",
         "martin@byrde.io",
-        new URL("http://linkedin.com/allama")),
-    libraryDependencies ++=
-      Seq(
-        compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.1"),
-        "com.github.ghik" %% "silencer-lib" % "1.3.1" % Provided))
+        new URL("http://linkedin.com/allama")))
 
 val auth =
   project

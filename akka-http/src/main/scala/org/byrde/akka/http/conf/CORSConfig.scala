@@ -16,16 +16,19 @@ object CORSConfig {
       config
         .getString(_origins)
         .split(", ")
+        .toIndexedSeq
 
     val methods =
       config
         .getString(_methods)
         .split(", ")
+        .toIndexedSeq
 
     val headers =
       config
         .getString(_headers)
         .split(", ")
+        .toIndexedSeq
 
     CORSConfig(origins, methods, headers)
   }

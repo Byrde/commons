@@ -5,8 +5,6 @@ import org.byrde.akka.http.libs.typedmap.{TypedEntry, TypedKey}
 import org.byrde.akka.http.logging.{HttpErrorLogging, HttpRequestLogging}
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
 
-import scala.language.higherKinds
-
 trait ModulesProviderLike[RuntimeModulesExt[T] <: RuntimeModulesLike[T]] {
   def SuccessCode: Int
 

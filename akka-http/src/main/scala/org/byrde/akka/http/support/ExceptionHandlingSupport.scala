@@ -82,7 +82,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
                 ClientException(normalizeString(response), Status.fromInt(status), ErrorCode)
 
               def transformed =
-                printer.prettyByteBuffer(clientException.toJson, MediaType.charset.nioCharset())
+                printer.printToByteBuffer(clientException.toJson, MediaType.charset.nioCharset())
 
               res.copy(
                 status = status,
@@ -124,7 +124,7 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
       else
         innerHandler
 
-    innerRegisterHandlers(handlersToBeRegistered.toIterator, initialHandler)
+    innerRegisterHandlers(handlersToBeRegistered.iterator, initialHandler)
   }
 
   private def stripLeadingAndTrailingQuotes(value: String): String = {

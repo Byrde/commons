@@ -3,7 +3,6 @@ package org.byrde.slick.db
 import org.byrde.slick.{HasPrivilege, Role}
 import org.byrde.slick.conf.Profile
 
-import com.github.ghik.silencer.silent
 import slick.dbio.{DBIOAction, Effect, NoStream}
 
 import scala.concurrent.Future
@@ -13,7 +12,7 @@ trait Db[R <: Role] {
     private val underlyingDb =
       config.jdbc.db
 
-    @silent def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
+    def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R HasPrivilege E): Future[Result] =
       underlyingDb.run(query)
 
     def shutdown: Future[Unit] =

@@ -14,7 +14,7 @@ trait UnmarshallingRequestWithRequestDirective {
     directive[T](handler)(um)
 
   protected def directive[T](pf: PartialFunction[Try[(T, HttpRequest)], Directive1[HttpRequestWithEntity[T]]])(um: FromEntityUnmarshaller[T]): Directive1[HttpRequestWithEntity[T]] =
-    extractRequestContext.flatMap[Tuple1[HttpRequestWithEntity[T]]] { ctx ⇒
+    extractRequestContext.flatMap[Tuple1[HttpRequestWithEntity[T]]] { ctx =>
       import ctx.{executionContext, materializer}
       onComplete(um(ctx.request.entity) map (_ -> ctx.request)) flatMap pf
     } & cancelRejections(RequestEntityExpectedRejection.getClass, classOf[UnsupportedRequestContentTypeRejection])

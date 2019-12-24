@@ -3,7 +3,6 @@ package org.byrde.clients.circuitbreaker.conf
 import com.typesafe.config.Config
 
 import scala.concurrent.duration.FiniteDuration
-import scala.language.implicitConversions
 
 case class CircuitBreakerConfig(maxFailures: Int, callTimeout: FiniteDuration, resetTimeout: FiniteDuration)
 

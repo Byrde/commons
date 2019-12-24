@@ -2,8 +2,6 @@ package org.byrde.service.response
 
 import io.circe.{Decoder, Encoder}
 
-import scala.language.implicitConversions
-
 class Status(val value: Int) {
   def isClientError: Boolean =
     value <= 500 && value >= 400

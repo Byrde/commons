@@ -4,8 +4,9 @@ import org.byrde.service.response.exceptions.BoxedResponseException
 import org.byrde.uri.{Host, Path}
 
 import akka.util.ByteString
+
 import play.api.libs.ws.{BodyWritable, InMemoryBody, StandaloneWSRequest, StandaloneWSResponse}
-import com.github.ghik.silencer.silent
+
 import io.circe.parser.parse
 import io.circe.{Decoder, Encoder, Json, Printer}
 import io.circe.syntax._
@@ -53,12 +54,12 @@ object CustomResponseAhcExecutor {
 
   implicit def circeJsonBodyWriteable(implicit printer: Printer = defaultPrinter): BodyWritable[Json] =
     BodyWritable(
-      json => InMemoryBody(ByteString.fromString(json.pretty(printer))),
+      json => InMemoryBody(ByteString.fromString(json.printWith(printer))),
       "application/json"
     )
 
   implicit class StandaloneWSResponse2ServiceResponseError(value: StandaloneWSResponse) {
-    @silent @inline def errorHook[T: ClassTag](method: String, host: Host, path: String): StandaloneWSResponse =
+    @inline def errorHook[T: ClassTag](method: String, host: Host, path: String): StandaloneWSResponse =
       if (value.status >= Error)
         throw new BoxedResponseException(host.protocol.toString, host.host, host.port.map(_.toString), method, path)(CustomResponseException(value.body))
       else

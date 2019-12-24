@@ -8,7 +8,6 @@ import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 
 import io.circe.Decoder
 
-import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 trait UnmarshallingRuntimeModulesDirective [

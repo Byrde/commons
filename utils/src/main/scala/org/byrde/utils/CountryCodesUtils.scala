@@ -1,8 +1,9 @@
 package org.byrde.utils
+
 import java.util.Locale
 
 object CountryCodesUtils {
-  private val countries =
+  private val localesByCountry =
     Locale
       .getAvailableLocales
       .map { locale =>
@@ -10,11 +11,19 @@ object CountryCodesUtils {
       }
       .toMap
 
-  def findByCountry(country: String): Option[Locale] =
-    countries.get(normalizeKey(country))
+  private val localesByCountryCode =
+    Locale
+      .getAvailableLocales
+      .map { locale =>
+        normalizeKey(locale.getCountry) -> locale
+      }
+      .toMap
 
-  def findByCountryCode(countryCode: String): Locale =
-    new Locale(Locale.getDefault.getLanguage, countryCode)
+  def findByCountry(country: String): Option[Locale] =
+    localesByCountry.get(normalizeKey(country))
+
+  def findByCountryCode(countryCode: String): Option[Locale] =
+    localesByCountryCode.get(normalizeKey(countryCode))
 
   private def normalizeKey(value: String) =
     value.toLowerCase.trim

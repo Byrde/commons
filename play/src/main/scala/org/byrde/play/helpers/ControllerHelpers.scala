@@ -13,7 +13,7 @@ import scala.util.control.NoStackTrace
 trait ControllerHelpers {
   implicit def ec: ExecutionContext
 
-  private case class ModelValidationException[A: ClassTag](errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])])
+  private case class ModelValidationException[A: ClassTag](errors: scala.collection.Seq[(JsPath, scala.collection.Seq[play.api.libs.json.JsonValidationError])])
     extends Throwable(
       s"""
          |Error parsing: ${classTag[A].runtimeClass},
@@ -44,7 +44,7 @@ trait ControllerHelpers {
           .fold(throw _, identity)
       }
 
-  private def formatErrors(errors: Seq[(JsPath, Seq[play.api.libs.json.JsonValidationError])]): String =
+  private def formatErrors(errors: scala.collection.Seq[(JsPath, scala.collection.Seq[play.api.libs.json.JsonValidationError])]): String =
     errors.foldLeft("") {
       case (acc, err) =>
         val error =

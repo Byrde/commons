@@ -4,12 +4,11 @@ import java.io._
 import java.util.zip.GZIPOutputStream
 
 import org.byrde.play.compressors.conf.{CssCompressorConfig, HtmlCompressorConfig, JsCompressorConfig}
-
 import org.apache.commons.io.{FilenameUtils, IOUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.{Codec, Source}
-import scala.language.reflectiveCalls
+import scala.util.Using
 
 case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None,
                              _jsConfig: Option[JsCompressorConfig] = None)(implicit ec: ExecutionContext) {
@@ -67,7 +66,7 @@ case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None,
         ow.write(html)
       }
     } else {
-      usingResource(Source.fromInputStream(is)(Codec.UTF8)) { source =>
+      Using(Source.fromInputStream(is)(Codec.UTF8)) { source =>
         source.getLines.foreach(ow.write)
       }
     }
@@ -75,11 +74,4 @@ case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None,
     target.renameTo(new File(s"${target.getName}.gz"))
     target
   }
-
-  private def usingResource[B <: { def close(): Unit }, C](resource: B)(f: B => C): C =
-    try {
-      f(resource)
-    } finally {
-      resource.close()
-    }
 }
