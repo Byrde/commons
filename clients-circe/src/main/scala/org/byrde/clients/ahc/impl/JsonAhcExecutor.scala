@@ -43,7 +43,7 @@ abstract class JsonAhcExecutor extends BaseAhcExecutor {
 object JsonAhcExecutor {
   implicit def circeJsonBodyWriteable: BodyWritable[Json] =
     BodyWritable(
-      json => InMemoryBody(ByteString.fromString(json.pretty(Printer.noSpaces.copy(dropNullValues = true)))),
+      json => InMemoryBody(ByteString.fromString(json.printWith(Printer.noSpaces.copy(dropNullValues = true)))),
       "application/json"
     )
 }

@@ -49,6 +49,6 @@ object Url {
           else
             Protocol.http
 
-        new URL(protocol + value)
+        new URL(protocol.toString + value)
     }
 }

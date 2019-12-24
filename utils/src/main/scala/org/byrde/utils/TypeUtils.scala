@@ -1,7 +1,6 @@
 package org.byrde.utils
 
 import scala.concurrent.Future
-import scala.language.implicitConversions
 import scala.util.Try
 
 trait TypeUtils

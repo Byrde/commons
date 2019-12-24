@@ -63,7 +63,7 @@ abstract class ServiceResponseAhcExecutor extends JsonAhcExecutor {
 
 object ServiceResponseAhcExecutor {
   implicit class JsValue2ServiceResponseError(value: Json) {
-    @inline def errorHook(method: String, host: Host, path: String)(implicit decoder: Decoder[Option[Message]]): Either[BoxedServiceResponseException, Json] =
+    @inline def errorHook(method: String, host: Host, path: String): Either[BoxedServiceResponseException, Json] =
       value
         .as[TransientServiceResponse[Option[Message]]] match {
           case Right(validated) if validated.`type` == ServiceResponseType.Error =>

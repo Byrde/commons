@@ -8,7 +8,6 @@ import biz.source_code.base64Coder.Base64Coder
 
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.postfixOps
 import scala.reflect.ClassTag
 
 class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoader)(implicit ec: ExecutionContext){
@@ -40,7 +39,7 @@ class RedisClient(val namespace: String, val pool: Pool, classLoader: ClassLoade
 
         case _data =>
           val data: Seq[String] =
-            _data.split("-")
+            _data.split("-").toIndexedSeq
 
           val bytes =
             Base64Coder.decode(data.last)

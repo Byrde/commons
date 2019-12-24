@@ -5,7 +5,6 @@ import java.lang
 import redis.clients.jedis.{Jedis, SortingParams}
 
 import scala.concurrent.duration.FiniteDuration
-import scala.language.implicitConversions
 
 trait Dress {
   implicit def delegateToJedis(d: Wrap): Jedis =
@@ -15,7 +14,7 @@ trait Dress {
     up(j)
 
   class Wrap(val j: Jedis) {
-    import collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
 
     def keys(pattern: String): Set[String] =
       j.keys(pattern).asScala.toSet
