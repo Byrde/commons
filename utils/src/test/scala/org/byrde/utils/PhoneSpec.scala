@@ -6,7 +6,7 @@ import org.byrde.utils.Phone.PhoneInvalid
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class PhoneTest extends AnyFlatSpec with Matchers {
+class PhoneSpec extends AnyFlatSpec with Matchers {
   "Phone.fromString" should "extract North American phone parts" in {
     val phone = Phone.fromString("16138044534").toOption.get
     phone.country shouldBe "1"

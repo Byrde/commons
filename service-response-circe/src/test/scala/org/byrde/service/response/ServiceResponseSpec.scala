@@ -34,7 +34,7 @@ class ServiceResponseSpec extends AnyFreeSpec with Matchers with EitherValues {
       val serialized =
         parse(json).flatMap(_.as[TransientServiceResponse[Message]])
 
-      serialized should be ("right")
+      serialized should be ('right)
     }
 
     "should deserialize to expected service response (e.g 2)" in {
@@ -50,7 +50,7 @@ class ServiceResponseSpec extends AnyFreeSpec with Matchers with EitherValues {
       val serialized =
         parse(json).flatMap(_.as[TransientServiceResponse[Option[Message]]])
 
-      serialized should be ("right")
+      serialized should be ('right)
     }
 
     "should serialize to expected service response (e.g 1)" in {

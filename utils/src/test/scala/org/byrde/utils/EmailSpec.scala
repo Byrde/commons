@@ -4,7 +4,7 @@ import org.byrde.utils.Email.EmailInvalid
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class EmailTest extends AnyFlatSpec with Matchers {
+class EmailSpec extends AnyFlatSpec with Matchers {
   "Email.fromString" should "extract email parts" in {
     val email = Email.fromString("martin@simple.reviews").toOption.get
     email.recipient shouldBe "martin"

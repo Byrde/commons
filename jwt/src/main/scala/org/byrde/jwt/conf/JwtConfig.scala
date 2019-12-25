@@ -2,12 +2,13 @@ package org.byrde.jwt.conf
 
 import com.typesafe.config.Config
 
+import pdi.jwt.algorithms.JwtHmacAlgorithm
 import pdi.jwt.{JwtAlgorithm, JwtClaim}
 
 case class JwtConfig(
   tokenName: String,
   private val secret: String,
-  encryptionAlgorithm: JwtAlgorithm,
+  encryptionAlgorithm: JwtHmacAlgorithm,
   saltOpt: Option[String] = None
 ) {
   lazy val signature: String =
