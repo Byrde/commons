@@ -30,6 +30,9 @@ object Phone {
   def fromStringFullRange(phone: String, country: String): Either[PhoneValidationError, Phone] =
     fromString(phone).orElse(fromStringWithCountry(phone, country))
 
+  def fromStringFullRange(phone: String, locale: Locale): Either[PhoneValidationError, Phone] =
+    fromString(phone).orElse(fromStringWithCountry(phone, locale))
+
   def fromString(phone: String): Either[PhoneValidationError, Phone] =
     normalizePhone(phone) match {
       case phone if phone.isEmpty =>
@@ -49,10 +52,10 @@ object Phone {
     CountryCodesUtils
       .findByCountry(country)
       .orElse(CountryCodesUtils.findByCountryCode(country))
-      .map(fromStringWithLocale(normalizePhone(phone), _))
+      .map(fromStringWithCountry(normalizePhone(phone), _))
       .getOrElse(Left(CountryNotFound))
 
-  def fromStringWithLocale(phone: String, locale: Locale): Either[PhoneValidationError, Phone] =
+  def fromStringWithCountry(phone: String, locale: Locale): Either[PhoneValidationError, Phone] =
     locale match {
       case Locale.US | Locale.CANADA | Locale.CANADA_FRENCH =>
         toNorthAmericanPhone(normalizePhone(phone))
