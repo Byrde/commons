@@ -100,7 +100,7 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
   }
 
   "Phone.fromStringWithLocale" should "work with North American phone" in {
-    val phone = Phone.fromStringWithLocale("16138044534", Locale.US).toOption.get
+    val phone = Phone.fromStringWithCountry("16138044534", Locale.US).toOption.get
     phone.country shouldBe "1"
     phone.area shouldBe "613"
     phone.exchange shouldBe "804"
@@ -108,7 +108,7 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "work with Australian phone" in {
-    val phone = Phone.fromStringWithLocale("61451266907", CountryCodesUtils.findByCountryCode("AU").get).toOption.get
+    val phone = Phone.fromStringWithCountry("61451266907", Country.findByCountryCode("AU").get).toOption.get
     phone.country shouldBe "61"
     phone.area shouldBe "4"
     phone.exchange shouldBe "5126"

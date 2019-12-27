@@ -49,7 +49,7 @@ object Phone {
     }
 
   def fromStringWithCountry(phone: String, country: String): Either[PhoneValidationError, Phone] =
-    CountryCodesUtils
+    Country
       .findByStringFullRange(country)
       .map(fromStringWithCountry(normalizePhone(phone), _))
       .getOrElse(Left(CountryNotFound))
