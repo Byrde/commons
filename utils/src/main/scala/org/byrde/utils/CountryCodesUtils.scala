@@ -19,6 +19,11 @@ object CountryCodesUtils {
       }
       .toMap
 
+  def findByStringFullRange(country: String): Option[Locale] =
+    CountryCodesUtils
+      .findByCountry(country)
+      .orElse(CountryCodesUtils.findByCountryCode(country))
+
   def findByCountry(country: String): Option[Locale] =
     localesByCountry.get(normalizeKey(country))
 

@@ -50,8 +50,7 @@ object Phone {
 
   def fromStringWithCountry(phone: String, country: String): Either[PhoneValidationError, Phone] =
     CountryCodesUtils
-      .findByCountry(country)
-      .orElse(CountryCodesUtils.findByCountryCode(country))
+      .findByStringFullRange(country)
       .map(fromStringWithCountry(normalizePhone(phone), _))
       .getOrElse(Left(CountryNotFound))
 
