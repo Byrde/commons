@@ -27,6 +27,9 @@ object Phone {
   private val AustralianNumber: String => Boolean =
     phone => phone.length == 11 && phone.startsWith("61")
 
+  def fromStringFullRange(phone: String, country: String): Either[PhoneValidationError, Phone] =
+    fromString(phone).orElse(fromStringWithCountry(phone, country))
+
   def fromString(phone: String): Either[PhoneValidationError, Phone] =
     normalizePhone(phone) match {
       case phone if phone.isEmpty =>
@@ -79,7 +82,7 @@ object Phone {
         extractExtensionCode(phone)
       )
 
-    normalizePhone(phone) match {
+    phone match {
       case normalizedPhone if normalizedPhone.length == 11 =>
         Right(toPhone(normalizedPhone))
 
@@ -112,7 +115,7 @@ object Phone {
         extractExtensionCode(phone)
       )
 
-    normalizePhone(phone) match {
+    phone match {
       case normalizedPhone if normalizedPhone.length == 11 =>
         Right(toPhone(normalizedPhone))
 
