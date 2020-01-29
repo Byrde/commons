@@ -2,11 +2,11 @@ package org.byrde.clients.utils
 
 import org.byrde.clients.Headers
 import org.byrde.uri.Host
-import org.byrde.utils.OptionUtils._
+import org.byrde.support.TypeSupport
 
 import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, WSCookie}
 
-trait RequestSupport {
+trait RequestSupport extends TypeSupport {
   implicit class Request2WSRequest[T](value: play.api.mvc.Request[T]) {
     @inline def toWSRequest(base: StandaloneWSRequest, newHost: Option[Host] = None)(
       implicit bodyWritable: BodyWritable[T]
