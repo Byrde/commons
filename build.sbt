@@ -25,7 +25,6 @@ val CommonsSettings =
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers ++=
       Seq(
-        Resolver.sonatypeRepo("releases"),
         Resolver.bintrayRepo("hseeberger", "maven"),
         Resolver.jcenterRepo),
     javacOptions ++=
@@ -78,7 +77,7 @@ val auth =
   project
     .settings(CommonsSettings)
 
-val `jwt` =
+val jwt =
   project
     .settings(CommonsSettings)
 
@@ -86,7 +85,7 @@ val redis =
   project
     .settings(CommonsSettings)
 
-val `service-response` =
+val `service-response-circe` =
   project
     .settings(CommonsSettings)
 
@@ -102,9 +101,9 @@ val email =
   project
     .settings(CommonsSettings)
 
-val `logging` =
+val `logging-circe` =
   project
-    .dependsOn(`service-response`)
+    .dependsOn(`service-response-circe`)
     .settings(CommonsSettings)
 
 val utils =
@@ -112,16 +111,10 @@ val utils =
     .dependsOn(uri)
     .settings(CommonsSettings)
 
-val client =
-  project
-    .dependsOn(uri)
-    .settings(CommonsSettings)
-
-val `client-play` =
+val `clients-circe` =
   project
     .dependsOn(
-      client,
-      `service-response`,
+      `service-response-circe`,
       utils
     )
     .settings(CommonsSettings)
@@ -129,7 +122,7 @@ val `client-play` =
 val play =
   project
     .dependsOn(
-      `jwt`,
+      jwt,
       utils
     )
     .settings(CommonsSettings)
@@ -137,8 +130,8 @@ val play =
 val `akka-http` =
   project
     .dependsOn(
-      `logging`,
-      `service-response`,
+      `logging-circe`,
+      `service-response-circe`,
       utils
     )
     .settings(CommonsSettings)
@@ -149,14 +142,13 @@ val root =
     .aggregate(
       `akka-http`,
       auth,
-      client,
-      `client-play`,
+      `clients-circe`,
       email,
-      `jwt`,
-      `logging`,
+      jwt,
+      `logging-circe`,
       play,
       redis,
-      `service-response`,
+      `service-response-circe`,
       slick,
       uri,
       utils
