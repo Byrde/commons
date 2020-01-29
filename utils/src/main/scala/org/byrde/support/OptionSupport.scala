@@ -1,6 +1,6 @@
-package org.byrde.utils
+package org.byrde.support
 
-trait OptionUtils {
+trait OptionSupport {
   implicit class Any2Some[T](value: T) {
     @inline def ? : Some[T] = Some(value)
   }
@@ -9,4 +9,4 @@ trait OptionUtils {
     if (boolean) Some(boolean) else Option.empty[Boolean]
 }
 
-object OptionUtils extends OptionUtils
+object OptionSupport extends OptionSupport

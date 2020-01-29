@@ -1,9 +1,9 @@
-package org.byrde.utils
+package org.byrde.support
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-trait FutureUtils {
+trait FutureSupport {
   implicit class FutureTry2Future[T](value: Future[Try[T]])(implicit ec: ExecutionContext) {
     @inline def toFuture: Future[T] =
       value.flatMap {
@@ -21,4 +21,4 @@ trait FutureUtils {
   }
 }
 
-object FutureUtils extends FutureUtils
+object FutureSupport extends FutureSupport

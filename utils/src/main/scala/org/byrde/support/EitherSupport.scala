@@ -1,6 +1,6 @@
-package org.byrde.utils
+package org.byrde.support
 
-trait EitherUtils {
+trait EitherSupport {
   implicit class Any2Right[T, TT](value: T) {
     @inline def success: Either[TT, T] = Right(value)
     @inline def r : Either[TT, T] = Right(value)
@@ -12,4 +12,4 @@ trait EitherUtils {
   }
 }
 
-object EitherUtils extends EitherUtils
+object EitherSupport extends EitherSupport

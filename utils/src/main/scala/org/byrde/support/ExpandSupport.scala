@@ -1,9 +1,9 @@
-package org.byrde.utils
+package org.byrde.support
 
 import scala.annotation.tailrec
 
-object ExpandUtils {
-  implicit class ExpandAny[A, B](val value: A) extends AnyVal {
+trait ExpandSupport {
+  implicit class ExpandAny[A, B](val value: A) {
     final def expand(expandFn: A => A, untilFn: A => Boolean): IterableOnce[A] = {
       @tailrec
       def innerExpand(acc: Seq[A], expandedValue: A): Seq[A] =
@@ -39,3 +39,5 @@ object ExpandUtils {
     }
   }
 }
+
+object ExpandSupport extends ExpandSupport

@@ -1,8 +1,8 @@
-package org.byrde.utils
+package org.byrde.support
 
 import java.util.Locale
 
-object Country {
+trait CountrySupport {
   private val localesByCountry =
     Locale
       .getAvailableLocales
@@ -20,9 +20,7 @@ object Country {
       .toMap
 
   def findByStringFullRange(country: String): Option[Locale] =
-    Country
-      .findByCountry(country)
-      .orElse(Country.findByCountryCode(country))
+    findByCountry(country).orElse(findByCountryCode(country))
 
   def findByCountry(country: String): Option[Locale] =
     localesByCountry.get(normalizeKey(country))
@@ -33,3 +31,5 @@ object Country {
   private def normalizeKey(value: String) =
     value.toLowerCase.trim
 }
+
+object CountrySupport extends CountrySupport

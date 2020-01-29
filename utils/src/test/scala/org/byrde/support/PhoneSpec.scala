@@ -1,8 +1,10 @@
-package org.byrde.utils
+package org.byrde.support
 
 import java.util.Locale
 
-import org.byrde.utils.Phone.PhoneInvalid
+import org.byrde.support.types.Phone
+import org.byrde.support.types.Phone.PhoneInvalid
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -108,7 +110,7 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "work with Australian phone" in {
-    val phone = Phone.fromStringWithCountry("61451266907", Country.findByCountryCode("AU").get).toOption.get
+    val phone = Phone.fromStringWithCountry("61451266907", CountrySupport.findByCountryCode("AU").get).toOption.get
     phone.country shouldBe "61"
     phone.area shouldBe "4"
     phone.exchange shouldBe "5126"

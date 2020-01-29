@@ -1,4 +1,4 @@
 name := """utils"""
 
-libraryDependencies +=
+libraryDependencies ++=
   Dependencies.ScalaTest

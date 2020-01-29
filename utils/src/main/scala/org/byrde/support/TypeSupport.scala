@@ -1,13 +1,14 @@
-package org.byrde.utils
+package org.byrde.support
 
 import scala.concurrent.Future
 import scala.util.Try
 
-trait TypeUtils
-  extends OptionUtils
-    with EitherUtils
-    with FutureUtils
-    with TryUtils {
+trait TypeSupport
+  extends OptionSupport
+    with EitherSupport
+    with FutureSupport
+    with TrySupport
+    with ExpandSupport {
   implicit def anyToFuture[T](value: T): Future[T] =
     value.f
 
@@ -30,4 +31,4 @@ trait TypeUtils
     value.!+
 }
 
-object TypeUtils extends TypeUtils
+object TypeSupport extends TypeSupport

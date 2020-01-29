@@ -1,8 +1,9 @@
-package org.byrde.utils
+package org.byrde.support.types
+
+import org.byrde.support.types.Phone.{Area, Country, Exchange, Ext}
+import org.byrde.support.{CountrySupport, types}
 
 import java.util.Locale
-
-import org.byrde.utils.Phone.{Area, Country, Exchange, Ext}
 
 object Phone {
   sealed trait PhoneValidationError
@@ -49,7 +50,7 @@ object Phone {
     }
 
   def fromStringWithCountry(phone: String, country: String): Either[PhoneValidationError, Phone] =
-    Country
+    CountrySupport
       .findByStringFullRange(country)
       .map(fromStringWithCountry(normalizePhone(phone), _))
       .getOrElse(Left(CountryNotFound))
@@ -63,7 +64,7 @@ object Phone {
         toAustralianPhone(normalizePhone(phone))
     }
 
-  private [utils] def toNorthAmericanPhone(phone: String): Either[PhoneValidationError, Phone] = {
+  private [support] def toNorthAmericanPhone(phone: String): Either[PhoneValidationError, Phone] = {
     def extractCountryCode(phone: String): String =
       phone.charAt(0).toString
 
@@ -77,7 +78,7 @@ object Phone {
       phone.substring(7, 11)
 
     def toPhone(phone: String): Phone =
-      Phone(
+      types.Phone(
         extractCountryCode(phone),
         extractAreaCode(phone),
         extractExchangeCode(phone),
@@ -96,7 +97,7 @@ object Phone {
     }
   }
 
-  private [utils] def toAustralianPhone(phone: String): Either[PhoneValidationError, Phone] = {
+  private [support] def toAustralianPhone(phone: String): Either[PhoneValidationError, Phone] = {
     def extractCountryCode(phone: String): String =
       phone.substring(0, 2)
 
@@ -110,7 +111,7 @@ object Phone {
       phone.substring(7, 11)
 
     def toPhone(phone: String): Phone =
-      Phone(
+      types.Phone(
         extractCountryCode(phone),
         extractAreaCode(phone),
         extractExchangeCode(phone),
