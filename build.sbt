@@ -25,6 +25,7 @@ val CommonsSettings =
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers ++=
       Seq(
+        Resolver.sonatypeRepo("releases"),
         Resolver.bintrayRepo("hseeberger", "maven"),
         Resolver.jcenterRepo),
     javacOptions ++=
