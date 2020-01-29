@@ -16,6 +16,11 @@ object Dependencies extends DependencyBuilders {
   val CirceVersion: String =
     "0.12.3"
 
+  val Zio: Seq[ModuleID] =
+    Seq(
+      "dev.zio" %% "zio" % "1.0.0-RC17"
+    )
+
   val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
@@ -67,8 +72,7 @@ object Dependencies extends DependencyBuilders {
 
   val PlayWSDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.play" %% "play-ws"                % PlayVersion,
-      "com.typesafe.play" %% "play-ahc-ws"            % PlayVersion
+      "com.typesafe.play" %% "play-ws" % PlayVersion
     )
 
   val PlayDependencies: Seq[ModuleID] =
@@ -88,6 +92,10 @@ object Dependencies extends DependencyBuilders {
       "io.circe" %% "circe-parser"  % CirceVersion
     )
 
-  val ScalaTest: ModuleID =
-    "org.scalatest" %% "scalatest" % "3.1.0" % "test"
+  val ScalaTest: Seq[ModuleID] =
+    Seq(
+      "org.scalatest"        %% "scalatest" % "3.1.0" % "test",
+      "org.scalatestplus"    %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
+      "org.scalacheck"       %% "scalacheck" % "1.14.0"
+    )
 }
