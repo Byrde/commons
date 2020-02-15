@@ -15,6 +15,7 @@ import scala.util.{Try, Using}
 trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
 
   private type Prefix = String
+
   private type DataStream = ByteArrayOutputStream
 
   def get[T](
@@ -60,7 +61,7 @@ trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
         redisClient.execute(_.set(redisK, redisV, expiration)).provide(env)
     } yield result
 
-  def remove(key: Key): ZIO[R, RedisClientError, Unit] =
+  def remove(key: Key): ZIO[R, RedisClientError, Long] =
     for {
       env <- ZIO.environment[R]
       result <- redisClient.execute(_.del(key)).provide(env)
@@ -123,7 +124,7 @@ trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
         dos.writeBoolean(value.asInstanceOf[Boolean])
         "boolean" -> baos
 
-      case value: T =>
+      case value =>
         val baos = new ByteArrayOutputStream()
         val dos = new DataOutputStream(baos)
         dos.writeUTF(value.asJson.printWith(printer))

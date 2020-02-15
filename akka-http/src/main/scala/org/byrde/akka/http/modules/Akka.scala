@@ -1,6 +1,6 @@
 package org.byrde.akka.http.modules
 import akka.actor.ActorSystem
 
-trait AkkaLike {
+trait Akka {
   def system: ActorSystem
 }

@@ -2,10 +2,10 @@ package org.byrde.akka.http.modules
 
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
 
-trait RuntimeModulesLike[Req]
+trait RuntimeModules[Req]
 
-object RuntimeModulesLike {
-  trait RuntimeModulesBuilderLike[RuntimeModulesExt[T] <: RuntimeModulesLike[T], ModulesExt <: ModulesProviderLike[RuntimeModulesExt]] {
+object RuntimeModules {
+  trait RuntimeModulesBuilderLike[RuntimeModulesExt[T] <: RuntimeModules[T], ModulesExt <: ModulesProvider[RuntimeModulesExt]] {
     def apply[Req](provider: ModulesExt)(implicit req: HttpRequestWithEntity[Req]): RuntimeModulesExt[Req]
   }
 }

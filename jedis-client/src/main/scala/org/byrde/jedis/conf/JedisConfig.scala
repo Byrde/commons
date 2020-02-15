@@ -10,9 +10,7 @@ import redis.clients.jedis.JedisPoolConfig
 import scala.util.Try
 
 trait JedisConfig extends RedisConfig {
-
   def poolConfig: JedisPoolConfig
-
 }
 
 object JedisConfig {

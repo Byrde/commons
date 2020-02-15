@@ -6,6 +6,7 @@ import play.api.http.{ContentTypeOf, ContentTypes, Writeable}
 import play.api.mvc.Codec
 
 trait CirceWritableSupport {
+
   private implicit lazy val LocalPrinter: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
 
@@ -14,6 +15,7 @@ trait CirceWritableSupport {
 
   implicit def writeableOf_CirceJson(implicit codec: Codec): Writeable[io.circe.Json] =
     Writeable(obj => codec.encode(LocalPrinter.print(obj)))
+
 }
 
 object CirceWritableSupport

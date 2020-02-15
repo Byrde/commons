@@ -7,7 +7,6 @@ import org.byrde.client.http.{Headers, Method}
 import org.byrde.uri.Url
 
 trait RequestSupport {
-
   implicit class StandaloneWSResponse2ResponseLike(value: StandaloneWSRequest) {
     def toRequest: PlayRequest =
       new PlayRequest {
@@ -21,5 +20,4 @@ trait RequestSupport {
           value.headers.view.mapValues(_.mkString(", ")).toMap
       }
   }
-
 }

@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 abstract class ResultCompressor[C <: Compressor](implicit mat: Materializer) {
+
   /**
     * The compressor instance.
     */
@@ -87,4 +88,5 @@ abstract class ResultCompressor[C <: Compressor](implicit mat: Materializer) {
     else
       Future.successful(result)
   }
+
 }

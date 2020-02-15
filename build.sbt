@@ -101,10 +101,10 @@ val email =
 val logging =
   project.settings(CommonsSettings)
 
-val `logging-akka` =
+val `akka-logging` =
   project.dependsOn(logging).settings(CommonsSettings)
 
-val `logging-play` =
+val `play-logging` =
   project.dependsOn(logging).settings(CommonsSettings)
 
 val utils =
@@ -117,7 +117,7 @@ val `jedis-client` =
     .dependsOn(`redis-client`, utils)
     .settings(CommonsSettings)
 
-val client =
+val `http-client` =
   project
     .dependsOn(uri)
     .settings(CommonsSettings)
@@ -130,11 +130,10 @@ val play =
     )
     .settings(CommonsSettings)
 
-val `client-play` =
+val `play-client` =
   project
     .dependsOn(
-      client,
-      play,
+      `http-client`,
       `service-response`,
       utils
     )
@@ -143,7 +142,7 @@ val `client-play` =
 val `akka-http` =
   project
     .dependsOn(
-      `logging-akka`,
+      `akka-logging`,
       `service-response`,
       utils
     )
@@ -155,13 +154,14 @@ val root =
     .aggregate(
       `akka-http`,
       auth,
-      client,
-      `client-play`,
+      gcs,
+      `http-client`,
+      `play-client`,
       email,
       `jwt`,
       logging,
-      `logging-akka`,
-      `logging-play`,
+      `akka-logging`,
+      `play-logging`,
       play,
       `redis-client`,
       `jedis-client`,

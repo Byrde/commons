@@ -9,6 +9,7 @@ import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 object ClientExceptionRejections extends FailFastCirceSupport {
+
   case class InnerRejection(ex: ClientException) extends Rejection
 
   implicit class ServiceResponseExceptionToRejection(ex: ClientException) {
@@ -24,4 +25,5 @@ object ClientExceptionRejections extends FailFastCirceSupport {
           rejectRequestEntityAndComplete(serviceResponseException.toJson)
       }
       .result()
+
 }

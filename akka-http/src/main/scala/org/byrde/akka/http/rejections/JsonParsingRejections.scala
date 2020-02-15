@@ -10,6 +10,7 @@ import io.circe.generic.auto._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 object JsonParsingRejections extends FailFastCirceSupport {
+
   case class JsonParsingRejection(errors: String, errorCode: Int) extends Rejection
 
   val handler: RejectionHandler =
@@ -20,4 +21,5 @@ object JsonParsingRejections extends FailFastCirceSupport {
           rejectRequestEntityAndComplete(E0400(errorCode).toJson)
       }
       .result()
+
 }

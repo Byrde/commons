@@ -10,6 +10,7 @@ import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import scala.util.{Failure, Success, Try}
 
 trait UnmarshallingRequestWithRequestDirective {
+
   def requestWithEntity[T](um: FromEntityUnmarshaller[T]): Directive1[HttpRequestWithEntity[T]] =
     directive[T](handler)(um)
 
@@ -30,7 +31,7 @@ trait UnmarshallingRequestWithRequestDirective {
       reject(RequestEntityExpectedRejection)
 
     case Failure(Unmarshaller.UnsupportedContentTypeException(x)) =>
-      reject(UnsupportedRequestContentTypeRejection(x))
+      reject(UnsupportedRequestContentTypeRejection(x, Option.empty))
 
     case Failure(x: IllegalArgumentException) =>
       reject(ValidationRejection(x.getMessage, Some(x)))
@@ -38,6 +39,7 @@ trait UnmarshallingRequestWithRequestDirective {
     case Failure(x) =>
       reject(MalformedRequestContentRejection(x.getMessage, x))
   }
+
 }
 
 object UnmarshallingRequestWithRequestDirective extends UnmarshallingRequestWithRequestDirective

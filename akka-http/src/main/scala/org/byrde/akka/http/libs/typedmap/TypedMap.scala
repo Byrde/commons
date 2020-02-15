@@ -16,6 +16,7 @@ import scala.collection.immutable
  * corresponding [[TypedKey]].
  */
 final class TypedMap(val m: immutable.Map[TypedKey[_], Any]) {
+
   /**
    * Get a value from the map, throwing an exception if it is not present.
    *
@@ -75,9 +76,11 @@ final class TypedMap(val m: immutable.Map[TypedKey[_], Any]) {
 
   override def toString: String =
     m.mkString("{", ", ", "}")
+
 }
 
 object TypedMap {
+
   /**
    * The empty [[TypedMap]] instance.
    */
@@ -88,4 +91,5 @@ object TypedMap {
    */
   def apply(entries: TypedEntry[_]*): TypedMap =
     TypedMap.empty.+(entries: _*)
+
 }

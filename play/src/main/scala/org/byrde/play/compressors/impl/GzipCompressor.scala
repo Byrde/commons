@@ -13,6 +13,7 @@ import play.api.mvc.{Headers, RequestHeader, ResponseHeader, Result}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
+
   def isCompressible(request: RequestHeader): Boolean =
     request.method != "HEAD" && gzipIsAcceptedAndPreferredBy(request)
 
@@ -146,4 +147,5 @@ case class GzipCompressor()(implicit ec: ExecutionContext, mat: Materializer) {
       }
     }
   }
+
 }

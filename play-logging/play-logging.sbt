@@ -1,4 +1,4 @@
-name := """logging-play"""
+name := """play-logging"""
 
 libraryDependencies ++=
   Dependencies.PlayDependencies

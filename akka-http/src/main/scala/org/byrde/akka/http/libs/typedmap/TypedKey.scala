@@ -55,4 +55,5 @@ object TypedKey {
    * @return A fresh key.
    */
   def apply[A](displayName: String): TypedKey[A] = new TypedKey[A](Some(displayName))
+
 }

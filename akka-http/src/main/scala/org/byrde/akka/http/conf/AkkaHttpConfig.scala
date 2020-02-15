@@ -2,7 +2,8 @@ package org.byrde.akka.http.conf
 
 import akka.util.Timeout
 
-trait ConfigLike {
+trait AkkaHttpConfig {
+
   def config: com.typesafe.config.Config
 
   def name: String
@@ -14,4 +15,5 @@ trait ConfigLike {
   def timeout: Timeout
 
   def cors: CORSConfig
+
 }

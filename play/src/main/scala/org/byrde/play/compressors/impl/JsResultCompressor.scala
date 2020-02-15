@@ -11,6 +11,7 @@ import play.api.http.MimeTypes
 
 case class JsResultCompressor(jsConfig: JsCompressorConfig)(implicit mat: Materializer)
   extends ResultCompressor[YuiJavaScriptCompressor] {
+
   override lazy val compressor: YuiJavaScriptCompressor =
     jsConfig.compressor
 
@@ -22,4 +23,5 @@ case class JsResultCompressor(jsConfig: JsCompressorConfig)(implicit mat: Materi
 
     super.isCompressible(result) && contentType
   }
+
 }

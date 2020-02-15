@@ -11,6 +11,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.util.control.NoStackTrace
 
 trait ControllerHelpers {
+
   implicit def ec: ExecutionContext
 
   private case class ModelValidationException[A: ClassTag](errors: scala.collection.Seq[(JsPath, scala.collection.Seq[play.api.libs.json.JsonValidationError])])
@@ -55,4 +56,5 @@ trait ControllerHelpers {
         else
           s"$acc, $error"
     }
+
 }

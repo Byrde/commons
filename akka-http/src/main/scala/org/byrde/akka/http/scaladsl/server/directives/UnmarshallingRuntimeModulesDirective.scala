@@ -1,6 +1,6 @@
 package org.byrde.akka.http.scaladsl.server.directives
 
-import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
+import org.byrde.akka.http.modules.{ModulesProvider, RuntimeModules}
 
 import akka.http.scaladsl.server.directives.BasicDirectives.provide
 import akka.http.scaladsl.server.{Directive1, Route}
@@ -11,12 +11,13 @@ import io.circe.Decoder
 import scala.reflect.ClassTag
 
 trait UnmarshallingRuntimeModulesDirective [
-  RuntimeModulesExt[T] <: RuntimeModulesLike[T],
-  ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
+  RuntimeModulesExt[T] <: RuntimeModules[T],
+  ModulesExt <: ModulesProvider[RuntimeModulesExt]
 ] extends UnmarshallingRequestWithJsonRequestDirective {
+
   def provider: ModulesExt
 
-  def builder: RuntimeModulesLike.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
+  def builder: RuntimeModules.RuntimeModulesBuilderLike[RuntimeModulesExt, ModulesExt]
 
   override def requestWithEntity[T](um: FromEntityUnmarshaller[T]): Directive1[HttpRequestWithEntity[T]] =
     super.requestWithEntity(um).tflatMap(tup => appendAttrs(tup._1))
@@ -26,4 +27,5 @@ trait UnmarshallingRuntimeModulesDirective [
 
   private def appendAttrs[Req](requestWithEntity: HttpRequestWithEntity[Req]): Directive1[HttpRequestWithEntity[Req]] =
     provide(provider.withModulesAttr(builder(provider)(requestWithEntity))(requestWithEntity))
+
 }

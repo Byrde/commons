@@ -11,6 +11,7 @@ import scala.io.{Codec, Source}
 import scala.util.Using
 
 case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None, _jsConfig: Option[JsCompressorConfig] = None)(implicit ec: ExecutionContext) {
+
   //Expensive operation, usually only put through compress processor if also caching results
   def compress(orig: File): File = {
     val origFileName =
@@ -73,4 +74,5 @@ case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None, _
     target.renameTo(new File(s"${target.getName}.gz"))
     target
   }
+
 }

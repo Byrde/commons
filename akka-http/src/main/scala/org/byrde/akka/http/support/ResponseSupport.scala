@@ -86,4 +86,5 @@ trait ResponseSupport extends FailFastCirceSupport with Logging {
           HandleThrowable(ex)
       }
   }
+
 }

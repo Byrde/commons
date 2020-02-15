@@ -7,8 +7,8 @@ import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
 
 import org.byrde.akka.http.conf.CORSConfig
-import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
-import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
+import org.byrde.akka.http.modules.RuntimeModules.RuntimeModulesBuilderLike
+import org.byrde.akka.http.modules.{ModulesProvider, RuntimeModules}
 import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
 import org.byrde.akka.http.support.{RequestResponseHandlingSupport, ResponseSupport}
 import org.byrde.logging.AkkaLogger
@@ -20,9 +20,9 @@ import io.circe.{Json, Printer}
 
 import scala.concurrent.ExecutionContext
 
-trait ServerLike[
-  RuntimeModulesExt[T] <: RuntimeModulesLike[T],
-  ModulesExt <: ModulesProviderLike[RuntimeModulesExt]
+trait Server[
+  RuntimeModulesExt[T] <: RuntimeModules[T],
+  ModulesExt <: ModulesProvider[RuntimeModulesExt]
 ] extends RequestResponseHandlingSupport {
   self =>
 

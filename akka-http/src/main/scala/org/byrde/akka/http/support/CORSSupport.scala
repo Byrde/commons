@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Directives.respondWithHeaders
 import akka.http.scaladsl.server.Route
 
 trait CORSSupport {
+
   def CORSConfig: CORSConfig
 
   lazy val origins: Seq[RawHeader] =
@@ -36,4 +37,5 @@ trait CORSSupport {
         allowHeaders ++
         exposeHeaders
     )(route)
+
 }

@@ -26,7 +26,7 @@ abstract class WiredJedisClient(client: JedisService) extends JedisClient {
 
   def wiredRemove(
     key: Key
-  ): IO[RedisClientError, Unit] =
+  ): IO[RedisClientError, Long] =
     remove(key).provide(client)
 
 }

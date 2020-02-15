@@ -11,6 +11,7 @@ import play.api.http.MimeTypes
 
 case class HtmlResultCompressor(htmlConfig: HtmlCompressorConfig)(implicit mat: Materializer)
   extends ResultCompressor[HtmlCompressor] {
+
   override lazy val compressor: HtmlCompressor =
     htmlConfig.compressor
 
@@ -23,4 +24,5 @@ case class HtmlResultCompressor(htmlConfig: HtmlCompressorConfig)(implicit mat: 
 
     super.isCompressible(result) && contentType
   }
+
 }

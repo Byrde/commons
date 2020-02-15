@@ -1,4 +1,4 @@
-name := """logging-akka"""
+name := """akka-logging"""
 
 libraryDependencies ++=
   Dependencies.AkkaDependencies

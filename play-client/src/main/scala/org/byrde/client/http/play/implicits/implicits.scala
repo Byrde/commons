@@ -5,8 +5,7 @@ import play.api.mvc
 
 import org.byrde.client.http.HttpClientError.{HttpParsingError, HttpResponseError}
 import org.byrde.client.http._
-import org.byrde.client.http.play.support.{ProxyRequestSupport, ResponseSupport}
-import org.byrde.play.support.BodyWritableSupport
+import org.byrde.client.http.play.support.{BodyWritableSupport, ProxyRequestSupport, ResponseSupport}
 import org.byrde.service.response.ServiceResponse
 import org.byrde.uri.{Path, Url}
 

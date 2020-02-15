@@ -20,4 +20,5 @@ trait AssistedInjectFactoryScalaModule[B <: Binder] extends Module {
           .implement(classTag[I].runtimeClass.asInstanceOf[Class[I]], classTag[C].runtimeClass.asInstanceOf[Class[C]])
           .build(classTag[F].runtimeClass.asInstanceOf[Class[F]])
       )
+
 }

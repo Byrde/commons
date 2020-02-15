@@ -84,9 +84,11 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
       info(HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start)).provide(RequestLogger)
       response
     }
+
 }
 
 object RequestResponseHandlingSupport {
+
   final case class IdHeader(id: String) extends ModeledCustomHeader[IdHeader] {
     override val renderInRequests: Boolean =
       true
@@ -108,5 +110,6 @@ object RequestResponseHandlingSupport {
     override def parse(value: String): Try[IdHeader] =
       Success(new IdHeader(value))
   }
+
 }
 

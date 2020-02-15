@@ -5,6 +5,7 @@ import com.googlecode.htmlcompressor.compressor.YuiJavaScriptCompressor
 import play.api.Configuration
 
 object JsCompressorConfig {
+
   lazy val default: JsCompressorConfig =
     apply(Configuration.empty)
 
@@ -26,11 +27,14 @@ object JsCompressorConfig {
 
     JsCompressorConfig(optimize, munge, semiColons)
   }
+
 }
 
-case class JsCompressorConfig(_optimize: Boolean,
-                              _munge: Boolean,
-                              _semiColons: Boolean) {
+case class JsCompressorConfig(
+  _optimize: Boolean,
+  _munge: Boolean,
+  _semiColons: Boolean
+) {
   lazy val compressor: YuiJavaScriptCompressor = {
     val c = new YuiJavaScriptCompressor
     c.setDisableOptimizations(_optimize)

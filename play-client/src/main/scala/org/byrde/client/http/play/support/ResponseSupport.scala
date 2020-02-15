@@ -6,7 +6,6 @@ import org.byrde.client.http._
 import org.byrde.uri.Url
 
 trait ResponseSupport {
-
   implicit class StandaloneWSResponse2ResponseLike(value: StandaloneWSResponse) {
     def toResponse[T <: RequestLike](request: T): ResponseLike =
       new ResponseLike {
@@ -29,5 +28,4 @@ trait ResponseSupport {
           value.body
       }
   }
-
 }

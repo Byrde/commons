@@ -16,6 +16,7 @@ trait ServiceResponse[T] {
 
   def response: T
 
+  @unchecked
   def toJson(implicit encoder: Encoder[T]): Json =
     TransientServiceResponse(`type`, status, code, response).asJson
 

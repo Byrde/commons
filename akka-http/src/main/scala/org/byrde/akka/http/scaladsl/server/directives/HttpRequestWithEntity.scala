@@ -13,6 +13,7 @@ import akka.http.scaladsl.model.HttpRequest
  * @tparam T Request body entity type
  */
 class HttpRequestWithEntity[T](val body: T, val request: HttpRequest, attrs: TypedMap = TypedMap.empty) {
+
   /**
    * Get a value from the map, returning [[None]] if it is not present.
    *
@@ -42,4 +43,5 @@ class HttpRequestWithEntity[T](val body: T, val request: HttpRequest, attrs: Typ
    */
   def withAttrs(newAttrs: TypedMap): HttpRequestWithEntity[T] =
     new HttpRequestWithEntity(body, request, newAttrs)
+
 }

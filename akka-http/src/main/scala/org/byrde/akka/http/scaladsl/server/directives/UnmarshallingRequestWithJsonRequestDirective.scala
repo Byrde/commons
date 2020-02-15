@@ -15,6 +15,7 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Try}
 
 trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestWithRequestDirective {
+
   private val unmarshallerContentTypes: Seq[ContentTypeRange] =
     List(`application/json`)
 
@@ -49,6 +50,7 @@ trait UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestW
 
     directive[T](pf.orElse(handler))(unmarshaller[T])(fn)
   }
+
 }
 
 object UnmarshallingRequestWithJsonRequestDirective extends UnmarshallingRequestWithJsonRequestDirective

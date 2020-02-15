@@ -4,11 +4,13 @@ import com.googlecode.htmlcompressor.compressor.HtmlCompressor
 
 import play.api.Configuration
 
-case class HtmlCompressorConfig(_lineBreak: Boolean,
-                                _comments: Boolean,
-                                _intSpace: Boolean,
-                                _rHttp: Boolean,
-                                _rHttps: Boolean) {
+case class HtmlCompressorConfig(
+  _lineBreak: Boolean,
+  _comments: Boolean,
+  _intSpace: Boolean,
+  _rHttp: Boolean,
+  _rHttps: Boolean
+) {
   lazy val compressor: HtmlCompressor = {
     val c = new HtmlCompressor
     c.setPreserveLineBreaks(_lineBreak)
@@ -21,6 +23,7 @@ case class HtmlCompressorConfig(_lineBreak: Boolean,
 }
 
 object HtmlCompressorConfig {
+
   lazy val default: HtmlCompressorConfig =
     apply(Configuration.empty)
 
@@ -32,12 +35,14 @@ object HtmlCompressorConfig {
           "rHttpsProtocol",
           config)
 
-  def apply(_lineBreak: String,
-            _comments: String,
-            _intSpace: String,
-            _rHttp: String,
-            _rHttps: String,
-            config: Configuration): HtmlCompressorConfig = {
+  def apply(
+    _lineBreak: String,
+    _comments: String,
+    _intSpace: String,
+    _rHttp: String,
+    _rHttps: String,
+    config: Configuration
+  ): HtmlCompressorConfig = {
     val lineBreak =
       config.getOptional[Boolean](_lineBreak).getOrElse(true)
 
@@ -55,4 +60,5 @@ object HtmlCompressorConfig {
 
     HtmlCompressorConfig(lineBreak, comments, intSpace, rHttp, rHttps)
   }
+
 }

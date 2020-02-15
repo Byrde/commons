@@ -145,4 +145,5 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport wit
 
   private def normalizeString(value: String): String =
     removeNewLine(stripLeadingAndTrailingQuotes(value))
+
 }

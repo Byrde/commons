@@ -12,6 +12,7 @@ trait SlickDb[R <: SlickRole] {
     private val underlyingDb =
       config.jdbc.db
 
+    @unchecked
     def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R SlickHasPrivilege E): Future[Result] =
       underlyingDb.run(query)
 

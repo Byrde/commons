@@ -1,11 +1,11 @@
-package org.byrde.play.support
+package org.byrde.client.http.play.support
 
-import io.circe.{Json, Printer}
+import akka.util.ByteString
 
 import play.api.libs.ws.{BodyWritable, EmptyBody, InMemoryBody}
 import play.api.mvc.AnyContent
 
-import akka.util.ByteString
+import io.circe.{Json, Printer}
 
 trait BodyWritableSupport {
 

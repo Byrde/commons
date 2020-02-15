@@ -5,6 +5,7 @@ import com.typesafe.config.Config
 case class CORSConfig(origins: Seq[String], methods: Seq[String], headers: Seq[String])
 
 object CORSConfig {
+
   def apply(config: Config): CORSConfig =
     apply("origins", "methods", "headers", config)
 
@@ -32,4 +33,5 @@ object CORSConfig {
 
     CORSConfig(origins, methods, headers)
   }
+
 }
