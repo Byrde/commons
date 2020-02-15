@@ -10,8 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.{Codec, Source}
 import scala.util.Using
 
-case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None,
-                             _jsConfig: Option[JsCompressorConfig] = None)(implicit ec: ExecutionContext) {
+case class RuntimeCompressor(_htmlConfig: Option[HtmlCompressorConfig] = None, _jsConfig: Option[JsCompressorConfig] = None)(implicit ec: ExecutionContext) {
   //Expensive operation, usually only put through compress processor if also caching results
   def compress(orig: File): File = {
     val origFileName =

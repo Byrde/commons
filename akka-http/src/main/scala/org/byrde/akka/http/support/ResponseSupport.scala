@@ -1,27 +1,29 @@
 package org.byrde.akka.http.support
 
-import org.byrde.akka.http.logging.HttpErrorLogging
-import org.byrde.akka.http.logging.HttpLogging.ExceptionWithHttpRequestLoggingFormatter$
-import org.byrde.akka.http.rejections.RejectionException
-import org.byrde.service.response.ServiceResponse
-import org.byrde.service.response.exceptions.ClientException
-
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 
+import org.byrde.akka.http.logging.HttpRequestLog
+import org.byrde.akka.http.rejections.RejectionException
+import org.byrde.logging.{AkkaLogger, Logging}
+import org.byrde.service.response.ServiceResponse
+import org.byrde.service.response.exceptions.ClientException
+
 import io.circe.{Encoder, Json, Printer}
+import io.circe.generic.auto._
+
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait ResponseSupport extends FailFastCirceSupport {
+trait ResponseSupport extends FailFastCirceSupport with Logging {
+
   import org.byrde.akka.http.rejections.ClientExceptionRejections._
 
   def Ack: Json
 
-  def ErrorLogger: HttpErrorLogging
+  def ErrorLogger: AkkaLogger
 
   def SuccessCode: Int
 
@@ -70,13 +72,13 @@ trait ResponseSupport extends FailFastCirceSupport {
       ex match {
         case ex: ClientException =>
           extractRequest { req =>
-            ErrorLogger.error(req, ex)
+            error(HttpRequestLog(req), ex).provide(ErrorLogger)
             reject(ex.toRejection)
           }
 
         case ex: RejectionException =>
           extractRequest { req =>
-            ErrorLogger.error(req, ex)
+            error(HttpRequestLog(req), ex).provide(ErrorLogger)
             reject(ex)
           }
 

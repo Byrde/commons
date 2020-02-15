@@ -1,18 +1,5 @@
 package org.byrde.akka.http.support
 
-import org.byrde.akka.http.logging.HttpErrorLogging
-import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
-import org.byrde.service.response.CommonsServiceResponseDictionary.{E0405, E0500}
-import org.byrde.service.response.ServiceResponse.TransientServiceResponse
-import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
-import org.byrde.service.response.{Message, Status}
-
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-
-import io.circe.generic.auto._
-import io.circe.parser.parse
-import io.circe.{Json, Printer}
-
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.model.headers.Allow
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
@@ -20,14 +7,27 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, MethodRejection, RejectionHandler}
 import akka.util.ByteString
 
+import org.byrde.akka.http.logging.HttpRequestLog
+import org.byrde.logging.{AkkaLogger, Logging}
+import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
+import org.byrde.service.response.CommonsServiceResponseDictionary.{E0405, E0500}
+import org.byrde.service.response.ServiceResponse.TransientServiceResponse
+import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
+import org.byrde.service.response.{Message, Status}
+
+import io.circe.generic.auto._
+import io.circe.parser.parse
+import io.circe.{Json, Printer}
+
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+
 import scala.annotation.tailrec
 
-trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
-  import org.byrde.akka.http.logging.HttpLogging._
+trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport with Logging {
 
   def Ack: Json
 
-  def ErrorLogger: HttpErrorLogging
+  def ErrorLogger: AkkaLogger
 
   def ErrorCode: Int
 
@@ -105,11 +105,11 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
         val serviceException =
           exception match {
             case serviceException: ServiceResponseException[_] =>
-              ErrorLogger.error(ctx.request, serviceException)
+              error(HttpRequestLog(ctx.request), serviceException).provide(ErrorLogger)
               serviceException
 
             case _ =>
-              ErrorLogger.error(ctx.request, exception)
+              error(HttpRequestLog(ctx.request), exception).provide(ErrorLogger)
               E0500(exception)(ErrorCode)
           }
 

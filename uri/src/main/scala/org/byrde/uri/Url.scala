@@ -11,14 +11,20 @@ case class Url(host: Host, path: Path) {
   def /(newPath: Path): Url =
     copy(path = path / newPath)
 
-  def +(newQuery: (String, String)): Url =
-    copy(path = path + newQuery)
+  def ?(query: (String, String)): Url =
+    &(query)
 
-  def ++(newQuery: Set[(String, String)]): Url =
-    copy(path = path ++ newQuery)
+  def &(query: (String, String)): Url =
+    copy(path = path & query)
 
-  def withQueries(newQuery: Queries): Url =
-    copy(path = path withQueries newQuery)
+  def ?+(_queries: Set[(String, String)]): Url =
+    &+(_queries)
+
+  def &+(_queries: Set[(String, String)]): Url =
+    copy(path = path &+ _queries)
+
+  def withQueries(_queries: Queries): Url =
+    copy(path = path withQueries _queries)
 
   override def toString: String =
     (host.toString + path.toString).trim

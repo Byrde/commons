@@ -43,10 +43,10 @@ object JwtConfig {
   private def build[T](
     token: String,
     signature: String,
-    encryption: String,
+    _encryption: String,
   ): JwtConfig = {
-    val resolvedEncryption =
-      encryption match {
+    val encryption =
+      _encryption match {
         case "HS256" =>
           JwtAlgorithm.HS256
 
@@ -65,7 +65,7 @@ object JwtConfig {
     JwtConfig(
       token,
       signature,
-      resolvedEncryption,
+      encryption,
     )
   }
 }

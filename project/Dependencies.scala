@@ -21,20 +21,30 @@ object Dependencies extends DependencyBuilders {
       "dev.zio" %% "zio" % "1.0.0-RC17"
     )
 
+  val AkkaDependencies =
+    Seq(
+      "com.typesafe.akka"  %% "akka-actor"          % AkkaVersion,
+      "com.typesafe.akka"  %% "akka-slf4j"          % AkkaVersion,
+      "com.typesafe.akka"  %% "akka-stream"         % AkkaVersion,
+      "com.typesafe.akka"  %% "akka-testkit"        % AkkaVersion,
+      "com.typesafe.akka"  %% "akka-stream-testkit" % AkkaVersion
+    )
+
+  val AlpakkaGCS =
+    Seq(
+      "com.typesafe.akka"    %% "akka-http-spray-json"                     % AkkaHttpVersion,
+      "com.lightbend.akka"   %% "akka-stream-alpakka-google-cloud-storage" % "1.1.2"
+        excludeAll("com.typesafe.akka" % "akka-http-spray-json"),
+    )
+
   val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
-      "com.typesafe.akka"  %% "akka-actor"             % AkkaVersion,
-      "com.typesafe.akka"  %% "akka-slf4j"             % AkkaVersion,
-      "com.typesafe.akka"  %% "akka-stream"            % AkkaVersion,
       "de.heikoseeberger"  %% "akka-http-circe"        % "1.30.0",
-
-      "com.typesafe.akka" %% "akka-http-testkit"    % AkkaHttpVersion,
-      "com.typesafe.akka" %% "akka-testkit"         % AkkaVersion,
-      "com.typesafe.akka" %% "akka-stream-testkit"  % AkkaVersion
-    )
+      "com.typesafe.akka"  %% "akka-http-testkit"      % AkkaHttpVersion,
+    ) ++ AkkaDependencies
 
   val CompressorDependencies: Seq[ModuleID] =
     Seq(
@@ -72,6 +82,7 @@ object Dependencies extends DependencyBuilders {
 
   val PlayWSDependencies: Seq[ModuleID] =
     Seq(
+      "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.1.2",
       "com.typesafe.play" %% "play-ws" % PlayVersion
     )
 
@@ -97,5 +108,10 @@ object Dependencies extends DependencyBuilders {
       "org.scalatest"        %% "scalatest" % "3.1.0" % "test",
       "org.scalatestplus"    %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
       "org.scalacheck"       %% "scalacheck" % "1.14.0"
+    )
+
+  val CommonsDependencies: Seq[ModuleID] =
+    Seq(
+      "commons-codec" % "commons-codec" % "1.13"
     )
 }

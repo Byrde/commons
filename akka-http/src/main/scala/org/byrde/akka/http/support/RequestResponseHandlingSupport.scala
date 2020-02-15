@@ -1,23 +1,24 @@
 package org.byrde.akka.http.support
 
-import java.util.UUID
-
-import org.byrde.akka.http.logging.HttpRequestLogging
-import org.byrde.akka.http.support.RequestResponseHandlingSupport.IdHeader
-
 import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.model.headers.{ModeledCustomHeader, ModeledCustomHeaderCompanion}
 import akka.http.scaladsl.server.Directives.{handleExceptions, _}
 import akka.http.scaladsl.server.{Directive0, Directive1, Route}
 
+import org.byrde.akka.http.logging.HttpRequestTelemetryLog
+import org.byrde.akka.http.support.RequestResponseHandlingSupport.IdHeader
+import org.byrde.logging.AkkaLogger
+
+import io.circe.generic.auto._
+import java.util.UUID
+
 import scala.util.{Success, Try}
 
 trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
-  import org.byrde.akka.http.logging.HttpLogging._
 
   def isRequestLoggingEnabled: Boolean
 
-  def RequestLogger: HttpRequestLogging
+  def RequestLogger: AkkaLogger
 
   def requestResponseHandler(route: Route): Route =
     cors {
@@ -67,8 +68,8 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
     mapRequest { request =>
       request.copy(
         headers =
-        id +:
-          request.headers
+          id +:
+            request.headers
       )
     }
 
@@ -80,13 +81,7 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
 
   private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
     mapResponse { response =>
-      RequestLogger
-        .request(
-          System.currentTimeMillis() - start,
-          response.status.toString(),
-          request
-        )
-
+      info(HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start)).provide(RequestLogger)
       response
     }
 }

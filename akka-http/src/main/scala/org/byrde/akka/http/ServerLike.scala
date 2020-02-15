@@ -1,22 +1,22 @@
 package org.byrde.akka.http
 
-import org.byrde.akka.http.conf.CORSConfig
-import org.byrde.akka.http.logging.{HttpErrorLogging, HttpRequestLogging}
-import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
-import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
-import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
-import org.byrde.akka.http.support.{RequestResponseHandlingSupport, ResponseSupport}
-import org.byrde.service.response.DefaultEmptyServiceResponse
-import org.byrde.service.response.Status.S0200
-
-import io.circe.{Json, Printer}
-import io.circe.generic.auto._
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.PathDirectives.path
 import akka.util.Timeout
+
+import org.byrde.akka.http.conf.CORSConfig
+import org.byrde.akka.http.modules.RuntimeModulesLike.RuntimeModulesBuilderLike
+import org.byrde.akka.http.modules.{ModulesProviderLike, RuntimeModulesLike}
+import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
+import org.byrde.akka.http.support.{RequestResponseHandlingSupport, ResponseSupport}
+import org.byrde.logging.AkkaLogger
+import org.byrde.service.response.DefaultEmptyServiceResponse
+import org.byrde.service.response.Status.S0200
+
+import io.circe.generic.auto._
+import io.circe.{Json, Printer}
 
 import scala.concurrent.ExecutionContext
 
@@ -41,7 +41,7 @@ trait ServerLike[
     override def SuccessCode: Int =
       self.SuccessCode
 
-    override def ErrorLogger: HttpErrorLogging =
+    override def ErrorLogger: AkkaLogger =
       provider.ErrorLogger
 
     override def Ack: Json =
@@ -81,10 +81,10 @@ trait ServerLike[
       }
     }
 
-  lazy val RequestLogger: HttpRequestLogging =
+  lazy val RequestLogger: AkkaLogger =
     provider.RequestLogger
 
-  lazy val ErrorLogger: HttpErrorLogging =
+  lazy val ErrorLogger: AkkaLogger =
     provider.ErrorLogger
 
   lazy val CORSConfig: CORSConfig =
@@ -94,4 +94,5 @@ trait ServerLike[
     requestResponseHandler {
       ping ~ routes
     }
+
 }

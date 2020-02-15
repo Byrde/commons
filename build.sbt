@@ -75,55 +75,67 @@ val CommonsSettings =
         new URL("http://linkedin.com/allama")))
 
 val auth =
-  project
-    .settings(CommonsSettings)
+  project.settings(CommonsSettings)
 
-val jwt =
-  project
-    .settings(CommonsSettings)
+val gcs  =
+  project.settings(CommonsSettings)
 
-val redis =
-  project
-    .settings(CommonsSettings)
+val `jwt` =
+  project.settings(CommonsSettings)
 
-val `service-response-circe` =
-  project
-    .settings(CommonsSettings)
+val `redis-client` =
+  project.settings(CommonsSettings)
+
+val `service-response` =
+  project.settings(CommonsSettings)
 
 val slick =
-  project
-    .settings(CommonsSettings)
+  project.settings(CommonsSettings)
 
 val uri =
-  project
-    .settings(CommonsSettings)
+  project.settings(CommonsSettings)
 
 val email =
-  project
-    .settings(CommonsSettings)
+  project.settings(CommonsSettings)
 
-val `logging-circe` =
-  project
-    .dependsOn(`service-response-circe`)
-    .settings(CommonsSettings)
+val logging =
+  project.settings(CommonsSettings)
+
+val `logging-akka` =
+  project.dependsOn(logging).settings(CommonsSettings)
+
+val `logging-play` =
+  project.dependsOn(logging).settings(CommonsSettings)
 
 val utils =
   project
     .dependsOn(uri)
     .settings(CommonsSettings)
 
-val `clients-circe` =
+val `jedis-client` =
   project
-    .dependsOn(
-      `service-response-circe`,
-      utils
-    )
+    .dependsOn(`redis-client`, utils)
+    .settings(CommonsSettings)
+
+val client =
+  project
+    .dependsOn(uri)
     .settings(CommonsSettings)
 
 val play =
   project
     .dependsOn(
-      jwt,
+      `jwt`,
+      utils
+    )
+    .settings(CommonsSettings)
+
+val `client-play` =
+  project
+    .dependsOn(
+      client,
+      play,
+      `service-response`,
       utils
     )
     .settings(CommonsSettings)
@@ -131,8 +143,8 @@ val play =
 val `akka-http` =
   project
     .dependsOn(
-      `logging-circe`,
-      `service-response-circe`,
+      `logging-akka`,
+      `service-response`,
       utils
     )
     .settings(CommonsSettings)
@@ -143,13 +155,17 @@ val root =
     .aggregate(
       `akka-http`,
       auth,
-      `clients-circe`,
+      client,
+      `client-play`,
       email,
-      jwt,
-      `logging-circe`,
+      `jwt`,
+      logging,
+      `logging-akka`,
+      `logging-play`,
       play,
-      redis,
-      `service-response-circe`,
+      `redis-client`,
+      `jedis-client`,
+      `service-response`,
       slick,
       uri,
       utils

@@ -9,14 +9,20 @@ case class Path(path: Seq[String], queries: Queries = Queries.empty) {
   def /(newPath: Path): Path =
     copy(path = path ++ newPath.path, queries = queries withQueries newPath.queries)
 
-  def +(newQuery: (String, String)): Path =
-    copy(queries = queries + newQuery)
+  def ?(query: (String, String)): Path =
+    &(query)
 
-  def ++(newQuery: Set[(String, String)]): Path =
-    copy(queries = queries ++ newQuery)
+  def &(query: (String, String)): Path =
+    copy(queries = queries & query)
 
-  def withQueries(newQuery: Queries): Path =
-    copy(queries = queries withQueries newQuery)
+  def ?+(_queries: Set[(String, String)]): Path =
+    &+(_queries)
+
+  def &+(_queries: Set[(String, String)]): Path =
+    copy(queries = queries &+ _queries)
+
+  def withQueries(_queries: Queries): Path =
+    copy(queries = queries withQueries _queries)
 
   override def toString: String =
     (if (path.nonEmpty) path.mkString("/", "/", "") else "").trim + queries.toString

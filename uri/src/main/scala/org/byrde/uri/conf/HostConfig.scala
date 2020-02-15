@@ -9,12 +9,13 @@ import scala.util.Try
 
 object HostConfig {
   def apply(config: Config): Host =
-    apply("protocol", "host", "port", config)
+    apply("protocol", "host", "port")(config)
 
-  def apply(_protocol: String,
-            _host: String,
-            _port: String,
-            config: Config): Host = {
+  def apply(
+    _protocol: String,
+    _host: String,
+    _port: String,
+  )(config: Config): Host = {
     val protocol =
       config
         .getString(_protocol) match {
