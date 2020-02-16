@@ -1,4 +1,4 @@
-package org.byrde.redis
+package org.byrde.client.redis
 
 import zio.{IO, ZIO}
 

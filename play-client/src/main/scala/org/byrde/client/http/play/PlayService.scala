@@ -6,12 +6,12 @@ import akka.stream.Materializer
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{StandaloneWSClient, StandaloneWSRequest}
 
-import org.byrde.client.http.conf.{CircuitBreakerConfig, HttpClientConfig}
+import org.byrde.client.http.play.conf.{CircuitBreakerConfig, HttpClientConfig}
 import org.byrde.uri.Host
 
 import com.typesafe.config.Config
 
-import scala.concurrent.duration.FiniteDuration
+import zio.duration.Duration
 
 trait PlayService extends StandaloneWSClient with HttpClientConfig with CircuitBreakerConfig
 
@@ -28,11 +28,8 @@ object PlayService {
       override def maxFailures: Int =
         config2.maxFailures
 
-      override def callTimeout: FiniteDuration =
+      override def callTimeout: Duration =
         config2.callTimeout
-
-      override def resetTimeout: FiniteDuration =
-        config2.resetTimeout
 
       override def host: Host =
         config1.host

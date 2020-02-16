@@ -1,4 +1,4 @@
-package org.byrde.client.http.conf
+package org.byrde.client.http.play.conf
 
 import org.byrde.uri.Host
 import org.byrde.uri.conf.HostConfig

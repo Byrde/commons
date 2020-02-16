@@ -1,4 +1,4 @@
-package org.byrde
+package org.byrde.client
 
 package object redis {
 

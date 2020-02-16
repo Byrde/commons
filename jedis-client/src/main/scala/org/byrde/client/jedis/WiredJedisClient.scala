@@ -1,6 +1,6 @@
-package org.byrde.jedis
+package org.byrde.client.jedis
 
-import org.byrde.redis.{Key, Namespace, RedisClientError, RedisObject}
+import org.byrde.client.redis.{Key, Namespace, RedisClientError, RedisObject}
 
 import io.circe.{Decoder, Encoder}
 

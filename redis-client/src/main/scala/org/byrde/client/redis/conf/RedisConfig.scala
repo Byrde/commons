@@ -1,4 +1,4 @@
-package org.byrde.redis.conf
+package org.byrde.client.redis.conf
 
 trait RedisConfig {
 

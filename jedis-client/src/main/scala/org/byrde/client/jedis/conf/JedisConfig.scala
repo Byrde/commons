@@ -1,6 +1,6 @@
-package org.byrde.jedis.conf
+package org.byrde.client.jedis.conf
 
-import org.byrde.redis.conf.RedisConfig
+import org.byrde.client.redis.conf.RedisConfig
 
 import java.net.URI
 

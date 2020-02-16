@@ -1,6 +1,6 @@
-package org.byrde.jedis
+package org.byrde.client.jedis
 
-import org.byrde.redis.{RedisClientError, RedisService, RedisExecutor}
+import org.byrde.client.redis.{RedisClientError, RedisExecutor, RedisService}
 
 import zio.{IO, ZIO}
 

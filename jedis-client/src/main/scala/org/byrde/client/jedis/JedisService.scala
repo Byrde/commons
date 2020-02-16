@@ -1,7 +1,7 @@
-package org.byrde.jedis
+package org.byrde.client.jedis
 
-import org.byrde.jedis.conf.JedisConfig
-import org.byrde.redis.{Key, RedisClientError, RedisService}
+import org.byrde.client.jedis.conf.JedisConfig
+import org.byrde.client.redis.{Key, RedisClientError, RedisService}
 
 import com.typesafe.config.Config
 

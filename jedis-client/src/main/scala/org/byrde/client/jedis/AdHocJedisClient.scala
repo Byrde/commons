@@ -1,3 +1,3 @@
-package org.byrde.jedis
+package org.byrde.client.jedis
 
 object AdHocJedisClient extends JedisClient

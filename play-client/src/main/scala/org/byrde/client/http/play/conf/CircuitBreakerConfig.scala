@@ -1,6 +1,8 @@
-package org.byrde.client.http.conf
+package org.byrde.client.http.play.conf
 
 import com.typesafe.config.Config
+
+import zio.duration.Duration
 
 import scala.concurrent.duration._
 
@@ -8,9 +10,7 @@ trait CircuitBreakerConfig {
 
   def maxFailures: Int
 
-  def callTimeout: FiniteDuration
-
-  def resetTimeout: FiniteDuration
+  def callTimeout: Duration
 
 }
 
@@ -19,9 +19,7 @@ object CircuitBreakerConfig {
   object Default extends CircuitBreakerConfig {
     override def maxFailures: Int = 3
 
-    override def callTimeout: FiniteDuration = 3.seconds
-
-    override def resetTimeout: FiniteDuration = 3.seconds
+    override def callTimeout: Duration = Duration.Finite(3.seconds.toNanos)
   }
 
   def apply(config: Config): CircuitBreakerConfig =
@@ -35,9 +33,7 @@ object CircuitBreakerConfig {
     new CircuitBreakerConfig {
       def maxFailures: Int = config.getInt(_maxFailures)
 
-      def callTimeout: FiniteDuration = config.getLong(_callTimeout).millis
-
-      def resetTimeout: FiniteDuration = config.getLong(_resetTimeout).millis
+      def callTimeout: Duration = Duration.Finite(config.getLong(_callTimeout).millis.toNanos)
     }
 
 }
