@@ -1,4 +1,4 @@
-name := """play-logging"""
+name := """gcs"""
 
 libraryDependencies ++=
   Dependencies.Zio ++ Dependencies.AkkaDependencies ++ Dependencies.AlpakkaGCS
