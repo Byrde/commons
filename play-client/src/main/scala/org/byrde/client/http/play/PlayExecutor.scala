@@ -23,6 +23,9 @@ trait PlayExecutor extends HttpExecutor[PlayService, StandaloneWSRequest, Standa
               .fromFuture(_ => request.execute())
               .timeoutFail(HttpTimeoutError(ResponseLike(request.toRequest)))(env.callTimeout)
               .refineOrDie {
+                case timeout: HttpTimeoutError =>
+                  timeout
+
                 case NonFatal(ex) =>
                   HttpExecutorError(ResponseLike(request.toRequest))(ex)
               }

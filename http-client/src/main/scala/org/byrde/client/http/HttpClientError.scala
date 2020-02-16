@@ -7,7 +7,7 @@ class HttpClientError(response: ResponseLike)(throwable: Throwable) extends Thro
 
 object HttpClientError {
 
-  case class HttpExecutorError(response: ResponseLike)(throwable: Throwable) extends HttpClientError(response)(new Exception("Request Failed"))
+  case class HttpExecutorError(response: ResponseLike)(throwable: Throwable) extends HttpClientError(response)(throwable)
 
   case class HttpResponseError(response: ResponseLike) extends HttpClientError(response)(new Exception("Request Failed"))
 
