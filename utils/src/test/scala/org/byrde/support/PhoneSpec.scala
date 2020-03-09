@@ -1,7 +1,5 @@
 package org.byrde.support
 
-import java.util.Locale
-
 import org.byrde.support.types.Phone
 import org.byrde.support.types.Phone.PhoneInvalid
 
@@ -77,6 +75,14 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
     phone.extension shouldBe "4534"
   }
 
+  "Phone.fromStringWithCountry" should "work with North American phone - US" in {
+    val phone = Phone.fromStringWithCountry("16138044534", "US").toOption.get
+    phone.country shouldBe "1"
+    phone.area shouldBe "613"
+    phone.exchange shouldBe "804"
+    phone.extension shouldBe "4534"
+  }
+
   it should "work with Australian phone - AU" in {
     val phone = Phone.fromStringWithCountry("61451266907", "AU").toOption.get
     phone.country shouldBe "61"
@@ -85,7 +91,7 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
     phone.extension shouldBe "6907"
   }
 
-  it should "work with short form North American phone" in {
+  it should "work with short form North American phone - CA" in {
     val phone = Phone.fromStringWithCountry("6138044534", "CA").toOption.get
     phone.country shouldBe "1"
     phone.area shouldBe "613"
@@ -93,24 +99,16 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
     phone.extension shouldBe "4534"
   }
 
-  it should "work with short form Australian phone" in {
-    val phone = Phone.fromStringWithCountry("0451266907", "AU").toOption.get
-    phone.country shouldBe "61"
-    phone.area shouldBe "4"
-    phone.exchange shouldBe "5126"
-    phone.extension shouldBe "6907"
-  }
-
-  "Phone.fromStringWithLocale" should "work with North American phone" in {
-    val phone = Phone.fromStringWithCountry("16138044534", Locale.US).toOption.get
+  it should "work with short form North American phone - US" in {
+    val phone = Phone.fromStringWithCountry("6138044534", "US").toOption.get
     phone.country shouldBe "1"
     phone.area shouldBe "613"
     phone.exchange shouldBe "804"
     phone.extension shouldBe "4534"
   }
 
-  it should "work with Australian phone" in {
-    val phone = Phone.fromStringWithCountry("61451266907", CountrySupport.findByCountryCode("AU").get).toOption.get
+  it should "work with short form Australian phone - AU" in {
+    val phone = Phone.fromStringWithCountry("0451266907", "AU").toOption.get
     phone.country shouldBe "61"
     phone.area shouldBe "4"
     phone.exchange shouldBe "5126"
