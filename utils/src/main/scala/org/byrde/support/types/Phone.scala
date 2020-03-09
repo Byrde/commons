@@ -1,9 +1,6 @@
 package org.byrde.support.types
 
 import org.byrde.support.types.Phone.{Area, Country, Exchange, Ext}
-import org.byrde.support.{CountrySupport, types}
-
-import java.util.Locale
 
 object Phone {
   sealed trait PhoneValidationError
@@ -31,9 +28,6 @@ object Phone {
   def fromStringFullRange(phone: String, country: String): Either[PhoneValidationError, Phone] =
     fromString(phone).orElse(fromStringWithCountry(phone, country))
 
-  def fromStringFullRange(phone: String, locale: Locale): Either[PhoneValidationError, Phone] =
-    fromString(phone).orElse(fromStringWithCountry(phone, locale))
-
   def fromString(phone: String): Either[PhoneValidationError, Phone] =
     normalizePhone(phone) match {
       case phone if phone.isEmpty =>
@@ -49,18 +43,12 @@ object Phone {
         Left(PhoneInvalid)
     }
 
-  def fromStringWithCountry(phone: String, country: String): Either[PhoneValidationError, Phone] =
-    CountrySupport
-      .findByStringFullRange(country)
-      .map(fromStringWithCountry(normalizePhone(phone), _))
-      .getOrElse(Left(CountryNotFound))
-
-  def fromStringWithCountry(phone: String, locale: Locale): Either[PhoneValidationError, Phone] =
-    locale match {
-      case Locale.US | Locale.CANADA | Locale.CANADA_FRENCH =>
+  def fromStringWithCountry(phone: String, countryCode: String): Either[PhoneValidationError, Phone] =
+    countryCode.toUpperCase match {
+      case "CA" | "US" =>
         toNorthAmericanPhone(normalizePhone(phone))
 
-      case locale if locale.getCountry == "AU" =>
+      case "AU" =>
         toAustralianPhone(normalizePhone(phone))
     }
 
@@ -78,7 +66,7 @@ object Phone {
       phone.substring(7, 11)
 
     def toPhone(phone: String): Phone =
-      types.Phone(
+      Phone(
         extractCountryCode(phone),
         extractAreaCode(phone),
         extractExchangeCode(phone),
@@ -111,7 +99,7 @@ object Phone {
       phone.substring(7, 11)
 
     def toPhone(phone: String): Phone =
-      types.Phone(
+      Phone(
         extractCountryCode(phone),
         extractAreaCode(phone),
         extractExchangeCode(phone),

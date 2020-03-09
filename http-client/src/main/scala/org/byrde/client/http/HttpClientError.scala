@@ -2,7 +2,6 @@ package org.byrde.client.http
 
 import io.circe.{DecodingFailure, ParsingFailure}
 
-
 class HttpClientError(response: ResponseLike)(throwable: Throwable) extends Throwable(throwable)
 
 object HttpClientError {
