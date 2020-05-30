@@ -10,6 +10,7 @@ import scala.collection.immutable
 class HttpRequestWithNoEntity(override val request: HttpRequest) extends HttpRequestWithEntity(None, request)
 
 object HttpRequestWithNoEntity {
+  
   def apply(
     method: HttpMethod = HttpMethods.GET,
     uri: Uri = Uri./,
@@ -18,4 +19,5 @@ object HttpRequestWithNoEntity {
     protocol: HttpProtocol = HttpProtocols.`HTTP/1.1`
   ): HttpRequestWithNoEntity =
     new HttpRequestWithNoEntity(HttpRequest(method, uri, headers, entity, protocol))
+  
 }

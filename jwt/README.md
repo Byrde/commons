@@ -1,8 +1,8 @@
-# JWT Libraries [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/jwt_2.12/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/jwt_2.12/latest/)
+# JWT [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/jwt_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/jwt_2.13/latest/)
 
-Library to facilitate jwt authentication.
+Library to facilitate encoding/decoding jwts.
 
-# How to install
+## How to install
 
 * add to your dependencies library dependencies:
 ```libraryDependencies += "org.byrde" %% "jwt" % "VERSION"```

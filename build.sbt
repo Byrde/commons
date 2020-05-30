@@ -1,39 +1,30 @@
 val RootSettings =
   Seq(
-    name :=
-      Option(
-        System.getProperty("name"))
-        .getOrElse("commons"),
+    name := Option(System.getProperty("name")).getOrElse("commons"),
     publish := {},
-    publishLocal := {})
+    publishLocal := {}
+  )
 
 val CommonsSettings =
   Seq(
-    version :=
-      Option(
-        System.getProperty("version"))
-        .getOrElse("SNAPSHOT"),
-    organization :=
-      Option(
-        System.getProperty("organization"))
-        .getOrElse("org.byrde"),
-    scalaVersion :=
-      Option(
-        System.getProperty("scalaVersion"))
-        .getOrElse("2.13.1"),
+    version := Option(System.getProperty("version")).getOrElse("SNAPSHOT"),
+    organization := Option(System.getProperty("organization")).getOrElse("org.byrde"),
+    scalaVersion := Option(System.getProperty("scalaVersion")).getOrElse("2.13.1"),
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers ++=
       Seq(
         Resolver.sonatypeRepo("releases"),
         Resolver.bintrayRepo("hseeberger", "maven"),
-        Resolver.jcenterRepo),
+        Resolver.jcenterRepo
+      ),
     javacOptions ++=
       Seq(
         "-source", "1.8",
         "-target", "1.8",
         "-Xlint:unchecked",
-        "-encoding", "UTF-8"),
+        "-encoding", "UTF-8"
+      ),
     scalacOptions ++=
       Seq(
         "-unchecked",
@@ -42,7 +33,8 @@ val CommonsSettings =
         "-Ywarn-dead-code",
         "-language:_",
         "-target:jvm-1.8",
-        "-encoding", "UTF-8"),
+        "-encoding", "UTF-8"
+      ),
     packageOptions +=
       Package.ManifestAttributes(
         "Created-By" -> "Martin Allaire",
@@ -56,23 +48,20 @@ val CommonsSettings =
         "Implementation-Vendor-Id" -> organization.value,
         "Implementation-Vendor" -> organization.value
       ),
-    credentials +=
-      Credentials(Path.userHome / ".sbt" / ".credentials"),
-    pomIncludeRepository :=
-      (_ => false),
-    startYear :=
-      Some(2018),
-    licenses :=
-      Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
-    publishTo :=
-      Some("Cloudsmith API" at "https://maven.cloudsmith.io/byrde/libraries/"),
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+    pomIncludeRepository := (_ => false),
+    startYear := Some(2018),
+    licenses := Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
+    publishTo := Some("Cloudsmith API" at "https://maven.cloudsmith.io/byrde/libraries/"),
     publishMavenStyle := true,
     developers +=
       Developer(
-        "Alfapalooza",
+        "mallaire77",
         "Martin Allaire",
         "martin@byrde.io",
-        new URL("http://linkedin.com/allama")))
+        new URL("http://linkedin.com/allama")
+      )
+  )
 
 val auth =
   project.settings(CommonsSettings)

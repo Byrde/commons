@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Directives.{complete, extractMaterializer, extr
 import akka.http.scaladsl.server.Route
 
 object RejectionDirective {
+  
   def rejectRequestEntityAndComplete(m: => ToResponseMarshallable): Route = {
     extractRequest { request =>
       extractMaterializer { implicit mat =>
@@ -13,4 +14,5 @@ object RejectionDirective {
       }
     }
   }
+  
 }

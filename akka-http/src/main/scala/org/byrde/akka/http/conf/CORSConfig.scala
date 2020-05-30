@@ -9,10 +9,12 @@ object CORSConfig {
   def apply(config: Config): CORSConfig =
     apply("origins", "methods", "headers", config)
 
-  def apply(_origins: String,
-            _methods: String,
-            _headers: String,
-            config: Config): CORSConfig = {
+  def apply(
+    _origins: String,
+    _methods: String,
+    _headers: String,
+    config: Config
+  ): CORSConfig = {
     val origins =
       config
         .getString(_origins)

@@ -11,6 +11,7 @@ import org.scalatest.EitherValues
 import org.scalatest.matchers.should.Matchers
 
 class ServiceResponseSpec extends AnyFreeSpec with Matchers with EitherValues {
+  
   private val MostlyEqualRegex =
     "\\s+"
 
@@ -88,4 +89,5 @@ class ServiceResponseSpec extends AnyFreeSpec with Matchers with EitherValues {
       assert(serialized == expected)
     }
   }
+  
 }

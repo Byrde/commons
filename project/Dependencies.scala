@@ -5,7 +5,7 @@ object Dependencies extends DependencyBuilders {
     "10.1.11"
 
   val AkkaVersion: String =
-    "2.6.1"
+    "2.5.31"
 
   val PlayVersion: String =
     "2.8.0"
@@ -31,19 +31,15 @@ object Dependencies extends DependencyBuilders {
     )
 
   val AlpakkaGCS =
-    Seq(
-      "com.typesafe.akka"    %% "akka-http-spray-json"                     % AkkaHttpVersion,
-      "com.lightbend.akka"   %% "akka-stream-alpakka-google-cloud-storage" % "1.1.2"
-        excludeAll("com.typesafe.akka" % "akka-http-spray-json"),
-    )
+    Seq("com.lightbend.akka"   %% "akka-stream-alpakka-google-cloud-storage" % "2.0.0")
 
   val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
-      "de.heikoseeberger"  %% "akka-http-circe"        % "1.30.0",
       "com.typesafe.akka"  %% "akka-http-testkit"      % AkkaHttpVersion,
+      "de.heikoseeberger"  %% "akka-http-circe"        % "1.30.0",
     ) ++ AkkaDependencies
 
   val CompressorDependencies: Seq[ModuleID] =
@@ -76,8 +72,8 @@ object Dependencies extends DependencyBuilders {
   val SlickDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.slick" %% "slick-hikaricp"      % SlickVersion,
+      "com.typesafe.slick" %% "slick"               % SlickVersion,
       "io.github.nafg"     %% "slick-migration-api" % "0.7.0",
-      "com.typesafe.slick" %% "slick"               % SlickVersion
     )
 
   val PlayWSDependencies: Seq[ModuleID] =
