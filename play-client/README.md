@@ -32,7 +32,7 @@ client.get(Request[Unit](Path("/ping"))).provide(service)
 
 #### Post
 ```
-post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True)))).provide(service)
+client.post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True)))).provide(service)
 ```
 
 ## Config Sample
