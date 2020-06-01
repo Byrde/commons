@@ -49,5 +49,5 @@ client.get[Unit, Json](Request[Unit](Path("/ping"))).provide(service)
 ```
 implicit def encoder: RequestEncoder[LibService, Json, LibRequest] = ???
 
-client.get[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True))).provide(service)
+client.post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True))).provide(service)
 ```
