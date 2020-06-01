@@ -3,7 +3,7 @@ package org.byrde.client.redis
 import zio.{IO, ZIO}
 
 trait RedisExecutor[R] {
-  def redisClient: RedisExecutor.Service[R]
+  def executor: RedisExecutor.Service[R]
 }
 
 object RedisExecutor {

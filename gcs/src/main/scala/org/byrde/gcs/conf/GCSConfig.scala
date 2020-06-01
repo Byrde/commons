@@ -4,13 +4,10 @@ import org.byrde.gcs.conf.GCSConfig.Bucket
 
 import com.typesafe.config.Config
 
-trait GCSConfig {
-
-  def bucket: Bucket
-
-  def chunk: Int
-
-}
+case class GCSConfig(
+  bucket: Bucket,
+  chunk: Int,
+)
 
 object GCSConfig {
 
@@ -24,10 +21,9 @@ object GCSConfig {
     _chunk: String,
     config: Config
   ): GCSConfig =
-    new GCSConfig {
-      override def bucket: Bucket = config.getString(_bucket)
-
-      override def chunk: Int = config.getBytes(_chunk).toInt
-    }
+    GCSConfig(
+      config.getString(_bucket),
+      config.getBytes(_chunk).toInt
+    )
 
 }

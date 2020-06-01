@@ -1,16 +1,16 @@
 package org.byrde.slick
 
 import org.byrde.slick.SlickRole.{Master, Slave}
-import org.byrde.slick.conf.SlickProfile
 
 import slick.dbio.Effect
 
 import scala.annotation.implicitNotFound
 
-@implicitNotFound("'${R}' database is not privileged to to perform effect '${E}'.")
+@implicitNotFound("'${R}' database is not privileged to perform effect '${E}'.")
 class SlickHasPrivilege[R <: SlickRole, +E <: Effect](profile: SlickProfile[R])
 
 object SlickHasPrivilege {
+  
   implicit def SlaveCanRead(implicit profile: SlickProfile[Slave]): Slave SlickHasPrivilege profile.api.Effect.Read =
     null
 
@@ -28,4 +28,5 @@ object SlickHasPrivilege {
 
   implicit def MasterCanAll(implicit profile: SlickProfile[Master]): Master SlickHasPrivilege profile.api.Effect.All =
     null
+  
 }

@@ -1,12 +1,10 @@
 package org.byrde.slick
 
-import org.byrde.slick.conf.SlickProfile
-import org.byrde.slick.db.SlickDb
-
 import scala.concurrent.Future
 
 trait SlickDAO[R <: SlickRole] {
   self: SlickProfile[R] with SlickDb[R] =>
+  
     import profile.api._
 
     protected implicit val AsEvidence: SlickProfile[R] =
@@ -16,4 +14,5 @@ trait SlickDAO[R <: SlickRole] {
       def run(implicit ev: R SlickHasPrivilege E): Future[Result] =
         self.run(query)
     }
+  
 }

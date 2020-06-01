@@ -90,6 +90,9 @@ val email =
 val logging =
   project.settings(CommonsSettings)
 
+val pubsub  =
+  project.dependsOn(logging).settings(CommonsSettings)
+
 val `akka-logging` =
   project.dependsOn(logging).settings(CommonsSettings)
 
@@ -144,6 +147,7 @@ val root =
       `akka-http`,
       auth,
       gcs,
+      pubsub,
       `http-client`,
       `play-client`,
       email,

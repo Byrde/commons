@@ -24,8 +24,8 @@ trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
   )(implicit decoder: Decoder[T]): ZIO[R, RedisClientError, Option[RedisObject[T]]] =
     for {
       env <- ZIO.environment[R]
-      ttl <- redisClient.execute(_.ttl(withNamespace(key)).map(_.longValue().seconds)).provide(env)
-      value <- redisClient.execute(_.get(withNamespace(key))).provide(env)
+      ttl <- executor.execute(_.ttl(withNamespace(key)).map(_.longValue().seconds)).provide(env)
+      value <- executor.execute(_.get(withNamespace(key))).provide(env)
       result <- {
         value.map {
           case null =>
@@ -58,13 +58,13 @@ trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
       redisV =
         prefix + "-" + Using(baos)(data => new String(Base64.encodeBase64(data.toByteArray)))
       result <-
-        redisClient.execute(_.set(redisK, redisV, expiration)).provide(env)
+        executor.execute(_.set(redisK, redisV, expiration)).provide(env)
     } yield result
 
   def remove(key: Key): ZIO[R, RedisClientError, Long] =
     for {
       env <- ZIO.environment[R]
-      result <- redisClient.execute(_.del(key)).provide(env)
+      result <- executor.execute(_.del(key)).provide(env)
     } yield result
 
   private def withDataInputStream[T](bytes: Array[Byte])(f: DataInputStream => T): Try[T] =

@@ -9,3 +9,40 @@
 
 * add this resolver to your resolvers dependencies:
 ```resolvers += "byrde-libraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/"```
+
+## Quickstart
+This library is compatible implementation of the [http-client](https://github.com/Byrde/commons/tree/master/http-client) library
+
+#### Usage
+```scala
+val system = ActorSystem()
+
+val config = PlayConfig(new SimpleConfig())
+
+val service = new PlayService(StandaloneAhcWSClient()(Materializer(system)))(config)
+
+val client = new PlayClient()
+```
+
+#### Get
+```
+import org.byrde.client.http.play.implicits._
+client.get(Request[Unit](Path("/ping"))).provide(service)
+```
+
+#### Post
+```
+post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True)))).provide(service)
+```
+
+## Config Sample
+```yaml
+{
+   protocol: "http"
+   host: "localhost"
+   port: 80
+   client-id: "client-id"
+   client-token: "client-token"
+   call-timeout: 2000
+}
+```

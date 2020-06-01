@@ -1,8 +1,9 @@
 package org.byrde.client.http
 
-import org.byrde.uri.Url
+import org.byrde.uri.Path
 
-case class Request[T](body: T, url: Url, method: Method, headers: Headers = Map.empty) extends RequestLike with WithMethod[Request[T]] {
-  def withMethod(method: Method): Request[T] =
-    copy(method = method)
-}
+case class Request[T](
+  path: Path,
+  body: Option[T] = Option.empty,
+  headers: Headers = Map.empty,
+)(val method: Method)

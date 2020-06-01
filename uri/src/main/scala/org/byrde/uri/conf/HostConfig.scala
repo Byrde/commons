@@ -32,6 +32,6 @@ object HostConfig {
     val port =
       Try(config.getInt(_port)).map(Port.apply).toOption
 
-    uri.Host(protocol, host, port)
+    uri.Host(host, protocol, port)
   }
 }

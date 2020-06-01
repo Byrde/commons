@@ -17,9 +17,7 @@ object Dependencies extends DependencyBuilders {
     "0.12.3"
 
   val Zio: Seq[ModuleID] =
-    Seq(
-      "dev.zio" %% "zio" % "1.0.0-RC17"
-    )
+    Seq("dev.zio" %% "zio" % "1.0.0-RC20")
 
   val AkkaDependencies =
     Seq(
@@ -31,11 +29,15 @@ object Dependencies extends DependencyBuilders {
     )
 
   val AlpakkaGCS =
-    Seq("com.lightbend.akka"   %% "akka-stream-alpakka-google-cloud-storage" % "2.0.0")
+    Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-storage" % "2.0.0")
+  
+  val AlpakkaPubSub =
+    Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-pub-sub" % "2.0.0")
 
   val AkkaHttpDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
+      "com.typesafe.akka"  %% "akka-http2-support"     % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-testkit"      % AkkaHttpVersion,
@@ -43,9 +45,7 @@ object Dependencies extends DependencyBuilders {
     ) ++ AkkaDependencies
 
   val CompressorDependencies: Seq[ModuleID] =
-    Seq(
-      "com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2"
-    )
+    Seq("com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2")
 
   val EmailDependencies: Seq[ModuleID] =
     Seq(
@@ -60,14 +60,10 @@ object Dependencies extends DependencyBuilders {
     )
 
   val JwtDependencies: Seq[ModuleID] =
-    Seq(
-      "com.pauldijou" %% "jwt-circe" % "4.2.0"
-    )
+    Seq("com.pauldijou" %% "jwt-circe" % "4.2.0")
 
   val RedisDependencies: Seq[ModuleID] =
-    Seq(
-      "redis.clients" % "jedis" % "2.9.0"
-    )
+    Seq("redis.clients" % "jedis" % "2.9.0")
 
   val SlickDependencies: Seq[ModuleID] =
     Seq(
@@ -83,14 +79,10 @@ object Dependencies extends DependencyBuilders {
     )
 
   val PlayDependencies: Seq[ModuleID] =
-    Seq(
-      "com.typesafe.play" %% "play" % PlayVersion
-    ) ++ PlayWSDependencies
+    Seq("com.typesafe.play" %% "play" % PlayVersion) ++ PlayWSDependencies
 
   val TypesafeConfigDependencies: Seq[ModuleID] =
-    Seq(
-      "com.typesafe" % "config" % "1.2.1"
-    )
+    Seq("com.typesafe" % "config" % "1.2.1")
 
   val CirceDependencies: Seq[ModuleID] =
     Seq(
@@ -107,7 +99,5 @@ object Dependencies extends DependencyBuilders {
     )
 
   val CommonsDependencies: Seq[ModuleID] =
-    Seq(
-      "commons-codec" % "commons-codec" % "1.13"
-    )
+    Seq("commons-codec" % "commons-codec" % "1.13")
 }

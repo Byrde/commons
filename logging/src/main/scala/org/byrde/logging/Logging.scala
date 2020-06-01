@@ -12,7 +12,10 @@ trait Logging {
 
   def debug[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     info(msg.asJson)
-
+  
+  def debug[R <: Logger, T](msg: String): RIO[R, Unit] =
+    info(Message(msg).asJson)
+  
   def debug[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     info(Message(msg).asJson deepMerge extra.asJson)
 
@@ -24,7 +27,10 @@ trait Logging {
 
   def info[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     info(msg.asJson)
-
+  
+  def info[R <: Logger, T](msg: String): RIO[R, Unit] =
+    info(Message(msg).asJson)
+  
   def info[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     info(Message(msg).asJson deepMerge extra.asJson)
 
@@ -36,7 +42,10 @@ trait Logging {
 
   def warning[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     warning(msg.asJson)
-
+  
+  def warning[R <: Logger, T](msg: String): RIO[R, Unit] =
+    warning(Message(msg).asJson)
+  
   def warning[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     warning(Message(msg).asJson deepMerge extra.asJson)
 
@@ -48,7 +57,10 @@ trait Logging {
 
   def error[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     error(msg.asJson)
-
+  
+  def error[R <: Logger, T](msg: String): RIO[R, Unit] =
+    error(Message(msg).asJson)
+  
   def error[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     error(Message(msg).asJson deepMerge extra.asJson)
 
@@ -60,7 +72,10 @@ trait Logging {
 
   def error[R <: Logger, T](msg: T, ex: Throwable)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     error(msg.asJson, ex)
-
+  
+  def error[R <: Logger, T](msg: String, ex: Throwable): RIO[R, Unit] =
+    error(Message(msg).asJson, ex)
+  
   def error[R <: Logger, T](msg: String, extra: T, ex: Throwable)(implicit encoder: Encoder[T]): RIO[R, Unit] =
     error(Message(msg).asJson deepMerge extra.asJson, ex)
 
