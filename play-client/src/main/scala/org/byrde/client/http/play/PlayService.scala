@@ -5,7 +5,7 @@ import play.api.libs.ws.{StandaloneWSClient, StandaloneWSRequest}
 import org.byrde.client.http.play.conf.PlayConfig
 import org.byrde.uri.Host
 
-import zio.duration.Duration
+import scala.concurrent.duration.Duration
 
 class PlayService(val client: StandaloneWSClient)(val config: PlayConfig) extends StandaloneWSClient {
   

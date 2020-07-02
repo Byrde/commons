@@ -5,13 +5,12 @@ import org.byrde.client.redis.{Key, RedisClientError, RedisService}
 
 import redis.clients.jedis.JedisPool
 
-import zio.{IO, ZIO}
-
 import scala.concurrent.duration.Duration
+import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.Using
 
-class JedisService(val config: JedisConfig) extends RedisService {
+class JedisService(val config: JedisConfig)(implicit ec: ExecutionContext) extends RedisService {
   
   private lazy val pool =
     new JedisPool(
@@ -23,22 +22,22 @@ class JedisService(val config: JedisConfig) extends RedisService {
       config.database
     )
   
-  override def keys(pattern: String): IO[RedisClientError, Set[String]] =
-    ZIO.fromTry {
+  override def keys(pattern: String): Future[Either[RedisClientError, Set[String]]] =
+    Future {
       Using(pool.getResource) { jedis =>
         jedis.keys(pattern)
-      }
-    }.map(_.asScala.toSet).mapError(RedisClientError.apply)
+      }.map(_.asScala.toSet).toEither.left.map(RedisClientError.apply)
+    }
   
-  override def get(key: Key): IO[RedisClientError, Option[String]] =
-    ZIO.fromTry {
+  override def get(key: Key): Future[Either[RedisClientError, Option[String]]] =
+    Future {
       Using(pool.getResource) { jedis =>
         Option(jedis.get(key))
-      }
-    }.mapError(RedisClientError.apply)
+      }.toEither.left.map(RedisClientError.apply)
+    }
   
-  override def set(key: Key, value: String, expiration: Duration): IO[RedisClientError, Unit] =
-    ZIO.fromTry {
+  override def set(key: Key, value: String, expiration: Duration): Future[Either[RedisClientError, Unit]] =
+    Future {
       Using(pool.getResource) { jedis =>
         val expirationInSec =
           if (expiration == Duration.Inf)
@@ -52,21 +51,21 @@ class JedisService(val config: JedisConfig) extends RedisService {
           jedis.expire(key, expirationInSec)
         
         ()
-      }
-    }.mapError(RedisClientError.apply)
+      }.toEither.left.map(RedisClientError.apply)
+    }
   
-  override def del(key: Key): IO[RedisClientError, Long] =
-    ZIO.fromTry {
+  override def del(key: Key): Future[Either[RedisClientError, Long]] =
+    Future {
       Using(pool.getResource) { jedis =>
         jedis.del(key)
-      }
-    }.map(_.longValue()).mapError(RedisClientError.apply)
+      }.map(_.longValue()).toEither.left.map(RedisClientError.apply)
+    }
   
-  override def ttl(key: Key): IO[RedisClientError, Long] =
-    ZIO.fromTry {
+  override def ttl(key: Key): Future[Either[RedisClientError, Long]] =
+    Future {
       Using(pool.getResource) { jedis =>
         jedis.ttl(key)
-      }
-    }.map(_.longValue()).mapError(RedisClientError.apply)
+      }.map(_.longValue).toEither.left.map(RedisClientError.apply)
+    }
   
 }

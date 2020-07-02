@@ -25,7 +25,7 @@ class LibResponse()
 
 class LibService()
 
-class MyClient() extends HttpClient[LibService, LibRequest, LibResponse] {
+class MyClient(env: LibService) extends HttpClient[LibService, LibRequest, LibResponse] {
 
   def executor: HttpExecutor.Service[LibService, LibRequest, LibResponse] = ???
 
@@ -33,7 +33,7 @@ class MyClient() extends HttpClient[LibService, LibRequest, LibResponse] {
 
 val service = new LibService()
 
-val client = new MyClient()
+val client = new MyClient(service)
 ```
 
 #### Get
@@ -42,12 +42,12 @@ implicit def encoder: RequestEncoder[LibService, Unit, LibRequest] = ???
 
 implicit def decoder: ResponseDecoder[LibService, LibResponse, Json] = ???
 
-client.get[Unit, Json](Request[Unit](Path("/ping"))).provide(service)
+client.get[Unit, Json](Request[Unit](Path("/ping")))
 ```
 
 #### Post
 ```
 implicit def encoder: RequestEncoder[LibService, Json, LibRequest] = ???
 
-client.post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True))).provide(service)
+client.post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True)))
 ```

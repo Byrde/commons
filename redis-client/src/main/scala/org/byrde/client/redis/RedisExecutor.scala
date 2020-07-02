@@ -1,6 +1,7 @@
 package org.byrde.client.redis
 
-import zio.{IO, ZIO}
+import scala.concurrent.Future
+
 
 trait RedisExecutor[R] {
   def executor: RedisExecutor.Service[R]
@@ -8,6 +9,6 @@ trait RedisExecutor[R] {
 
 object RedisExecutor {
   trait Service[R] {
-    def execute[T](request: RedisService => IO[RedisClientError, T]): ZIO[R, RedisClientError, T]
+    def execute[T](request: RedisService => Future[Either[RedisClientError, T]]): Future[Either[RedisClientError, T]]
   }
 }

@@ -19,22 +19,22 @@ val config = JedisConfig(new SimpleConfig())
 
 val service = new JedisService(config)
 
-val client = new JedisClient()
+val client = new JedisClient(service)
 ```
 
 #### Get
 ```
-client.get[String]("example").provide(service)
+client.get[String]("example")
 ```
 
 #### Set
 ```
-client.set[String]("example", "my-value").provide(service)
+client.set[String]("example", "my-value")
 ```
 
 #### Remove
 ```
-client.remove("example").provide(service)
+client.remove("example")
 ```
 
 ## Config Sample

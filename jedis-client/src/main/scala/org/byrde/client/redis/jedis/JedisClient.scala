@@ -2,17 +2,14 @@ package org.byrde.client.redis.jedis
 
 import org.byrde.client.redis.{RedisClient, RedisClientError, RedisExecutor, RedisService}
 
-import zio.{IO, ZIO}
+import scala.concurrent.{ExecutionContext, Future}
 
-class JedisClient extends RedisClient[JedisService] {
+class JedisClient(env: JedisService)(implicit ec: ExecutionContext) extends RedisClient[JedisService] {
   
   override val executor: RedisExecutor.Service[JedisService] =
     new RedisExecutor.Service[JedisService] {
-      override def execute[T](request: RedisService => IO[RedisClientError, T]): ZIO[JedisService, RedisClientError, T] =
-        for {
-          redisClientLike <- ZIO.environment[JedisService]
-          result <- request(redisClientLike)
-        } yield result
+      override def execute[T](request: RedisService => Future[Either[RedisClientError, T]]): Future[Either[RedisClientError, T]] =
+        request(env)
     }
   
 }

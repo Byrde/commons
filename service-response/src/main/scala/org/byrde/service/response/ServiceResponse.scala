@@ -28,10 +28,13 @@ trait ServiceResponse[T] {
 }
 
 object ServiceResponse {
-  case class TransientServiceResponse[T](override val `type`: ServiceResponseType,
-                                         override val status: Status,
-                                         override val code: Int,
-                                         override val response: T) extends ServiceResponse[T]
+  case class TransientServiceResponse[T](
+    override val `type`: ServiceResponseType,
+    override val status: Status,
+    override val code: Int,
+    override val response: T
+  ) extends ServiceResponse[T]
+
   def apply[T](_response: T): TransientServiceResponse[T] =
     apply(200, _response)
 

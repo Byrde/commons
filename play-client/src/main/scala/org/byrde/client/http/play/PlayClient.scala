@@ -1,37 +1,25 @@
 package org.byrde.client.http.play
 
 import play.api.libs.ws.{StandaloneWSRequest, StandaloneWSResponse}
-
-import org.byrde.client.http.HttpClientError.{HttpExecutorError, HttpTimeoutError}
+import org.byrde.client.http.HttpClientError.HttpExecutorError
 import org.byrde.client.http.{HttpClient, HttpExecutor, Response}
 import org.byrde.uri.Url
 
-import zio.ZIO
-import zio.clock.Clock
-
+import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class PlayClient extends HttpClient[PlayService with Clock, StandaloneWSRequest, StandaloneWSResponse] {
-  
-  override def executor: HttpExecutor.Service[PlayService with Clock, StandaloneWSRequest, StandaloneWSResponse] =
-    (request: StandaloneWSRequest) => {
-      for {
-        env <- ZIO.environment[PlayService with Clock]
-        response <-
-          ZIO
-            .fromFuture(_ => request.execute())
-            .timeoutFail(HttpTimeoutError(incompleteResponse(request)))(env.callTimeout)
-            .refineOrDie {
-              case timeout: HttpTimeoutError =>
-                timeout
-              
-              case NonFatal(ex) =>
-                HttpExecutorError(incompleteResponse(request))(ex)
-            }
-            .provide(env)
-      } yield response
-    }
-  
+class PlayClient(service: PlayService)(implicit ec: ExecutionContext) extends HttpClient[PlayService, StandaloneWSRequest, StandaloneWSResponse](service) {
+
+  override def executor: HttpExecutor.Service[PlayService, StandaloneWSRequest, StandaloneWSResponse] =
+    (request: StandaloneWSRequest) =>
+      request
+        .execute()
+        .map(Right.apply)
+        .recover {
+          case NonFatal(ex) =>
+            Left(HttpExecutorError(incompleteResponse(request))(ex))
+        }
+
   private def incompleteResponse(request: StandaloneWSRequest): Response =
     Response(
       Url.fromString(request.url),
@@ -41,5 +29,5 @@ class PlayClient extends HttpClient[PlayService with Clock, StandaloneWSRequest,
       -1,
       "N/A"
     )
-  
+
 }

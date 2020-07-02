@@ -14,8 +14,6 @@ import io.circe.generic.auto._
 import io.circe.parser.parse
 import io.circe.{Decoder, Json}
 
-import zio.{IO, ZIO}
-
 package object implicits extends BodyWritableSupport with ProxyRequestSupport {
 
   implicit def proxy__RequestEncoder[T: BodyWritable]: RequestEncoder[PlayService, mvc.Request[T], StandaloneWSRequest] =
@@ -60,66 +58,62 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
 
   implicit def generic__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSResponse, T] =
     new ResponseDecoder[PlayService, StandaloneWSResponse, T] {
-      override def decode[TT](response: StandaloneWSResponse)(request: Request[TT])(
+      override def decode[TT](request: Request[TT])(response: StandaloneWSResponse)(
         implicit env: PlayService
-      ): IO[HttpClientError, T] =
+      ): Either[HttpClientError, T] =
         if (isFailure(response))
-          ZIO.fail(HttpResponseError(incompleteResponse(request)(response)))
+          Left(HttpResponseError(incompleteResponse(request)(response)))
         else
-          json__ResponseDecoder.decode(response)(request).flatMap { innerResponse =>
+          json__ResponseDecoder.decode(request)(response).flatMap { innerResponse =>
             innerResponse.as[T] match {
               case Right(value) =>
-                ZIO.succeed(value)
+                Right(value)
 
               case Left(error) =>
-                ZIO.fail(HttpDecodingError(incompleteResponse(request)(response))(error))
+                Left(HttpDecodingError(incompleteResponse(request)(response))(error))
             }
           }
     }
 
   implicit def serviceResponse__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSResponse, ServiceResponse[T]] =
     new ResponseDecoder[PlayService, StandaloneWSResponse, ServiceResponse[T]] {
-      override def decode[TT](
+      override def decode[TT](request: Request[TT])(
         response: StandaloneWSResponse,
-      )(request: Request[TT])(implicit env: PlayService): IO[HttpClientError, ServiceResponse[T]] =
+      )(implicit env: PlayService): Either[HttpClientError, ServiceResponse[T]] =
         if (isFailure(response))
-          ZIO.fail(HttpResponseError(incompleteResponse(request)(response)))
+          Left(HttpResponseError(incompleteResponse(request)(response)))
         else
-          json__ResponseDecoder.decode(response)(request)
+          json__ResponseDecoder.decode(request)(response)
             .flatMap { innerResponse =>
               innerResponse.as[TransientServiceResponse[Option[Message]]] match {
                 case Right(validated) if validated.`type` == ServiceResponseType.Error =>
-                  ZIO.fail(HttpServiceResponseError(incompleteResponse(request)(response))(validated.code))
+                  Left(HttpServiceResponseError(incompleteResponse(request)(response))(validated.code))
 
                 case _ =>
-                  ZIO.succeed(innerResponse)
+                  Right(innerResponse)
               }
             }
             .flatMap { innerResponse =>
-              innerResponse.as[TransientServiceResponse[T]] match {
-                case Right(validated: TransientServiceResponse[T]) =>
-                  ZIO.succeed(validated)
-
-                case Left(error) =>
-                  ZIO.fail(HttpDecodingError(incompleteResponse(request)(response))(error))
-              }
+              innerResponse.as[TransientServiceResponse[T]]
+                .left
+                .map(HttpDecodingError(incompleteResponse(request)(response)))
             }
     }
 
   implicit val json__ResponseDecoder: ResponseDecoder[PlayService, StandaloneWSResponse, Json] =
     new ResponseDecoder[PlayService, StandaloneWSResponse, Json] {
-      override def decode[TT](response: StandaloneWSResponse)(request: Request[TT])(
+      override def decode[TT](request: Request[TT])(response: StandaloneWSResponse)(
         implicit env: PlayService
-      ): IO[HttpClientError, Json] =
+      ): Either[HttpClientError, Json] =
         if (isFailure(response))
-          ZIO.fail(HttpResponseError(incompleteResponse(request)(response)))
+          Left(HttpResponseError(incompleteResponse(request)(response)))
         else
           parse(response.body) match {
             case Right(response) =>
-              ZIO.succeed(response)
+              Right(response)
 
             case Left(error) =>
-              ZIO.fail(HttpParsingError(incompleteResponse(request)(response))(error))
+              Left(HttpParsingError(incompleteResponse(request)(response))(error))
           }
     }
 

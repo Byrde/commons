@@ -1,6 +1,6 @@
 package org.byrde.client.http
 
-import zio.ZIO
+import scala.concurrent.Future
 
 trait HttpExecutor[R, I, A] {
   
@@ -11,7 +11,7 @@ trait HttpExecutor[R, I, A] {
 object HttpExecutor {
   
   trait Service[R, I, A] {
-    def execute(request: I): ZIO[R, HttpClientError, A]
+    def execute(request: I): Future[Either[HttpClientError, A]]
   }
   
 }

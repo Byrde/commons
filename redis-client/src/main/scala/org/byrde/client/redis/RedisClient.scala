@@ -2,17 +2,17 @@ package org.byrde.client.redis
 
 import java.io._
 
+import org.byrde.support.EitherSupport
+
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Printer}
-
 import org.apache.commons.codec.binary.Base64
 
-import zio.ZIO
-
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Try, Using}
 
-trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
+abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) extends RedisExecutor[R] with EitherSupport {
 
   private type Prefix = String
 
@@ -21,26 +21,20 @@ trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
   def get[T](
     key: Key,
     withNamespace: Key => Namespace = key => s"global::$key"
-  )(implicit decoder: Decoder[T]): ZIO[R, RedisClientError, Option[RedisObject[T]]] =
+  )(implicit decoder: Decoder[T]): Future[Either[RedisClientError, Option[RedisObject[T]]]] =
     for {
-      env <- ZIO.environment[R]
-      ttl <- executor.execute(_.ttl(withNamespace(key)).map(_.longValue().seconds)).provide(env)
-      value <- executor.execute(_.get(withNamespace(key))).provide(env)
-      result <- {
-        value.map {
-          case null =>
-            ZIO.succeed(Option.empty[RedisObject[T]])
+      ttl <- executor.execute(_.ttl(withNamespace(key)).map(_.map(_.longValue().seconds)))
+      value <- executor.execute(_.get(withNamespace(key)))
+      result =
+        value.zip(ttl).flatMap {
+          case (None, _) =>
+            Right(Option.empty[RedisObject[T]])
 
-          case data =>
-            ZIO
-              .fromEither {
-                processGetValue(data)
-                  .map(RedisObject[T](key, _, ttl))
-                  .map(Some.apply)
-              }
+          case (Some(data), ttl) =>
+            processGetValue(data)
+              .map(RedisObject[T](key, _, ttl))
+              .map(Some.apply)
         }
-        .getOrElse(ZIO.succeed(Option.empty))
-      }
     } yield result
 
   def set[T](
@@ -48,24 +42,21 @@ trait RedisClient[R <: RedisService] extends RedisExecutor[R] {
     value: T,
     withNamespace: Key => Namespace = key => s"global::$key",
     expiration: Duration = Duration.Inf
-  )(implicit encoder: Encoder[T], printer: Printer = Printer.noSpaces): ZIO[R, RedisClientError, Unit] =
-    for {
-      env <- ZIO.environment[R]
-      redisK =
-        withNamespace(key)
-      (prefix, baos) =
-        processSetValue(value)
-      redisV =
-        prefix + "-" + Using(baos)(data => new String(Base64.encodeBase64(data.toByteArray)))
-      result <-
-        executor.execute(_.set(redisK, redisV, expiration)).provide(env)
-    } yield result
+  )(implicit encoder: Encoder[T], printer: Printer = Printer.noSpaces): Future[Either[RedisClientError, Unit]] = {
+    val redisK =
+      withNamespace(key)
 
-  def remove(key: Key): ZIO[R, RedisClientError, Long] =
-    for {
-      env <- ZIO.environment[R]
-      result <- executor.execute(_.del(key)).provide(env)
-    } yield result
+    val (prefix, baos) =
+      processSetValue(value)
+
+    val redisV =
+      prefix + "-" + Using(baos)(data => new String(Base64.encodeBase64(data.toByteArray)))
+
+    executor.execute(_.set(redisK, redisV, expiration))
+  }
+
+  def remove(key: Key): Future[Either[RedisClientError, Long]] =
+    executor.execute(_.del(key))
 
   private def withDataInputStream[T](bytes: Array[Byte])(f: DataInputStream => T): Try[T] =
     Using(new DataInputStream(new ByteArrayInputStream(bytes)))(f)

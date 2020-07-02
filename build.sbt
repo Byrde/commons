@@ -72,9 +72,6 @@ val gcs  =
 val `jwt` =
   project.settings(CommonsSettings)
 
-val `redis-client` =
-  project.settings(CommonsSettings)
-
 val `service-response` =
   project.settings(CommonsSettings)
 
@@ -104,9 +101,14 @@ val utils =
     .dependsOn(uri)
     .settings(CommonsSettings)
 
+val `redis-client` =
+  project
+    .dependsOn(utils)
+    .settings(CommonsSettings)
+
 val `jedis-client` =
   project
-    .dependsOn(`redis-client`, utils)
+    .dependsOn(`redis-client`)
     .settings(CommonsSettings)
 
 val `http-client` =

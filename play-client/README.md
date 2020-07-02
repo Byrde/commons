@@ -21,18 +21,18 @@ val config = PlayConfig(new SimpleConfig())
 
 val service = new PlayService(StandaloneAhcWSClient()(Materializer(system)))(config)
 
-val client = new PlayClient()
+val client = new PlayClient(service)
 ```
 
 #### Get
 ```
 import org.byrde.client.http.play.implicits._
-client.get(Request[Unit](Path("/ping"))).provide(service)
+client.get(Request[Unit](Path("/ping")))
 ```
 
 #### Post
 ```
-client.post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True)))).provide(service)
+client.post[Json, Json](Request[Json](Path("/ping"), Some(Json.obj("ping" -> Json.True))))
 ```
 
 ## Config Sample

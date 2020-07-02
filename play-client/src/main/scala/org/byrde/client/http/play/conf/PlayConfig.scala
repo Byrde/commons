@@ -5,8 +5,6 @@ import org.byrde.uri.conf.HostConfig
 
 import com.typesafe.config.Config
 
-import zio.duration.Duration
-
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -24,7 +22,7 @@ object PlayConfig {
       HostConfig(config),
       Try(config.getString("client-id")).toOption,
       Try(config.getString("client-token")).toOption,
-      Duration.Finite(config.getLong("call-timeout").millis.toNanos)
+      Duration.fromNanos(config.getDuration("call-timeout").toNanos)
     )
 
 }

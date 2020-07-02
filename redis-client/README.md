@@ -19,19 +19,19 @@ Compatible implementations:
 ```scala
 class MyService() extends RedisService {
 
-  def keys(pattern: String): IO[RedisClientError, Set[String]] = ???
+  def keys(pattern: String): Future[Either[RedisClientError, Set[String]]] = ???
 
-  def get(key: Key): IO[RedisClientError, Option[String]] = ???
+  def get(key: Key): Future[Either[RedisClientError, Option[String]]] = ???
 
-  def set(key: Key, value: String, expiration: Duration = Duration.Inf): IO[RedisClientError, Unit] = ???
+  def set(key: Key, value: String, expiration: Duration = Duration.Inf): Future[Either[RedisClientError, Unit]] = ???
 
-  def del(key: Key): IO[RedisClientError, Long] = ???
+  def del(key: Key): Future[Either[RedisClientError, Long]] = ???
 
-  def ttl(key: Key): IO[RedisClientError, Long] = ???
+  def ttl(key: Key): Future[Either[RedisClientError, Long]] = ???
 
 }
 
-class MyClient() extends RedisClient[MyService] {
+class MyClient(env: MyService) extends RedisClient[MyService] {
 
   def executor: RedisExecutor.Service[MyService] = ???
 
@@ -44,15 +44,15 @@ val client = new MyClient()
 
 #### Get
 ```
-client.get[String]("example").provide(service)
+client.get[String]("example")
 ```
 
 #### Set
 ```
-client.set[String]("example", "my-value").provide(service)
+client.set[String]("example", "my-value")
 ```
 
 #### Remove
 ```
-client.remove("example").provide(service)
+client.remove("example")
 ```

@@ -1,4 +1,4 @@
 name := """play-client"""
 
 libraryDependencies ++=
-  Dependencies.Zio ++ Dependencies.PlayWSDependencies ++ Dependencies.CirceDependencies
+  Dependencies.PlayWSDependencies ++ Dependencies.CirceDependencies
