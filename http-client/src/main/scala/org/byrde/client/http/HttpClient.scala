@@ -9,63 +9,78 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
 
   private implicit def _environment: R = env
 
-  def get[T, TT](request: Method => Request[T])(
-    implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
-  ): Future[Either[HttpClientError, TT]] =
-    innerRequest(request, "GET")
+  def get[T](
+    path: Path,
+    headers: Headers = Map.empty,
+  )(
+    implicit encoder: RequestEncoder[R, Request[Unit], I],
+    decoder: ResponseDecoder[R, I, A, T]
+  ): Future[Either[HttpClientError, T]] =
+    request(Request("GET", path, headers =  headers))
 
-  def post[T, TT](request: Method => Request[T])(
+  def post[T, TT](body: T)(
+    path: Path,
+    headers: Headers = Map.empty,
+  )(
     implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
+    decoder: ResponseDecoder[R, I, A, TT]
   ): Future[Either[HttpClientError, TT]] =
-    innerRequest(request, "POST")
+    request(Request("POST", path, body, headers))
 
-  def put[T, TT](request: Method => Request[T])(
+  def put[T, TT](body: T)(
+    path: Path,
+    headers: Headers = Map.empty,
+  )(
     implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
+    decoder: ResponseDecoder[R, I, A, TT]
   ): Future[Either[HttpClientError, TT]] =
-    innerRequest(request, "PUT")
+    request(Request("PUT", path, body, headers))
 
-  def delete[T, TT](request: Method => Request[T])(
+  def delete[T, TT](body: T)(
+    path: Path,
+    headers: Headers = Map.empty,
+  )(
     implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
+    decoder: ResponseDecoder[R, I, A, TT]
   ): Future[Either[HttpClientError, TT]] =
-    innerRequest(request, "DELETE")
+    request(Request("DELETE", path, body, headers))
 
-  def patch[T, TT](request: Method => Request[T])(
+  def patch[T, TT](body: T)(
+    path: Path,
+    headers: Headers = Map.empty,
+  )(
     implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
+    decoder: ResponseDecoder[R, I, A, TT]
   ): Future[Either[HttpClientError, TT]] =
-    innerRequest(request, "PATCH")
+    request(Request("PATCH", path, body, headers))
 
-  def proxy[T, TT](request: Request[T])(
-    implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
-  ): Future[Either[HttpClientError, TT]] =
-    innerRequest(_ => request, request.method)
-
-  def request[T, TT](body: Option[T])(
+  def request[T, TT](body: T)(
     method: Method,
     path: Path,
     headers: Headers = Map.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
+    decoder: ResponseDecoder[R, I, A, TT]
   ): Future[Either[HttpClientError, TT]] =
-    innerRequest(Request(path, body, headers)(_), method)
+    request(Request(method, path, body, headers))
 
-  private def innerRequest[T, TT](
-    requestFn: Method => Request[T],
-    method: Method,
-  )(
+  def request[T, TT](request: Request[T])(
     implicit encoder: RequestEncoder[R, Request[T], I],
-    decoder: ResponseDecoder[R, A, TT]
+    decoder: ResponseDecoder[R, I, A, TT]
   ): Future[Either[HttpClientError, TT]] =
-    requestFn(method).pipe { request =>
-      executor
-        .execute(encoder.encode(request))
-        .map(_.flatMap(decoder.decode(request)))
-    }
+    _request(encoder.encode(request))
+
+  def proxy[T, TT](request: T)(
+    implicit encoder: RequestEncoder[R, T, I],
+    decoder: ResponseDecoder[R, I, A, TT]
+  ): Future[Either[HttpClientError, TT]] =
+    _request(encoder.encode(request))
+
+  private def _request[T, TT](request: I)(
+    implicit decoder: ResponseDecoder[R, I, A, TT]
+  ): Future[Either[HttpClientError, TT]] =
+    executor
+      .execute(request)
+      .map(_.flatMap(decoder.decode(request)))
 
 }

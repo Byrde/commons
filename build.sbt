@@ -163,5 +163,5 @@ val root =
       `service-response`,
       slick,
       uri,
-      utils
+      utils,
     )

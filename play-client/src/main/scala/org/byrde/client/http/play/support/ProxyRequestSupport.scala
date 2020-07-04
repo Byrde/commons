@@ -13,7 +13,7 @@ trait ProxyRequestSupport extends TypeSupport {
     @inline def toWSRequest(
       request: StandaloneWSRequest,
       host: Option[Host] = Option.empty
-    )(implicit bodyWritable: BodyWritable[T]): StandaloneWSRequest =
+    )(implicit writeable: BodyWritable[T]): StandaloneWSRequest =
       request
         .withBody(value.body)
         .withMethod(value.method)

@@ -3,7 +3,8 @@ package org.byrde.client.http
 import org.byrde.uri.Path
 
 case class Request[T](
+  method: Method,
   path: Path,
-  body: Option[T] = Option.empty,
+  body: T = (),
   headers: Headers = Map.empty,
-)(val method: Method)
+)

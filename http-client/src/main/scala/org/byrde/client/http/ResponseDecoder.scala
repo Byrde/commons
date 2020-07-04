@@ -1,7 +1,7 @@
 package org.byrde.client.http
 
-trait ResponseDecoder[R, I, A] {
+trait ResponseDecoder[R, T, I, A] {
   
-  def decode[T](request: Request[T])(response: I)(implicit env: R): Either[HttpClientError, A]
+  def decode(request: T)(response: I)(implicit env: R): Either[HttpClientError, A]
   
 }

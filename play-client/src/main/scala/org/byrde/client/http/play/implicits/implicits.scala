@@ -25,40 +25,24 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
   implicit def unit__RequestEncoder: RequestEncoder[PlayService, Request[Unit], StandaloneWSRequest] =
     new RequestEncoder[PlayService, Request[Unit], StandaloneWSRequest] {
       override def encode(request: Request[Unit])(implicit env: PlayService): StandaloneWSRequest =
-        env
-          .url(Url(env.host, request.path).toString)
-          .withMethod(request.method)
-          .withHttpHeaders(request.headers.toSeq: _*)
+        _request(request)
     }
   
   implicit def generic__RequestEncoder[T: BodyWritable]: RequestEncoder[PlayService, Request[T], StandaloneWSRequest] =
     new RequestEncoder[PlayService, Request[T], StandaloneWSRequest] {
-      override def encode(request: Request[T])(implicit env: PlayService): StandaloneWSRequest = {
-        val libRequest =
-          env.url(Url(env.host, request.path).toString)
-            .withMethod(request.method)
-            .withHttpHeaders(request.headers.toSeq: _*)
-        
-        request.body.fold(libRequest)(libRequest.withBody)
-      }
+      override def encode(request: Request[T])(implicit env: PlayService): StandaloneWSRequest =
+        _request(request).withBody(request.body)
     }
 
   implicit val json__RequestEncoder: RequestEncoder[PlayService, Request[Json], StandaloneWSRequest] =
     new RequestEncoder[PlayService, Request[Json], StandaloneWSRequest] {
-      override def encode(request: Request[Json])(implicit env: PlayService): StandaloneWSRequest = {
-        val libRequest =
-          env
-            .url(Url(env.host, request.path).toString)
-            .withMethod(request.method)
-            .withHttpHeaders(request.headers.toSeq: _*)
-        
-        request.body.fold(libRequest)(libRequest.withBody)
-      }
+      override def encode(request: Request[Json])(implicit env: PlayService): StandaloneWSRequest =
+        _request(request).withBody(request.body)
     }
 
-  implicit def generic__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSResponse, T] =
-    new ResponseDecoder[PlayService, StandaloneWSResponse, T] {
-      override def decode[TT](request: Request[TT])(response: StandaloneWSResponse)(
+  implicit def generic__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, T] =
+    new ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, T] {
+      override def decode(request: StandaloneWSRequest)(response: StandaloneWSResponse)(
         implicit env: PlayService
       ): Either[HttpClientError, T] =
         if (isFailure(response))
@@ -75,9 +59,9 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
           }
     }
 
-  implicit def serviceResponse__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSResponse, ServiceResponse[T]] =
-    new ResponseDecoder[PlayService, StandaloneWSResponse, ServiceResponse[T]] {
-      override def decode[TT](request: Request[TT])(
+  implicit def serviceResponse__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, ServiceResponse[T]] =
+    new ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, ServiceResponse[T]] {
+      override def decode(request: StandaloneWSRequest)(
         response: StandaloneWSResponse,
       )(implicit env: PlayService): Either[HttpClientError, ServiceResponse[T]] =
         if (isFailure(response))
@@ -100,9 +84,9 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
             }
     }
 
-  implicit val json__ResponseDecoder: ResponseDecoder[PlayService, StandaloneWSResponse, Json] =
-    new ResponseDecoder[PlayService, StandaloneWSResponse, Json] {
-      override def decode[TT](request: Request[TT])(response: StandaloneWSResponse)(
+  implicit val json__ResponseDecoder: ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, Json] =
+    new ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, Json] {
+      override def decode(request: StandaloneWSRequest)(response: StandaloneWSResponse)(
         implicit env: PlayService
       ): Either[HttpClientError, Json] =
         if (isFailure(response))
@@ -117,14 +101,20 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
           }
     }
 
+  private def _request(request: Request[_])(implicit env: PlayService) =
+    env
+      .url(Url(env.host, request.path).toString)
+      .withMethod(request.method)
+      .withHttpHeaders(request.headers.toSeq: _*)
+
   private def isFailure(response: StandaloneWSResponse): Boolean =
     response.status >= 400
   
-  private def incompleteResponse[TT](request: Request[TT])(response: StandaloneWSResponse)(implicit env: PlayService) =
+  private def incompleteResponse(request: StandaloneWSRequest)(response: StandaloneWSResponse)(implicit env: PlayService) =
     Response(
-      Url(env.host, request.path),
+      Url(env.host, Path.fromString(request.uri.getPath)),
       request.method,
-      request.headers,
+      request.headers.view.mapValues(_.mkString(", ")).toMap,
       response.headers.view.mapValues(_.mkString(", ")).toMap,
       response.status,
       response.body
