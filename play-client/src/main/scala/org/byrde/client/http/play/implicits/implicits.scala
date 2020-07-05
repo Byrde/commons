@@ -40,7 +40,7 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
         _request(request).withBody(request.body)
     }
 
-  implicit def generic__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, T] =
+  implicit def generic__ResponseDecoder[T](implicit decoder: Decoder[T]): ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, T] =
     new ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, T] {
       override def decode(request: StandaloneWSRequest)(response: StandaloneWSResponse)(
         implicit env: PlayService
@@ -59,7 +59,7 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
           }
     }
 
-  implicit def serviceResponse__ResponseDecoder[T: Decoder]: ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, ServiceResponse[T]] =
+  implicit def serviceResponse__ResponseDecoder[T](implicit decoder: Decoder[T]): ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, ServiceResponse[T]] =
     new ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, ServiceResponse[T]] {
       override def decode(request: StandaloneWSRequest)(
         response: StandaloneWSResponse,

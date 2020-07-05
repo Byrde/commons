@@ -17,9 +17,9 @@ import io.circe.syntax._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
-abstract class Subscriber[T: Decoder](
+abstract class Subscriber[T](
   subscription: Subscription,
-)(config: conf.PubSubConfig)(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem) extends Logging {
+)(config: conf.PubSubConfig)(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem, decoder: Decoder[T]) extends Logging {
   
   private val _config = PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
   

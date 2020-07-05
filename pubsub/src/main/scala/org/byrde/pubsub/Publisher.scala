@@ -18,14 +18,14 @@ class Publisher(config: conf.PubSubConfig)(implicit ec: ExecutionContext, system
   
   private val _config = PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
   
-  def publish[T: Encoder](message: Message[T]): Future[Unit] =
+  def publish[T](message: Message[T])(implicit encoder: Encoder[T]): Future[Unit] =
     Source
       .single(PublishRequest(Seq(convertMessage(message))))
       .via(flow(message.topic))
       .runWith(Sink.seq)
       .map(_ => ())
   
-  private def convertMessage[T: Encoder](message: Message[T]): PublishMessage =
+  private def convertMessage[T](message: Message[T])(implicit encoder: Encoder[T]): PublishMessage =
     PublishMessage(new String(Base64.getEncoder.encode(message.asJson.toString.getBytes)))
 
   private def flow(topic: Topic): Flow[PublishRequest, Seq[String], NotUsed] =

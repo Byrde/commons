@@ -14,7 +14,7 @@ object HttpClientError {
 
   case class HttpDecodingError(override val response: Response)(failure: DecodingFailure) extends HttpClientError(response)(failure)
 
-  case class HttpServiceResponseError(override val response: Response)(code: Long) extends HttpClientError(response)(new Exception(s"Request Failed. Error Code: $code"))
+  case class HttpServiceResponseError(override val response: Response)(val code: Long) extends HttpClientError(response)(new Exception(s"Request Failed. Error Code: $code"))
 
   case class HttpTimeoutError(override val response: Response) extends HttpClientError(response)(new Exception("Timed Out"))
 
