@@ -1,5 +1,7 @@
 package org.byrde.support
 
+import scala.concurrent.Future
+
 trait EitherSupport {
   implicit class Any2Right[T, TT](value: T) {
     @inline def success: Either[TT, T] = Right(value)
@@ -14,6 +16,11 @@ trait EitherSupport {
   implicit class Either2Zip[T, TT](value: Either[TT, T]) {
     @inline def zip[A](other: Either[TT, A]): Either[TT, (T, A)] =
       value.flatMap(right1 => other.map(right2 => right1 -> right2))
+  }
+
+  implicit class Either2Future[T, TT <: Throwable](value: Either[TT, T]) {
+    @inline def toFuture: Future[T] =
+      value.fold(Future.failed, Future.successful)
   }
 }
 

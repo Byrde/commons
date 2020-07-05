@@ -6,6 +6,7 @@ import org.byrde.support.EitherSupport
 
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Printer}
+
 import org.apache.commons.codec.binary.Base64
 
 import scala.concurrent.duration._
