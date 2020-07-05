@@ -24,8 +24,8 @@ class PlayClient(service: PlayService)(implicit ec: ExecutionContext) extends Ht
     Response(
       Url.fromString(request.url),
       request.method,
-      request.headers.view.mapValues(_.mkString(", ")).toMap,
-      Map.empty,
+      request.headers.view.mapValues(_.mkString(", ")).toSeq,
+      Seq.empty,
       -1,
       "N/A"
     )

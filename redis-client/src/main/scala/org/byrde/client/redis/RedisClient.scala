@@ -14,6 +14,8 @@ import scala.util.{Try, Using}
 
 abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) extends RedisExecutor[R] with EitherSupport {
 
+  private type Namespace = String
+
   private type Prefix = String
 
   private type DataStream = ByteArrayOutputStream
@@ -55,8 +57,11 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
     executor.execute(_.set(redisK, redisV, expiration))
   }
 
-  def remove(key: Key): Future[Either[RedisClientError, Long]] =
-    executor.execute(_.del(key))
+  def remove(
+    key: Key,
+    withNamespace: Key => Namespace = key => s"global::$key"
+  ): Future[Either[RedisClientError, Long]] =
+    executor.execute(_.del(withNamespace(key)))
 
   private def withDataInputStream[T](bytes: Array[Byte])(f: DataInputStream => T): Try[T] =
     Using(new DataInputStream(new ByteArrayInputStream(bytes)))(f)

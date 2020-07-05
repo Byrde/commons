@@ -11,7 +11,7 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
 
   def get[T](
     path: Path,
-    headers: Headers = Map.empty,
+    headers: Headers = Seq.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[Unit], I],
     decoder: ResponseDecoder[R, I, A, T]
@@ -20,7 +20,7 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
 
   def post[T, TT](body: T)(
     path: Path,
-    headers: Headers = Map.empty,
+    headers: Headers = Seq.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[T], I],
     decoder: ResponseDecoder[R, I, A, TT]
@@ -29,7 +29,7 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
 
   def put[T, TT](body: T)(
     path: Path,
-    headers: Headers = Map.empty,
+    headers: Headers = Seq.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[T], I],
     decoder: ResponseDecoder[R, I, A, TT]
@@ -38,7 +38,7 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
 
   def delete[T, TT](body: T)(
     path: Path,
-    headers: Headers = Map.empty,
+    headers: Headers = Seq.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[T], I],
     decoder: ResponseDecoder[R, I, A, TT]
@@ -47,7 +47,7 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
 
   def patch[T, TT](body: T)(
     path: Path,
-    headers: Headers = Map.empty,
+    headers: Headers = Seq.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[T], I],
     decoder: ResponseDecoder[R, I, A, TT]
@@ -57,7 +57,7 @@ abstract class HttpClient[R, I, A](env: R)(implicit ec: ExecutionContext) extend
   def request[T, TT](body: T)(
     method: Method,
     path: Path,
-    headers: Headers = Map.empty,
+    headers: Headers = Seq.empty,
   )(
     implicit encoder: RequestEncoder[R, Request[T], I],
     decoder: ResponseDecoder[R, I, A, TT]

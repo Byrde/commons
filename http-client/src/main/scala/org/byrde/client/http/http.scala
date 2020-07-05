@@ -6,7 +6,7 @@ package object http {
 
   type Method = String
 
-  type Headers = Map[String, String]
+  type Headers = Seq[(String, String)]
 
   type Status = Int
 

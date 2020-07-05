@@ -6,5 +6,5 @@ case class Request[T](
   method: Method,
   path: Path,
   body: T = (),
-  headers: Headers = Map.empty,
+  headers: Headers = Seq.empty,
 )

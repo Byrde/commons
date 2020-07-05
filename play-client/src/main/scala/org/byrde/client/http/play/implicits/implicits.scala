@@ -105,7 +105,7 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
     env
       .url(Url(env.host, request.path).toString)
       .withMethod(request.method)
-      .withHttpHeaders(request.headers.toSeq: _*)
+      .withHttpHeaders(request.headers: _*)
 
   private def isFailure(response: StandaloneWSResponse): Boolean =
     response.status >= 400
@@ -114,8 +114,8 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
     Response(
       Url(env.host, Path.fromString(request.uri.getPath)),
       request.method,
-      request.headers.view.mapValues(_.mkString(", ")).toMap,
-      response.headers.view.mapValues(_.mkString(", ")).toMap,
+      request.headers.view.mapValues(_.mkString(", ")).toSeq,
+      response.headers.view.mapValues(_.mkString(", ")).toSeq,
       response.status,
       response.body
     )
