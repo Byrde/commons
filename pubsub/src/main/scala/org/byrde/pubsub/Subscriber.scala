@@ -56,10 +56,12 @@ abstract class Subscriber[T](
       PubSubError.DecodingError(message)(failure)
     }
   
-  _subscriptionSource
-    .mapAsync(config.batch)(process)
-    .groupedWithin(config.batch, 1.seconds)
-    .map(AcknowledgeRequest.apply)
-    .to(_ackSink)
+  def start(): Unit = {
+    _subscriptionSource
+      .mapAsync(config.batch)(process)
+      .groupedWithin(config.batch, 1.seconds)
+      .map(AcknowledgeRequest.apply)
+      .to(_ackSink)
+  }
   
 }
