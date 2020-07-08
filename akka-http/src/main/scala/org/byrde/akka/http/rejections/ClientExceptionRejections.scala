@@ -4,9 +4,10 @@ import org.byrde.akka.http.scaladsl.server.directives.RejectionDirective._
 import org.byrde.service.response.exceptions.ClientException
 
 import io.circe.generic.auto._
+
 import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import org.byrde.akka.http.support.CirceSupport.FailFastCirceSupport
 
 object ClientExceptionRejections extends FailFastCirceSupport {
 

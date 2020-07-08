@@ -10,6 +10,7 @@ import akka.util.ByteString
 import org.byrde.akka.http.logging.HttpRequestLog
 import org.byrde.logging.{AkkaLogger, Logging}
 import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
+import org.byrde.akka.http.support.CirceSupport.FailFastCirceSupport
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0405, E0500}
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
@@ -18,8 +19,6 @@ import org.byrde.service.response.{Message, Status}
 import io.circe.generic.auto._
 import io.circe.parser.parse
 import io.circe.{Json, Printer}
-
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.annotation.tailrec
 

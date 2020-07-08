@@ -1,16 +1,18 @@
-package org.byrde.service.response
+package org.byrde.jwt
+
+import org.byrde.jwt.claims.Claims
+import org.byrde.jwt.conf.JwtConfig
+import org.byrde.jwt.support.JwtSupport
+import org.byrde.jwt.support.validation.JwtValidationError.{Expired, Invalid}
 
 import java.time.Instant
 
-import io.circe.generic.auto._
-import org.byrde.jwt.claims.Claims
-import org.byrde.jwt.conf.JwtConfig
-import org.byrde.jwt.support.validation.JwtValidationError.{Expired, Invalid}
-
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+
+import io.circe.generic.auto._
+
 import pdi.jwt.JwtAlgorithm
-import org.byrde.jwt.support.JwtSupport
 
 class JwtSpec extends AnyFlatSpec with Matchers {
   private case class Claim(sub: String, org: String, typ: String, loc: String, acc: String)

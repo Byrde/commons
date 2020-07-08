@@ -2,12 +2,11 @@ package org.byrde.akka.http.rejections
 
 import org.byrde.akka.http.scaladsl.server.directives.RejectionDirective._
 import org.byrde.service.response.CommonsServiceResponseDictionary.E0400
-
 import akka.http.scaladsl.server.{Rejection, RejectionHandler}
 
-import io.circe.generic.auto._
+import org.byrde.akka.http.support.CirceSupport.FailFastCirceSupport
 
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import io.circe.generic.auto._
 
 object JsonParsingRejections extends FailFastCirceSupport {
 

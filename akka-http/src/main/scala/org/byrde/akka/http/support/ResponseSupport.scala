@@ -5,14 +5,13 @@ import akka.http.scaladsl.server.Route
 
 import org.byrde.akka.http.logging.HttpRequestLog
 import org.byrde.akka.http.rejections.RejectionException
+import org.byrde.akka.http.support.CirceSupport.FailFastCirceSupport
 import org.byrde.logging.{AkkaLogger, Logging}
 import org.byrde.service.response.ServiceResponse
 import org.byrde.service.response.exceptions.ClientException
 
 import io.circe.{Encoder, Json, Printer}
 import io.circe.generic.auto._
-
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}

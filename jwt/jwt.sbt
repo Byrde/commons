@@ -1,4 +1,7 @@
 name := """jwt"""
 
 libraryDependencies ++=
-  Dependencies.Zio ++ Dependencies.JwtDependencies ++ Dependencies.TypesafeConfigDependencies ++ Dependencies.ScalaTest
+  Dependencies.JwtDependencies ++
+    Dependencies.TypesafeConfigDependencies ++
+    Dependencies.CirceDependencies ++
+    Dependencies.ScalaTest

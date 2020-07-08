@@ -93,8 +93,8 @@ object Dependencies extends DependencyBuilders {
   val ScalaTest: Seq[ModuleID] =
     Seq(
       "org.scalatest"        %% "scalatest" % "3.1.0" % "test",
-      "org.scalatestplus"    %% "scalatestplus-scalacheck" % "3.1.0.0-RC2",
-      "org.scalacheck"       %% "scalacheck" % "1.14.0"
+      "org.scalatestplus"    %% "scalatestplus-scalacheck" % "3.1.0.0-RC2" % "test",
+      "org.scalacheck"       %% "scalacheck" % "1.14.0" % "test"
     )
 
   val CommonsDependencies: Seq[ModuleID] =
