@@ -11,6 +11,7 @@ import akka.actor.{ActorSystem, Cancellable}
 import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
 import akka.stream.alpakka.googlecloud.pubsub.{AcknowledgeRequest, PubSubConfig, ReceivedMessage}
 import akka.stream.scaladsl.{Sink, Source}
+
 import io.circe.generic.auto._
 import io.circe.syntax._
 
@@ -19,17 +20,20 @@ import scala.concurrent.duration._
 
 abstract class Subscriber[T](
   subscription: Subscription,
-)(config: conf.PubSubConfig)(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem, decoder: Decoder[T]) extends Logging {
+)(
+  config: conf.PubSubConfig
+)(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem, decoder: Decoder[T])
+  extends Logging {
   
   private val _config = PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
   
-  private val subscriptionSource: Source[ReceivedMessage, Cancellable] =
+  private val _subscriptionSource: Source[ReceivedMessage, Cancellable] =
     GooglePubSub.subscribe(subscription, _config)
   
-  private val ackSink: Sink[AcknowledgeRequest, Future[Done]] =
+  private val _ackSink: Sink[AcknowledgeRequest, Future[Done]] =
     GooglePubSub.acknowledge(subscription, _config)
 
-  def handle(message: Message[T]): Future[Either[PubSubError, Unit]]
+  def handle(env: Envelope[T]): Future[Unit]
 
   def process(message: ReceivedMessage): Future[MessageId] =
     message.message.data
@@ -46,16 +50,16 @@ abstract class Subscriber[T](
   private def decode(message: String) =
     new String(Base64.getDecoder.decode(message))
 
-  private def convertMessage(message: String): Either[PubSubError, Message[T]] =
-    decode(message).asJson.as[Message[T]].left.map { failure =>
+  private def convertMessage(message: String): Either[PubSubError, Envelope[T]] =
+    decode(message).asJson.as[Envelope[T]].left.map { failure =>
       error(s"Failed to decode message: $message", failure).provide(logger)
       PubSubError.DecodingError(message)(failure)
     }
   
-  subscriptionSource
+  _subscriptionSource
     .mapAsync(config.batch)(process)
     .groupedWithin(config.batch, 1.seconds)
     .map(AcknowledgeRequest.apply)
-    .to(ackSink)
+    .to(_ackSink)
   
 }

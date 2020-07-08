@@ -8,13 +8,13 @@ object Dependencies extends DependencyBuilders {
     "2.5.31"
 
   val PlayVersion: String =
-    "2.8.0"
+    "2.7.5"
 
   val SlickVersion: String =
     "3.3.2"
 
   val CirceVersion: String =
-    "0.12.3"
+    "0.13.0"
 
   val Zio: Seq[ModuleID] =
     Seq("dev.zio" %% "zio" % "1.0.0-RC20")
@@ -41,7 +41,6 @@ object Dependencies extends DependencyBuilders {
       "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
       "com.typesafe.akka"  %% "akka-http-testkit"      % AkkaHttpVersion,
-      "de.heikoseeberger"  %% "akka-http-circe"        % "1.30.0",
     ) ++ AkkaDependencies
 
   val CompressorDependencies: Seq[ModuleID] =
@@ -60,7 +59,7 @@ object Dependencies extends DependencyBuilders {
     )
 
   val JwtDependencies: Seq[ModuleID] =
-    Seq("com.pauldijou" %% "jwt-circe" % "4.2.0")
+    Seq("com.pauldijou" %% "jwt-circe" % "4.3.0")
 
   val RedisDependencies: Seq[ModuleID] =
     Seq("redis.clients" % "jedis" % "2.9.0")
@@ -74,7 +73,7 @@ object Dependencies extends DependencyBuilders {
 
   val PlayWSDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.1.2",
+      "com.typesafe.play" %% "play-ahc-ws-standalone" % "2.0.8",
       "com.typesafe.play" %% "play-ws" % PlayVersion
     )
 
@@ -82,7 +81,7 @@ object Dependencies extends DependencyBuilders {
     Seq("com.typesafe.play" %% "play" % PlayVersion) ++ PlayWSDependencies
 
   val TypesafeConfigDependencies: Seq[ModuleID] =
-    Seq("com.typesafe" % "config" % "1.2.1")
+    Seq("com.typesafe" % "config" % "1.3.3")
 
   val CirceDependencies: Seq[ModuleID] =
     Seq(
