@@ -3,8 +3,8 @@ package org.byrde.client.http.play
 import play.api.libs.ws.{BodyWritable, StandaloneWSRequest, StandaloneWSResponse}
 import play.api.mvc
 
+import org.byrde.client.http.HttpClientError.{HttpDecodingError, HttpParsingError, HttpServiceResponseError}
 import org.byrde.client.http._
-import org.byrde.client.http.HttpClientError.{HttpDecodingError, HttpParsingError, HttpResponseError, HttpServiceResponseError}
 import org.byrde.client.http.play.support.{BodyWritableSupport, ProxyRequestSupport}
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.{Message, ServiceResponse, ServiceResponseType}
@@ -45,18 +45,15 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
       override def decode(request: StandaloneWSRequest)(response: StandaloneWSResponse)(
         implicit env: PlayService
       ): Either[HttpClientError, T] =
-        if (isFailure(response))
-          Left(HttpResponseError(incompleteResponse(request)(response)))
-        else
-          json__ResponseDecoder.decode(request)(response).flatMap { innerResponse =>
-            innerResponse.as[T] match {
-              case Right(value) =>
-                Right(value)
+        json__ResponseDecoder.decode(request)(response).flatMap { innerResponse =>
+          innerResponse.as[T] match {
+            case Right(value) =>
+              Right(value)
 
-              case Left(error) =>
-                Left(HttpDecodingError(incompleteResponse(request)(response))(error))
-            }
+            case Left(error) =>
+              Left(HttpDecodingError(incompleteResponse(request)(response))(error))
           }
+        }
     }
 
   implicit def serviceResponse__ResponseDecoder[T](implicit decoder: Decoder[T]): ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, ServiceResponse[T]] =
@@ -64,24 +61,21 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
       override def decode(request: StandaloneWSRequest)(
         response: StandaloneWSResponse,
       )(implicit env: PlayService): Either[HttpClientError, ServiceResponse[T]] =
-        if (isFailure(response))
-          Left(HttpResponseError(incompleteResponse(request)(response)))
-        else
-          json__ResponseDecoder.decode(request)(response)
-            .flatMap { innerResponse =>
-              innerResponse.as[TransientServiceResponse[Option[Message]]] match {
-                case Right(validated) if validated.`type` == ServiceResponseType.Error =>
-                  Left(HttpServiceResponseError(incompleteResponse(request)(response))(validated.code))
+        json__ResponseDecoder.decode(request)(response)
+          .flatMap { innerResponse =>
+            innerResponse.as[TransientServiceResponse[Option[Message]]] match {
+              case Right(validated) if validated.`type` == ServiceResponseType.Error =>
+                Left(HttpServiceResponseError(incompleteResponse(request)(response))(validated.code))
 
-                case _ =>
-                  Right(innerResponse)
-              }
+              case _ =>
+                Right(innerResponse)
             }
-            .flatMap { innerResponse =>
-              innerResponse.as[TransientServiceResponse[T]]
-                .left
-                .map(HttpDecodingError(incompleteResponse(request)(response)))
-            }
+          }
+          .flatMap { innerResponse =>
+            innerResponse.as[TransientServiceResponse[T]]
+              .left
+              .map(HttpDecodingError(incompleteResponse(request)(response)))
+          }
     }
 
   implicit val json__ResponseDecoder: ResponseDecoder[PlayService, StandaloneWSRequest, StandaloneWSResponse, Json] =
@@ -89,16 +83,13 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
       override def decode(request: StandaloneWSRequest)(response: StandaloneWSResponse)(
         implicit env: PlayService
       ): Either[HttpClientError, Json] =
-        if (isFailure(response))
-          Left(HttpResponseError(incompleteResponse(request)(response)))
-        else
-          parse(response.body) match {
-            case Right(response) =>
-              Right(response)
+        parse(response.body) match {
+          case Right(response) =>
+            Right(response)
 
-            case Left(error) =>
-              Left(HttpParsingError(incompleteResponse(request)(response))(error))
-          }
+          case Left(error) =>
+            Left(HttpParsingError(incompleteResponse(request)(response))(error))
+        }
     }
 
   private def _request(request: Request[_])(implicit env: PlayService) =
@@ -106,9 +97,6 @@ package object implicits extends BodyWritableSupport with ProxyRequestSupport {
       .url(Url(env.host, request.path).toString)
       .withMethod(request.method)
       .withHttpHeaders(request.headers: _*)
-
-  private def isFailure(response: StandaloneWSResponse): Boolean =
-    response.status >= 400
   
   private def incompleteResponse(request: StandaloneWSRequest)(response: StandaloneWSResponse)(implicit env: PlayService) =
     Response(
