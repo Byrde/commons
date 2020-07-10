@@ -8,7 +8,7 @@ object Dependencies extends DependencyBuilders {
     "2.5.31"
 
   val PlayVersion: String =
-    "2.7.5"
+    "2.7.4"
 
   val SlickVersion: String =
     "3.3.2"
