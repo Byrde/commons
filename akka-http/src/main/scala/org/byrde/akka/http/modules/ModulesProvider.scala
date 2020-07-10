@@ -3,7 +3,7 @@ package org.byrde.akka.http.modules
 import org.byrde.akka.http.conf.AkkaHttpConfig
 import org.byrde.akka.http.libs.typedmap.{TypedEntry, TypedKey}
 import org.byrde.akka.http.scaladsl.server.directives.HttpRequestWithEntity
-import org.byrde.logging.AkkaLogger
+import org.byrde.logging.Logger
 
 trait ModulesProvider[RuntimeModulesExt[T] <: RuntimeModules[T]] {
 
@@ -15,9 +15,7 @@ trait ModulesProvider[RuntimeModulesExt[T] <: RuntimeModules[T]] {
 
   def akka: Akka
 
-  def RequestLogger: AkkaLogger
-
-  def ErrorLogger: AkkaLogger
+  def logger: Logger
 
   def ModulesAttr[Req]: TypedKey[RuntimeModulesExt[Req]] =
     TypedKey[RuntimeModulesExt[Req]]("Modules")

@@ -11,7 +11,7 @@ import org.byrde.akka.http.modules.RuntimeModules.RuntimeModulesBuilderLike
 import org.byrde.akka.http.modules.{ModulesProvider, RuntimeModules}
 import org.byrde.akka.http.scaladsl.server.directives.UnmarshallingRuntimeModulesDirective
 import org.byrde.akka.http.support.{RequestResponseHandlingSupport, ResponseSupport}
-import org.byrde.logging.AkkaLogger
+import org.byrde.logging.Logger
 import org.byrde.service.response.DefaultEmptyServiceResponse
 import org.byrde.service.response.Status.S0200
 
@@ -41,8 +41,8 @@ trait Server[
     override def SuccessCode: Int =
       self.SuccessCode
 
-    override def ErrorLogger: AkkaLogger =
-      provider.ErrorLogger
+    override def logger: Logger =
+      provider.logger
 
     override def Ack: Json =
       self.Ack
@@ -81,11 +81,8 @@ trait Server[
       }
     }
 
-  lazy val RequestLogger: AkkaLogger =
-    provider.RequestLogger
-
-  lazy val ErrorLogger: AkkaLogger =
-    provider.ErrorLogger
+  lazy val logger: Logger =
+    provider.logger
 
   lazy val CORSConfig: CORSConfig =
     provider.config.cors

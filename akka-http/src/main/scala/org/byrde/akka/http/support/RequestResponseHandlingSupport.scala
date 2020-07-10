@@ -7,18 +7,16 @@ import akka.http.scaladsl.server.{Directive0, Directive1, Route}
 
 import org.byrde.akka.http.logging.HttpRequestTelemetryLog
 import org.byrde.akka.http.support.RequestResponseHandlingSupport.IdHeader
-import org.byrde.logging.AkkaLogger
+
+import java.util.UUID
 
 import io.circe.generic.auto._
-import java.util.UUID
 
 import scala.util.{Success, Try}
 
 trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
 
   def isRequestLoggingEnabled: Boolean
-
-  def RequestLogger: AkkaLogger
 
   def requestResponseHandler(route: Route): Route =
     cors {
@@ -81,7 +79,7 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
 
   private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
     mapResponse { response =>
-      info(HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start)).provide(RequestLogger)
+      info(HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start))
       response
     }
 

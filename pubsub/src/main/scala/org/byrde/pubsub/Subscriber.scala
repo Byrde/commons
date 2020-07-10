@@ -22,7 +22,7 @@ abstract class Subscriber[T](
   subscription: Subscription,
 )(
   config: conf.PubSubConfig
-)(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem, decoder: Decoder[T])
+)(implicit val logger: Logger, ec: ExecutionContext, system: ActorSystem, decoder: Decoder[T])
   extends Logging {
   
   private val _config = PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
@@ -52,7 +52,7 @@ abstract class Subscriber[T](
 
   private def convertMessage(message: String): Either[PubSubError, Envelope[T]] =
     decode(message).asJson.as[Envelope[T]].left.map { failure =>
-      error(s"Failed to decode message: $message", failure).provide(logger)
+      error(s"Failed to decode message: $message", failure)
       PubSubError.DecodingError(message)(failure)
     }
   

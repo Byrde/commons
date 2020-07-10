@@ -16,9 +16,6 @@ object Dependencies extends DependencyBuilders {
   val CirceVersion: String =
     "0.13.0"
 
-  val Zio: Seq[ModuleID] =
-    Seq("dev.zio" %% "zio" % "1.0.0-RC20")
-
   val AkkaDependencies =
     Seq(
       "com.typesafe.akka"  %% "akka-actor"          % AkkaVersion,

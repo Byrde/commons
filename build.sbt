@@ -136,7 +136,7 @@ val `play-client` =
 val `akka-http` =
   project
     .dependsOn(
-      `akka-logging`,
+      logging,
       `service-response`,
       utils
     )

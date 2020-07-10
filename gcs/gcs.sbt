@@ -1,4 +1,4 @@
 name := """gcs"""
 
 libraryDependencies ++=
-  Dependencies.Zio ++ Dependencies.AkkaDependencies ++ Dependencies.AlpakkaGCS
+  Dependencies.AkkaDependencies ++ Dependencies.AlpakkaGCS

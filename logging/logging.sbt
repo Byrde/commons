@@ -1,4 +1,4 @@
 name := """logging"""
 
 libraryDependencies ++=
-  Dependencies.Zio ++ Dependencies.CirceDependencies
+  Dependencies.CirceDependencies
