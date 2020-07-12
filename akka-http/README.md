@@ -64,7 +64,7 @@ object Server extends org.byrde.akka.http.Server[RuntimeModules, ModulesProvider
 
   Http()
     .bindAndHandle(
-      HandledRoutes,
+      handled,
       provider.config.interface,
       provider.config.port
     )

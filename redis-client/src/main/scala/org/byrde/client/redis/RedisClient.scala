@@ -1,9 +1,9 @@
 package org.byrde.client.redis
 
 import java.io._
-
 import org.byrde.support.EitherSupport
 
+import io.circe.parser._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Printer}
 
@@ -14,6 +14,9 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Try, Using}
 
 abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) extends RedisExecutor[R] with EitherSupport {
+  
+  private val _printer: Printer =
+    Printer.noSpaces.copy(dropNullValues = true)
 
   private type Namespace = String
 
@@ -45,17 +48,21 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
     value: T,
     withNamespace: Key => Namespace = key => s"global::$key",
     expiration: Duration = Duration.Inf
-  )(implicit encoder: Encoder[T], printer: Printer = Printer.noSpaces): Future[Either[RedisClientError, Unit]] = {
+  )(implicit encoder: Encoder[T]): Future[Either[RedisClientError, Unit]] = {
     val redisK =
       withNamespace(key)
 
     val (prefix, baos) =
       processSetValue(value)
-
-    val redisV =
-      prefix + "-" + Using(baos)(data => new String(Base64.encodeBase64(data.toByteArray)))
-
-    executor.execute(_.set(redisK, redisV, expiration))
+  
+    Using(baos)(data => new String(Base64.encodeBase64(data.toByteArray))).toEither match {
+      case Right(value) =>
+        val redisV = prefix + "-" + value
+        executor.execute(_.set(redisK, redisV, expiration))
+    
+      case Left(ex) =>
+        Future.successful(Left(RedisClientError(ex)))
+    }
   }
 
   def remove(
@@ -76,7 +83,11 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
 
     (innerData.head, Base64.decodeBase64(innerData.last)) match {
       case ("oos", bytes) =>
-        withDataInputStream(bytes)(_.readUTF()).toEither.flatMap(_.asJson.as[T]).left.map(RedisClientError.apply)
+        withDataInputStream(bytes)(_.readUTF())
+          .toEither
+          .flatMap(parse)
+          .flatMap(_.as[T])
+          .left.map(RedisClientError.apply)
 
       case ("string", bytes) =>
         decodePrimitive(bytes)(_.readUTF().asInstanceOf[T])
@@ -95,7 +106,7 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
     }
   }
 
-  private def processSetValue[T](value: T)(implicit encoder: Encoder[T], printer: Printer): (Prefix, DataStream) =
+  private def processSetValue[T](value: T)(implicit encoder: Encoder[T]): (Prefix, DataStream) =
     value match {
       case value: String =>
         val baos = new ByteArrayOutputStream()
@@ -124,7 +135,7 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
       case value =>
         val baos = new ByteArrayOutputStream()
         val dos = new DataOutputStream(baos)
-        dos.writeUTF(value.asJson.printWith(printer))
+        dos.writeUTF(value.asJson.printWith(_printer))
         "oos" -> baos
     }
 

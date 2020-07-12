@@ -84,10 +84,10 @@ trait Server[
   lazy val logger: Logger =
     provider.logger
 
-  lazy val CORSConfig: CORSConfig =
+  lazy val cors: CORSConfig =
     provider.config.cors
 
-  lazy val HandledRoutes: Route =
+  lazy val handled: Route =
     requestResponseHandler {
       ping ~ routes
     }

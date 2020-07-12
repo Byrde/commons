@@ -20,6 +20,6 @@ class AkkaLogger(name: String)(implicit system: ActorSystem) extends Logger {
     logger.error(msg)
 
   override def error(msg: String, cause: Throwable): Unit =
-    logger.error(msg, cause)
+    logger.error(s"$msg: {}", cause)
 
 }

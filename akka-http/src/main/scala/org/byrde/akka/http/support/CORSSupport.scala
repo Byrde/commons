@@ -8,25 +8,25 @@ import akka.http.scaladsl.server.Route
 
 trait CORSSupport {
 
-  def CORSConfig: CORSConfig
+  def cors: CORSConfig
 
   lazy val origins: Seq[RawHeader] =
-    CORSConfig.origins.map {
+    cors.origins.map {
       RawHeader("Access-Control-Allow-Origin", _)
     }
 
   lazy val allowedMethods: Seq[RawHeader] =
-    CORSConfig.methods.map {
+    cors.methods.map {
       RawHeader("Access-Control-Allow-Methods", _)
     }
 
   lazy val allowHeaders: Seq[RawHeader] =
-    CORSConfig.headers.map {
+    cors.headers.map {
       RawHeader("Access-Control-Allow-Headers", _)
     }
 
   lazy val exposeHeaders: Seq[RawHeader] =
-    CORSConfig.headers.map {
+    cors.headers.map {
       RawHeader("Access-Control-Expose-Headers", _)
     }
 

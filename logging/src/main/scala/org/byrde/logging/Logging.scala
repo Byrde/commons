@@ -6,68 +6,70 @@ import io.circe.{Encoder, Json, Printer}
 
 trait Logging {
   
+  private lazy val printer = Printer.noSpaces.copy(dropNullValues = true)
+  
   def logger: Logger
   
   private [logging] case class Message(message: String)
 
-  def debug[R <: Logger, T](msg: T)(implicit encoder: Encoder[T], logger: Logger): Unit =
+  def debug[T](msg: T)(implicit encoder: Encoder[T]): Unit =
     info(msg.asJson)
   
-  def debug[R <: Logger, T](msg: String): Unit =
+  def debug[T](msg: String): Unit =
     info(Message(msg).asJson)
   
-  def debug[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
+  def debug[T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
     info(Message(msg).asJson deepMerge extra.asJson)
 
-  def debug[R <: Logger](msg: Json): Unit =
-    logger.debug(msg.printWith(Printer.noSpaces))
+  def debug(msg: Json): Unit =
+    logger.debug(msg.printWith(printer))
 
-  def info[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): Unit =
+  def info[T](msg: T)(implicit encoder: Encoder[T]): Unit =
     info(msg.asJson)
   
-  def info[R <: Logger, T](msg: String): Unit =
+  def info[T](msg: String): Unit =
     info(Message(msg).asJson)
   
-  def info[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
+  def info[T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
     info(Message(msg).asJson deepMerge extra.asJson)
 
-  def info[R <: Logger](msg: Json): Unit =
-    logger.info(msg.printWith(Printer.noSpaces))
+  def info(msg: Json): Unit =
+    logger.info(msg.printWith(printer))
 
-  def warning[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): Unit =
+  def warning[T](msg: T)(implicit encoder: Encoder[T]): Unit =
     warning(msg.asJson)
   
-  def warning[R <: Logger, T](msg: String): Unit =
+  def warning[T](msg: String): Unit =
     warning(Message(msg).asJson)
   
-  def warning[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
+  def warning[T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
     warning(Message(msg).asJson deepMerge extra.asJson)
 
-  def warning[R <: Logger](msg: Json): Unit =
-    logger.warning(msg.printWith(Printer.noSpaces))
+  def warning(msg: Json): Unit =
+    logger.warning(msg.printWith(printer))
 
-  def error[R <: Logger, T](msg: T)(implicit encoder: Encoder[T]): Unit =
+  def error[T](msg: T)(implicit encoder: Encoder[T]): Unit =
     error(msg.asJson)
   
-  def error[R <: Logger, T](msg: String): Unit =
+  def error[T](msg: String): Unit =
     error(Message(msg).asJson)
   
-  def error[R <: Logger, T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
+  def error[T](msg: String, extra: T)(implicit encoder: Encoder[T]): Unit =
     error(Message(msg).asJson deepMerge extra.asJson)
 
-  def error[R <: Logger](msg: Json): Unit =
-    logger.error(msg.printWith(Printer.noSpaces))
+  def error(msg: Json): Unit =
+    logger.error(msg.printWith(printer))
 
-  def error[R <: Logger, T](msg: T, ex: Throwable)(implicit encoder: Encoder[T]): Unit =
+  def error[T](msg: T, ex: Throwable)(implicit encoder: Encoder[T]): Unit =
     error(msg.asJson, ex)
   
-  def error[R <: Logger, T](msg: String, ex: Throwable): Unit =
+  def error[T](msg: String, ex: Throwable): Unit =
     error(Message(msg).asJson, ex)
   
-  def error[R <: Logger, T](msg: String, extra: T, ex: Throwable)(implicit encoder: Encoder[T]): Unit =
+  def error[T](msg: String, extra: T, ex: Throwable)(implicit encoder: Encoder[T]): Unit =
     error(Message(msg).asJson deepMerge extra.asJson, ex)
 
-  def error[R <: Logger](msg: Json, ex: Throwable): Unit =
-    logger.error(msg.printWith(Printer.noSpaces), ex)
+  def error(msg: Json, ex: Throwable): Unit =
+    logger.error(msg.printWith(printer), ex)
 
 }

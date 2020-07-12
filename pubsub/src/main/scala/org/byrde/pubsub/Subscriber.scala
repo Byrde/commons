@@ -1,33 +1,32 @@
 package org.byrde.pubsub
 
-import java.util.Base64
-
-import org.byrde.logging.{Logger, Logging}
-
-import io.circe.Decoder
-
 import akka.Done
 import akka.actor.{ActorSystem, Cancellable}
 import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
 import akka.stream.alpakka.googlecloud.pubsub.{AcknowledgeRequest, PubSubConfig, ReceivedMessage}
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.{RestartSource, Sink, Source}
 
+import org.byrde.logging.{Logger, Logging}
+
+import java.util.Base64
+
+import io.circe.Decoder
 import io.circe.generic.auto._
-import io.circe.syntax._
+import io.circe.parser._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 abstract class Subscriber[T](
   subscription: Subscription,
-)(
-  config: conf.PubSubConfig
-)(implicit val logger: Logger, ec: ExecutionContext, system: ActorSystem, decoder: Decoder[T])
+  config: conf.PubSubConfig,
+  logger: Logger
+)(implicit ec: ExecutionContext, system: ActorSystem, decoder: Decoder[T])
   extends Logging {
+  lazy val _config: PubSubConfig =
+    PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
   
-  private val _config = PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
-  
-  private val _subscriptionSource: Source[ReceivedMessage, Cancellable] =
+  def _subscriptionSource: Source[ReceivedMessage, Cancellable] =
     GooglePubSub.subscribe(subscription, _config)
   
   private val _ackSink: Sink[AcknowledgeRequest, Future[Done]] =
@@ -40,6 +39,7 @@ abstract class Subscriber[T](
       .map(convertMessage)
       .map {
         case Right(innerMessage) =>
+          info(s"Handling message for subscription: $subscription")
           handle(innerMessage).map(_ => message.ackId)
 
         case Left(err) =>
@@ -48,20 +48,26 @@ abstract class Subscriber[T](
       .getOrElse(Future.failed(PubSubError.NoMessage))
 
   private def decode(message: String) =
-    new String(Base64.getDecoder.decode(message))
+    parse(new String(Base64.getDecoder.decode(message)))
 
   private def convertMessage(message: String): Either[PubSubError, Envelope[T]] =
-    decode(message).asJson.as[Envelope[T]].left.map { failure =>
-      error(s"Failed to decode message: $message", failure)
-      PubSubError.DecodingError(message)(failure)
-    }
+    decode(message)
+      .left
+      .map(PubSubError.ParsingError(message))
+      .flatMap(_.as[Envelope[T]].left.map(PubSubError.DecodingError(message)))
   
   def start(): Unit = {
-    _subscriptionSource
-      .mapAsync(config.batch)(process)
-      .groupedWithin(config.batch, 1.seconds)
+    RestartSource.withBackoff(1.second, 10.seconds, 0.1)(() => _subscriptionSource)
+      .mapAsync(config.batch) { message =>
+        process(message).recoverWith {
+          case err =>
+            error(s"Error processing message for subscription: $subscription", err)
+            Future.failed(err)
+        }
+      }
+      .groupedWithin(config.batch, 1.second)
       .map(AcknowledgeRequest.apply)
       .to(_ackSink)
+      .run()
   }
-  
 }

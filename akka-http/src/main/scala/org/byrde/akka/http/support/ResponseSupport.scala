@@ -26,8 +26,7 @@ trait ResponseSupport extends FailFastCirceSupport with Logging {
 
   def SuccessCode: Int
 
-  def HandleThrowable: Throwable => Route =
-    throw _
+  def handle: Throwable => Route
 
   implicit def printer: Printer
 
@@ -82,7 +81,7 @@ trait ResponseSupport extends FailFastCirceSupport with Logging {
           }
 
         case _ =>
-          HandleThrowable(ex)
+          handle(ex)
       }
   }
 

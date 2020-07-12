@@ -15,8 +15,8 @@ case class Claims[T](
   jwtId: Option[String] = Option.empty,
   claim: Option[T] = Option.empty[T]
 )(implicit encoder: Encoder[T]) {
-  private val printer: Printer =
-    Printer.noSpaces
+  private lazy val printer: Printer =
+    Printer.noSpaces.copy(dropNullValues = true)
 
   def toJwtClaim: JwtClaim =
     new JwtClaim(
