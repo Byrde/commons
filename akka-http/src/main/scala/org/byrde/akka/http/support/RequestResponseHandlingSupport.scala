@@ -10,8 +10,6 @@ import org.byrde.akka.http.support.RequestResponseHandlingSupport.IdHeader
 
 import java.util.UUID
 
-import io.circe.generic.auto._
-
 import scala.util.{Success, Try}
 
 trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
@@ -79,7 +77,7 @@ trait RequestResponseHandlingSupport extends ExceptionHandlingSupport {
 
   private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
     mapResponse { response =>
-      info(HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start))
+      logger.info("RequestResponseHandlingSupport.bagAndTag", HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start))
       response
     }
 

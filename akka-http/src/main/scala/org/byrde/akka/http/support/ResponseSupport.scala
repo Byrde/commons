@@ -6,17 +6,16 @@ import akka.http.scaladsl.server.Route
 import org.byrde.akka.http.logging.HttpRequestLog
 import org.byrde.akka.http.rejections.RejectionException
 import org.byrde.akka.http.support.CirceSupport.FailFastCirceSupport
-import org.byrde.logging.{Logger, Logging}
+import org.byrde.logging.Logger
 import org.byrde.service.response.ServiceResponse
 import org.byrde.service.response.exceptions.ClientException
 
-import io.circe.generic.auto._
 import io.circe.{Encoder, Json, Printer}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait ResponseSupport extends FailFastCirceSupport with Logging {
+trait ResponseSupport extends FailFastCirceSupport {
 
   import org.byrde.akka.http.rejections.ClientExceptionRejections._
   
@@ -70,13 +69,13 @@ trait ResponseSupport extends FailFastCirceSupport with Logging {
       ex match {
         case ex: ClientException =>
           extractRequest { req =>
-            error(HttpRequestLog(req), ex)
+            logger.error("ResponseSupport.innerHandle: ClientException", HttpRequestLog(req), ex)
             reject(ex.toRejection)
           }
 
         case ex: RejectionException =>
           extractRequest { req =>
-            error(HttpRequestLog(req), ex)
+            logger.error("ResponseSupport.innerHandle: RejectionException", HttpRequestLog(req), ex)
             reject(ex)
           }
 

@@ -10,7 +10,7 @@ import akka.util.ByteString
 import org.byrde.akka.http.logging.HttpRequestLog
 import org.byrde.akka.http.rejections.{ClientExceptionRejections, JsonParsingRejections}
 import org.byrde.akka.http.support.CirceSupport.FailFastCirceSupport
-import org.byrde.logging.{Logger, Logging}
+import org.byrde.logging.Logger
 import org.byrde.service.response.CommonsServiceResponseDictionary.{E0405, E0500}
 import org.byrde.service.response.ServiceResponse.TransientServiceResponse
 import org.byrde.service.response.exceptions.{ClientException, ServiceResponseException}
@@ -22,7 +22,7 @@ import io.circe.{Json, Printer}
 
 import scala.annotation.tailrec
 
-trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport with Logging {
+trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
 
   def Ack: Json
   
@@ -104,11 +104,19 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport wit
         val serviceException =
           exception match {
             case serviceException: ServiceResponseException[_] =>
-              error(HttpRequestLog(ctx.request), serviceException)
+              logger.error(
+                "ExceptionHandlingSupport.exceptionHandler: ServiceResponseException",
+                HttpRequestLog(ctx.request),
+                serviceException
+              )
               serviceException
 
             case _ =>
-              error(HttpRequestLog(ctx.request), exception)
+              logger.error(
+                "ExceptionHandlingSupport.exceptionHandler: Exception",
+                HttpRequestLog(ctx.request),
+                exception
+              )
               E0500(exception)(ErrorCode)
           }
 

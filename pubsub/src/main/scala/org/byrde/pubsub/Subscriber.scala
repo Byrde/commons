@@ -6,7 +6,7 @@ import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
 import akka.stream.alpakka.googlecloud.pubsub.{AcknowledgeRequest, PubSubConfig, ReceivedMessage}
 import akka.stream.scaladsl.{RestartSource, Sink, Source}
 
-import org.byrde.logging.{Logger, Logging}
+import org.byrde.logging.Logger
 
 import java.util.Base64
 
@@ -21,8 +21,7 @@ abstract class Subscriber[T](
   subscription: Subscription,
   config: conf.PubSubConfig,
   logger: Logger
-)(implicit ec: ExecutionContext, system: ActorSystem, decoder: Decoder[T])
-  extends Logging {
+)(implicit ec: ExecutionContext, system: ActorSystem, decoder: Decoder[T]) {
   lazy val _config: PubSubConfig =
     PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
   
@@ -39,7 +38,7 @@ abstract class Subscriber[T](
       .map(convertMessage)
       .map {
         case Right(innerMessage) =>
-          info(s"Handling message for subscription: $subscription")
+          logger.info(s"Handling message for subscription: $subscription")
           handle(innerMessage).map(_ => message.ackId)
 
         case Left(err) =>
@@ -61,7 +60,7 @@ abstract class Subscriber[T](
       .mapAsync(config.batch) { message =>
         process(message).recoverWith {
           case err =>
-            error(s"Error processing message for subscription: $subscription", err)
+            logger.error(s"Error processing message for subscription: $subscription", err)
             Future.failed(err)
         }
       }

@@ -63,9 +63,6 @@ val CommonsSettings =
       )
   )
 
-val auth =
-  project.settings(CommonsSettings)
-
 val gcs  =
   project.settings(CommonsSettings)
 
@@ -90,10 +87,7 @@ val logging =
 val pubsub  =
   project.dependsOn(logging).settings(CommonsSettings)
 
-val `akka-logging` =
-  project.dependsOn(logging).settings(CommonsSettings)
-
-val `play-logging` =
+val `scala-logging` =
   project.dependsOn(logging).settings(CommonsSettings)
 
 val utils =
@@ -147,7 +141,6 @@ val root =
     .settings(RootSettings)
     .aggregate(
       `akka-http`,
-      auth,
       gcs,
       pubsub,
       `http-client`,
@@ -155,8 +148,7 @@ val root =
       email,
       `jwt`,
       logging,
-      `akka-logging`,
-      `play-logging`,
+      `scala-logging`,
       play,
       `redis-client`,
       `jedis-client`,
