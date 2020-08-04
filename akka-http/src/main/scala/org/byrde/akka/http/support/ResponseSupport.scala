@@ -69,13 +69,15 @@ trait ResponseSupport extends FailFastCirceSupport {
       ex match {
         case ex: ClientException =>
           extractRequest { req =>
-            logger.error("ResponseSupport.innerHandle: ClientException", HttpRequestLog(req), ex)
+            logger.error("ResponseSupport.innerHandle: ClientException (1)", ex)
+            logger.error("ResponseSupport.innerHandle: ClientException (2)", HttpRequestLog(req))
             reject(ex.toRejection)
           }
 
         case ex: RejectionException =>
           extractRequest { req =>
-            logger.error("ResponseSupport.innerHandle: RejectionException", HttpRequestLog(req), ex)
+            logger.error("ResponseSupport.innerHandle: RejectionException (1)", ex)
+            logger.error("ResponseSupport.innerHandle: RejectionException (2)", HttpRequestLog(req))
             reject(ex)
           }
 

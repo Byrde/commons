@@ -103,19 +103,25 @@ trait ExceptionHandlingSupport extends FailFastCirceSupport with CORSSupport {
       case exception: Throwable => ctx =>
         val serviceException =
           exception match {
-            case serviceException: ServiceResponseException[_] =>
+            case ex: ServiceResponseException[_] =>
               logger.error(
-                "ExceptionHandlingSupport.exceptionHandler: ServiceResponseException",
-                HttpRequestLog(ctx.request),
-                serviceException
+                "ExceptionHandlingSupport.exceptionHandler: ServiceResponseException (1)",
+                ex,
               )
-              serviceException
-
-            case _ =>
               logger.error(
-                "ExceptionHandlingSupport.exceptionHandler: Exception",
+                "ExceptionHandlingSupport.exceptionHandler: ServiceResponseException (2)",
                 HttpRequestLog(ctx.request),
-                exception
+              )
+              ex
+
+            case ex =>
+              logger.error(
+                s"ExceptionHandlingSupport.exceptionHandler: ${ex.getClass.getSimpleName} (1)",
+                ex,
+              )
+              logger.error(
+                s"ExceptionHandlingSupport.exceptionHandler: ${ex.getClass.getSimpleName} (2)",
+                HttpRequestLog(ctx.request),
               )
               E0500(exception)(ErrorCode)
           }
