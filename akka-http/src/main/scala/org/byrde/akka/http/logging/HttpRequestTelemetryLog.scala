@@ -9,10 +9,10 @@ case class HttpRequestTelemetryLog(requestId: String, method: String, path: Stri
   override def asMap: Map[String, String] =
     Map(
       "request_id" -> requestId,
-      "method" -> method,
-      "path" -> path,
-      "status" -> status.toString,
-      "duration" -> duration.toString
+      "request_method" -> method,
+      "request_path" -> path,
+      "request_status" -> status.toString,
+      "request_duration" -> duration.toString
     )
 }
 

@@ -24,6 +24,9 @@ class ScalaLogger(name: String) extends Logger {
   
   override def warning(msg: String, extras: Log): Unit =
     logger.warn(msg, appendEntries(extras.asMap.asJava))
+  
+  override def warning(msg: String, cause: Throwable): Unit =
+    logger.warn(msg, cause)
 
   override def error(msg: String): Unit =
     logger.error(msg)
@@ -33,8 +36,4 @@ class ScalaLogger(name: String) extends Logger {
 
   override def error(msg: String, cause: Throwable): Unit =
     logger.error(msg, cause)
-  
-  override def error(msg: String, extras: Log, cause: Throwable): Unit =
-    logger.error(msg, cause, appendEntries(extras.asMap.asJava))
-
 }

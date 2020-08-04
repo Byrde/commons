@@ -9,8 +9,8 @@ case class HttpRequestLog(requestId: String, method: String, path: String) exten
   override def asMap: Map[String, String] =
     Map(
       "request_id" -> requestId,
-      "method" -> method,
-      "path" -> path
+      "request_method" -> method,
+      "request_path" -> path
     )
 }
 
