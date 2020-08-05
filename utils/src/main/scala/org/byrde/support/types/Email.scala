@@ -19,7 +19,7 @@ object Email {
 
   val fromString: String => Either[EmailValidationError, Email] = {
     case EmailRegex(recipient, domain, domainSuffix) =>
-      Right(types.Email(recipient, domain, domainSuffix))
+      Right(types.Email(recipient.toLowerCase, domain.toLowerCase, domainSuffix.toLowerCase))
 
     case _ =>
       Left(EmailInvalid)
@@ -28,5 +28,5 @@ object Email {
 
 case class Email(recipient: Recipient, domain: Domain, domainSuffix: DomainSuffix) {
   override def toString: String =
-    s"$recipient@$domain.$domainSuffix"
+    s"${recipient.toLowerCase}@${domain.toLowerCase}.${domainSuffix.toLowerCase}"
 }

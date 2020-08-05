@@ -41,7 +41,7 @@ object TimeRange {
       else
         0
 
-  def YearSlicedByMonth(now: LocalDateTime): List[TimeRange] = {
+  def yearByMonth(now: LocalDateTime): List[TimeRange] = {
     val start: LocalDateTime =
       now.minusYears(1).plusMonths(1).`with`(lastDayOfMonth)
 

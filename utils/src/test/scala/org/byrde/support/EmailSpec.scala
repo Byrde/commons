@@ -29,6 +29,13 @@ class EmailSpec extends AnyFlatSpec with Matchers {
     email.domain shouldBe "simple"
     email.domainSuffix shouldBe "reviews"
   }
+  
+  it should "normalize email" in {
+    val email = Email.fromString("MArTiN@siMPle.rEViews").toOption.get
+    email.recipient shouldBe "martin"
+    email.domain shouldBe "simple"
+    email.domainSuffix shouldBe "reviews"
+  }
 
   it should "fail on duplicate @" in {
     Email.fromString("martin@@simple.reviews") shouldBe Left(EmailInvalid)
