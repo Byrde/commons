@@ -55,7 +55,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     protected lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
       _ =>
         Future
-          .successful(Right("Hello World!"))
+          .successful(Right[String, String]("Hello World!"))
           .toOut {
             case (_, code) =>
               TapirResponse.Default(code)
@@ -107,8 +107,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         val entity = responseAs[Json].as[TapirResponse.Default].get
         
         assert(response.header[IdHeader].isDefined)
-        status.intValue shouldBe 400
-        assert(entity.code === ErrorCode)
+        status.intValue shouldBe 403
+        assert(entity.code === ErrorCode + 2)
       }
     }
   
@@ -124,11 +124,16 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
             val route =
               test.toRoute { _ =>
                 Future
-                  .successful(Right(("Hello World!", "Goodbye World!")))
-                  .toOut {
-                    case ((example, example1), code) =>
-                      Test(code, example, example1)
-                  }
+                  .successful(Left[Int, (String, String)](ErrorCode + 2))
+                  .toOut(
+                    {
+                      case ((example, example1), code) =>
+                        Test(code, example, example1)
+                    }, {
+                      case (code, _) =>
+                        TapirResponse.Default(code)
+                    }
+                  )
               }
           
             TapirRoute(test, route)
