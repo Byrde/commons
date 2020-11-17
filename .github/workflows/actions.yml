@@ -15,7 +15,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Test
-      run: sbt clean test
+#     - name: Test
+#       run: sbt clean test
     - name: Publish
       run: sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_NUMBER}" 'set credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "mallaire77", "${GH_TOKEN}")' publish
