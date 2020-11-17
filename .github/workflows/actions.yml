@@ -5,6 +5,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      MAJOR_VERSION: "2"
+      MINOR_VERSION: "0"
+      GITHUB_NUMBER: ${{ github.run_number }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
@@ -15,7 +19,3 @@ jobs:
       run: sbt clean test
     - name: Publish
       run: sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_NUMBER}" 'set credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "mallaire77", "${GH_TOKEN}")' publish
-    env:
-      MAJOR_VERSION: "2"
-      MINOR_VERSION: "0"
-      GITHUB_NUMBER: ${{ github.run_number }}
