@@ -1,4 +1,4 @@
-name: Scala CI
+name: Commons CI/CD
 on:
   push:
     branches: [ master ]
