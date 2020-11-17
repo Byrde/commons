@@ -22,6 +22,11 @@ trait EitherSupport {
     @inline def toFuture: Future[T] =
       value.fold(Future.failed, Future.successful)
   }
+  
+  implicit class GetEither[T, TT <: Throwable](value: Either[TT, T]) {
+    @inline def get: T =
+      value.right.get
+  }
 }
 
 object EitherSupport extends EitherSupport

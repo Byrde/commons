@@ -5,9 +5,6 @@ import org.byrde.service.response.support.StatusSupport
 
 // Commons codes are between 1 - 1000;
 object CommonsServiceResponseDictionary extends StatusSupport {
-  // OK
-  object E0200 extends DefaultEmptyServiceResponse(200, 200)
-
   // Client errors (1 - 499)
   object E0400 extends ClientException("Bad Request", 400, 400)
   object E0401 extends ClientException("Unauthorized", 401, 401)

@@ -45,17 +45,8 @@ abstract class Subscriber[T](
           Future.failed(err)
       }
       .getOrElse(Future.failed(PubSubError.NoMessage))
-
-  private def decode(message: String) =
-    parse(new String(Base64.getDecoder.decode(message)))
-
-  private def convertMessage(message: String): Either[PubSubError, Envelope[T]] =
-    decode(message)
-      .left
-      .map(PubSubError.ParsingError(message))
-      .flatMap(_.as[Envelope[T]].left.map(PubSubError.DecodingError(message)))
   
-  def start(): Unit = {
+  def start(): Unit =
     RestartSource.withBackoff(1.second, 10.seconds, 0.1)(() => _subscriptionSource)
       .mapAsync(config.batch) { message =>
         process(message).recoverWith {
@@ -68,5 +59,13 @@ abstract class Subscriber[T](
       .map(AcknowledgeRequest.apply)
       .to(_ackSink)
       .run()
-  }
+
+  private def decode(message: String) =
+    parse(new String(Base64.getDecoder.decode(message)))
+
+  private def convertMessage(message: String): Either[PubSubError, Envelope[T]] =
+    decode(message)
+      .left
+      .map(PubSubError.ParsingError(message))
+      .flatMap(_.as[Envelope[T]].left.map(PubSubError.DecodingError(message)))
 }

@@ -10,7 +10,6 @@ case class PubSubConfig(
 )
 
 object PubSubConfig {
-  
   def apply(config: Config): PubSubConfig =
     apply("project-id", "client-email", "private-key", config)
   
@@ -25,5 +24,4 @@ object PubSubConfig {
       config.getString(_clientEmail),
       config.getString(_privateKey)
     )
-  
 }

@@ -12,7 +12,7 @@ object ServiceResponseType {
       Json.fromString(`type`.value)
 
   implicit def decoder: Decoder[ServiceResponseType] =
-    Decoder.decodeString.map(`type` => fromString(`type`))
+    Decoder.decodeString.map(fromString)
 
   private val success: String =
     "Success"

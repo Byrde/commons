@@ -2,7 +2,7 @@ import sbt.librarymanagement.{DependencyBuilders, ModuleID}
 
 object Dependencies extends DependencyBuilders {
   val AkkaHttpVersion: String =
-    "10.1.11"
+    "10.2.1"
 
   val AkkaVersion: String =
     "2.5.31"
@@ -15,6 +15,9 @@ object Dependencies extends DependencyBuilders {
 
   val CirceVersion: String =
     "0.13.0"
+  
+  val TapirVersion: String =
+    "0.17.0-M8"
 
   val AkkaDependencies =
     Seq(
@@ -30,14 +33,15 @@ object Dependencies extends DependencyBuilders {
   
   val AlpakkaPubSub =
     Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-pub-sub" % "2.0.0")
-
-  val AkkaHttpDependencies: Seq[ModuleID] =
+  
+  val TapirDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.akka"  %% "akka-http"              % AkkaHttpVersion,
-      "com.typesafe.akka"  %% "akka-http2-support"     % AkkaHttpVersion,
-      "com.typesafe.akka"  %% "akka-http-xml"          % AkkaHttpVersion,
-      "com.typesafe.akka"  %% "akka-http-caching"      % AkkaHttpVersion,
-      "com.typesafe.akka"  %% "akka-http-testkit"      % AkkaHttpVersion,
+      "com.typesafe.akka"           %% "akka-http-testkit"          % AkkaHttpVersion % "test" exclude("com.typesafe.akka", "akka-streams_2.13"),
+      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server"     % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"         % TapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml"   % TapirVersion,
+      "com.softwaremill.sttp.tapir" %% "tapir-json-circe"           % TapirVersion
     ) ++ AkkaDependencies
 
   val CompressorDependencies: Seq[ModuleID] =
@@ -47,12 +51,6 @@ object Dependencies extends DependencyBuilders {
     Seq(
       "javax"       % "javaee-api"  % "7.0",
       "javax.mail"  % "mail"        % "1.4"
-    )
-
-  val GuiceDependencies: Seq[ModuleID] =
-    Seq(
-      "com.google.inject.extensions"  % "guice-assistedinject"  % "4.2.2",
-      "net.codingwell"                %% "scala-guice"          % "4.2.6"
     )
 
   val JwtDependencies: Seq[ModuleID] =
@@ -65,7 +63,7 @@ object Dependencies extends DependencyBuilders {
     Seq(
       "com.typesafe.slick" %% "slick-hikaricp"      % SlickVersion,
       "com.typesafe.slick" %% "slick"               % SlickVersion,
-      "io.github.nafg"     %% "slick-migration-api" % "0.7.0",
+      "io.github.nafg"     %% "slick-migration-api" % "0.7.0"
     )
 
   val PlayWSDependencies: Seq[ModuleID] =

@@ -1,7 +1,6 @@
 package org.byrde.logging
 
 trait Logger {
-
   def debug(msg: String): Unit
   
   def debug(msg: String, extras: Log): Unit

@@ -105,33 +105,10 @@ val `jedis-client` =
     .dependsOn(`redis-client`)
     .settings(CommonsSettings)
 
-val `http-client` =
-  project
-    .dependsOn(uri)
-    .settings(CommonsSettings)
-
-val play =
-  project
-    .dependsOn(
-      `jwt`,
-      utils
-    )
-    .settings(CommonsSettings)
-
-val `play-client` =
-  project
-    .dependsOn(
-      `http-client`,
-      `service-response`,
-      utils
-    )
-    .settings(CommonsSettings)
-
-val `akka-http` =
+val `tapir` =
   project
     .dependsOn(
       logging,
-      `service-response`,
       utils
     )
     .settings(CommonsSettings)
@@ -140,16 +117,13 @@ val root =
   Project("commons", file("."))
     .settings(RootSettings)
     .aggregate(
-      `akka-http`,
+      `tapir`,
       gcs,
       pubsub,
-      `http-client`,
-      `play-client`,
       email,
       `jwt`,
       logging,
       `scala-logging`,
-      play,
       `redis-client`,
       `jedis-client`,
       `service-response`,

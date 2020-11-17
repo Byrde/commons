@@ -1,6 +1,6 @@
 # Redis Client [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/redis-client_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/redis-client_2.13/latest/)
 
-Abstraction for a Zio Redis Client.
+Abstraction for a Redis Client.
 
 ## How to install
 
