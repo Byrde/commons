@@ -1,4 +1,4 @@
-name: Continuous Delivery
+name: Scala CI
 on:
   push:
     branches: [ master ]
