@@ -19,4 +19,4 @@ jobs:
 #     - name: Test
 #       run: sbt clean test
     - name: Publish
-      run: sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_NUMBER}" 'set credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "mallaire77", "${GITHUB_TOKEN}")' publish
+      run: sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_NUMBER}" 'set credentials += Credentials("GitHub Package Registry", "maven.pkg.github.com", "Byrde", "${GITHUB_TOKEN}")' publish
