@@ -19,6 +19,8 @@ jobs:
         java-version: 1.8
 #     - name: Test
 #       run: sbt clean test
+    - name: Create Credentials Directory
+      run: mkdir -R ${HOME}/.sbt/.credentials
     - name: Prepare Credentials
       run: |
         cat <<EOF >${HOME}/.sbt/.credentials
