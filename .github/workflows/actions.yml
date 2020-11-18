@@ -9,10 +9,8 @@ jobs:
       MAJOR_VERSION: "2"
       MINOR_VERSION: "0"
       GITHUB_NUMBER: ${{ github.run_number }}
-      MAVEN_REALM: "GitHub Package Registry"
-      MAVEN_HOST: "maven.pkg.github.com"
-      MAVEN_USER: ${{ github.actor }}
-      MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
@@ -21,5 +19,15 @@ jobs:
         java-version: 1.8
 #     - name: Test
 #       run: sbt clean test
+    - name: Create Credentials Directory	
+      run: mkdir -p ${HOME}/.sbt	
+    - name: Prepare Credentials	
+      run: |	
+        cat <<EOF >${HOME}/.sbt/.credentials	
+        realm=GitHub Package Registry	
+        host=maven.pkg.github.com	
+        user=${GITHUB_ACTOR}	
+        password=${GITHUB_TOKEN}	
+        EOF
     - name: Publish
       run: sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_NUMBER}" publish
