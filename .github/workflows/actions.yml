@@ -20,7 +20,7 @@ jobs:
 #     - name: Test
 #       run: sbt clean test
     - name: Create Credentials Directory
-      run: mkdir -p ${HOME}/.sbt/.credentials
+      run: mkdir -p ${HOME}/.sbt
     - name: Prepare Credentials
       run: |
         cat <<EOF >${HOME}/.sbt/.credentials
