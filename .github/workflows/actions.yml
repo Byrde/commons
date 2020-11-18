@@ -9,8 +9,10 @@ jobs:
       MAJOR_VERSION: "2"
       MINOR_VERSION: "0"
       GITHUB_NUMBER: ${{ github.run_number }}
-      GITHUB_ACTOR:  ${{ github.actor }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_REALM: "GitHub Package Registry"
+      MAVEN_HOST: "maven.pkg.github.com"
+      MAVEN_USER: ${{ github.actor }}
+      MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
