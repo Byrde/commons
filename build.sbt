@@ -1,3 +1,15 @@
+val realm =
+  Option(System.getProperty("MAVEN_REALM")).getOrElse("N/A")
+
+val host =
+  Option(System.getProperty("MAVEN_HOST")).getOrElse("N/A")
+
+val user =
+  Option(System.getProperty("MAVEN_USER")).getOrElse("N/A")
+
+val password =
+  Option(System.getProperty("MAVEN_PASSWORD")).getOrElse("N/A")
+
 val RootSettings =
   Seq(
     name := Option(System.getProperty("name")).getOrElse("commons"),
@@ -48,11 +60,11 @@ val CommonsSettings =
         "Implementation-Vendor-Id" -> organization.value,
         "Implementation-Vendor" -> organization.value
       ),
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
+    credentials += Credentials(realm, host, user, password),
     pomIncludeRepository := (_ => false),
     startYear := Some(2018),
     licenses := Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
-    publishTo := Some("GitHubPackages" at "https://maven.pkg.github.com/Byrde/commons"),
+    publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/Byrde/commons"),
     publishMavenStyle := true,
     developers +=
       Developer(
