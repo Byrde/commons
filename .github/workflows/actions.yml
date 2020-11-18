@@ -24,7 +24,7 @@ jobs:
     - name: Prepare Credentials
       run: |
         cat <<EOF >${HOME}/.sbt/.credentials
-        realm=GitHubPackages
+        realm=GitHub Package Registry
         host=maven.pkg.github.com
         user=${GITHUB_ACTOR}
         password=${GITHUB_TOKEN}
