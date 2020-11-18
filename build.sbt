@@ -51,7 +51,7 @@ val CommonsSettings =
     pomIncludeRepository := (_ => false),
     startYear := Some(2018),
     licenses := Seq(("Apache 2", new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))),
-    publishTo := Some("GitHub Package Registry" at "https://maven.pkg.github.com/Byrde"),
+    publishTo := Some("GitHubPackages" at "https://maven.pkg.github.com/Byrde/commons"),
     publishMavenStyle := true,
     developers +=
       Developer(
