@@ -13,11 +13,9 @@ import io.circe.generic.auto._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.server.akkahttp._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -25,17 +23,14 @@ import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
   class TestRoute(fn: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]]) extends ChainingSyntax {
-    self: Server#TapirRoutes =>
+    self: Server#TapirRoutesMixin =>
     
     private lazy val test: TapirRoute =
       endpoint[TapirResponse.Default]
         .in("test")
-        .pipe { test =>
-          TapirRoute(test, test.toRoute(fn))
-        }
+        .toTapirRoute(fn)
     
-    override lazy val routes: Seq[TapirRoute] =
-      Seq(test)
+    override lazy val routes: TapirRoutes = test
   }
   
   trait TestServer extends Server {
@@ -49,8 +44,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         }
       )
     
-    protected lazy val routes: Seq[TapirRoutes] =
-      Seq(new TestRoute(test) with TapirRoutes)
+    protected lazy val routes: Seq[TapirRoutesMixin] =
+      Seq(new TestRoute(test) with TapirRoutesMixin)
   
     protected lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
       _ =>
@@ -113,34 +108,28 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     }
   
     class TestRoute extends ChainingSyntax {
-      self: Server#TapirRoutes =>
+      self: Server#TapirRoutesMixin =>
     
       case class Test(code: Int, example: String, example1: String) extends TapirResponse
       
       private lazy val test: TapirRoute =
         endpoint[Test]
           .in("test")
-          .pipe { test =>
-            val route =
-              test.toRoute { _ =>
-                Future
-                  .successful(Left[Int, (String, String)](ErrorCode + 2))
-                  .toOut(
-                    {
-                      case ((example, example1), code) =>
-                        Test(code, example, example1)
-                    }, {
-                      case (code, _) =>
-                        TapirResponse.Default(code)
-                    }
-                  )
-              }
-          
-            TapirRoute(test, route)
+          .toTapirRoute { _ =>
+            Future
+              .successful(Left[Int, (String, String)](ErrorCode + 2))
+              .toOut(
+                {
+                  case ((example, example1), code) =>
+                    Test(code, example, example1)
+                }, {
+                  case (code, _) =>
+                    TapirResponse.Default(code)
+                }
+              )
           }
     
-      override lazy val routes: Seq[TapirRoute] =
-        Seq(test)
+      override lazy val routes: TapirRoutes = test
     }
   
     override lazy val provider: Provider =
@@ -156,8 +145,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         }
       )
   
-    protected lazy val routes: Seq[TapirRoutes] =
-      Seq(new TestRoute with TapirRoutes)
+    protected lazy val routes: Seq[TapirRoutesMixin] =
+      Seq(new TestRoute with TapirRoutesMixin)
   }
   
   it should "return a custom status code based on the error type when function completes with controlled failure" in new TestServer {
@@ -383,29 +372,23 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     }
   
     class TestRoute extends ChainingSyntax {
-      self: Server#TapirRoutes =>
+      self: Server#TapirRoutesMixin =>
       
       case class Test(code: Int, example: String, example1: String) extends TapirResponse
     
       private lazy val test: TapirRoute =
         endpoint[Test]
           .in("test")
-          .pipe { test =>
-            val route =
-              test.toRoute { _ =>
-                Future
-                  .successful(Right(("Hello World!", "Goodbye World!")))
-                  .toOut {
-                    case ((example, example1), code) =>
-                      Test(code, example, example1)
-                  }
+          .toTapirRoute { _ =>
+            Future
+              .successful(Right(("Hello World!", "Goodbye World!")))
+              .toOut {
+                case ((example, example1), code) =>
+                  Test(code, example, example1)
               }
-            
-            TapirRoute(test, route)
           }
     
-      override lazy val routes: Seq[TapirRoute] =
-        Seq(test)
+      override lazy val routes: TapirRoutes = test
     }
   
     override lazy val provider: Provider =
@@ -421,7 +404,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         }
       )
   
-    protected lazy val routes: Seq[TapirRoutes] =
-      Seq(new TestRoute with TapirRoutes)
+    protected lazy val routes =
+      Seq(new TestRoute with TapirRoutesMixin)
   }
 }

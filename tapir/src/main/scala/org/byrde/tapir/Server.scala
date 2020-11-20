@@ -31,7 +31,7 @@ import scala.concurrent.Future
 trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   self =>
   
-  trait TapirRoutes extends RouteSupport {
+  trait TapirRoutesMixin extends RouteSupport {
     override def SuccessCode: Int = self.provider.SuccessCode
   
     override def ErrorCode: Int = self.provider.ErrorCode
@@ -44,7 +44,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
     ): Endpoint[Unit, TapirErrorResponse, T, Any] =
       self.endpoint[T]
     
-    def routes: Seq[TapirRoute]
+    def routes: TapirRoutes
   }
   
   def provider: Provider
@@ -93,12 +93,12 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       .description("Standard API endpoint to say hello to the server.")
       .in("ping")
   
-  def handleTapirRoutes(routes: Seq[TapirRoutes]): Route =
+  def handleTapirRoutes[T <: TapirRoutesMixin](routes: Seq[T]): Route =
     routes
       .view
       .foldLeft(Seq.empty[TapirRoute]) {
         case (acc, elem) =>
-          acc ++ elem.routes
+          acc ++ elem.routes.value
       }
       .foldLeft[(Route, Seq[Endpoint[_, _, _, _]])]((RouteDirectives.reject, Seq.empty[Endpoint[_, _, _, _]])) {
         case ((routes, endpoints), elem) =>
