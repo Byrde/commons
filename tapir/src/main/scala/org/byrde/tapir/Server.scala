@@ -61,7 +61,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   private lazy val version: String =
     s"v${provider.config.version}"
   
-  private def requestId: Directive1[IdHeader] =
+  private lazy val requestId: Directive1[IdHeader] =
     extractRequestContext.flatMap { ctx =>
       provide {
         ctx
@@ -87,6 +87,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       .name("Ping")
       .summary("Say hello!")
       .description("Standard API endpoint to say hello to the server.")
+      .get
       .in("ping")
       .toTapirRoute { _ =>
         Future.successful {

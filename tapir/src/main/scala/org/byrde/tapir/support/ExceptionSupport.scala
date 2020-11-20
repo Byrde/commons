@@ -25,7 +25,6 @@ trait ExceptionSupport extends CirceSupport with WithSuccessAndErrorCode with Ch
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", ex)
           logger.error(
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
-          
           ctx.complete((StatusCodes.InternalServerError, TapirResponse.Default(errorCode).asJson))
         }
     }
