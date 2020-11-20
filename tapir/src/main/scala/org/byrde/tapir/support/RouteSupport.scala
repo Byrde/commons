@@ -1,10 +1,14 @@
 package org.byrde.tapir.support
 
+import akka.http.scaladsl.server.Route
+
 import org.byrde.tapir._
 
 import io.circe.{Decoder, Encoder}
 
-import sttp.tapir.{Schema, Validator}
+import sttp.capabilities.WebSockets
+import sttp.capabilities.akka.AkkaStreams
+import sttp.tapir.{Endpoint, Schema, Validator}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -12,6 +16,11 @@ trait RouteSupport extends RequestSupport with ResponseSupport with RequestIdSup
   def SuccessCode: Int
   
   def ErrorCode: Int
+  
+  implicit class RichEndpoint[I, T <: TapirResponse](endpoint: Endpoint[I, TapirErrorResponse, T, AkkaStreams with WebSockets]) {
+    def toRoute(logic: I => Future[Either[TapirErrorResponse, T]]): Route =
+      sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(logic)
+  }
   
   implicit class RichResponse[T, TT](future: Future[Either[TT, T]]) {
     def toOut[A <: TapirResponse](
