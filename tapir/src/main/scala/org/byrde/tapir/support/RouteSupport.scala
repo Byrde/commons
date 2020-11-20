@@ -17,9 +17,22 @@ trait RouteSupport extends RequestSupport with ResponseSupport with RequestIdSup
   
   def ErrorCode: Int
   
+  implicit class ChainTapirRoute(route: TapirRoute) {
+    def ~ (_route: TapirRoute): Seq[TapirRoute] =
+      Seq(route, _route)
+  }
+  
+  implicit class ChainTapirRoutes(routes: Seq[TapirRoute]) {
+    def ~ (route: TapirRoute): Seq[TapirRoute] =
+      routes :+ route
+  }
+  
   implicit class RichEndpoint[I, T <: TapirResponse](endpoint: Endpoint[I, TapirErrorResponse, T, AkkaStreams with WebSockets]) {
     def toRoute(logic: I => Future[Either[TapirErrorResponse, T]]): Route =
       sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(logic)
+    
+    def toTapirRoute(logic: I => Future[Either[TapirErrorResponse, T]]): TapirRoute =
+      TapirRoute(endpoint, endpoint.toRoute(logic))
   }
   
   implicit class RichResponse[T, TT](future: Future[Either[TT, T]]) {
