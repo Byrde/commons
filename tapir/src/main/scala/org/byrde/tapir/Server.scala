@@ -86,12 +86,17 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   ): Endpoint[Unit, TapirErrorResponse, T, Any] =
     sttp.tapir.endpoint.out(jsonBody[T]).errorOut(mapper)
    
-  def ping: Endpoint[Unit, TapirErrorResponse, TapirResponse.Default, Any] =
+  def ping: TapirRoute =
     endpoint[TapirResponse.Default]
       .name("Ping")
       .summary("Say hello!")
       .description("Standard API endpoint to say hello to the server.")
       .in("ping")
+      .toTapirRoute { _ =>
+        Future.successful {
+          Right(TapirResponse.Default(SuccessCode))
+        }
+      }
   
   def handleTapirRoutes[T <: TapirRoutesMixin](routes: Seq[T]): Route =
     routes
@@ -100,6 +105,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
         case (acc, elem) =>
           acc ++ elem.routes.value
       }
+      .pipe(_ :+ ping)
       .foldLeft[(Route, Seq[Endpoint[_, _, _, _]])]((RouteDirectives.reject, Seq.empty[Endpoint[_, _, _, _]])) {
         case ((routes, endpoints), elem) =>
           (routes ~ elem.route, endpoints :+ elem.endpoint)
@@ -110,10 +116,10 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       }
     
   def handleEndpoints(endpoints: Seq[Endpoint[_, _, _, _]]): Route =
-    new SwaggerAkka((endpoints :+ ping)
+    new SwaggerAkka((endpoints)
       .toOpenAPI(provider.config.name, version).toYaml).routes
   
-  def handleRoutes(route: Route): Route =
+  def handleRoutes(routes: Route): Route =
     cors {
       requestId { id =>
         addRequestId(id) {
@@ -121,13 +127,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
             extractRequest { request =>
               Instant.now.toEpochMilli.pipe { start =>
                 bagAndTag(start, request) {
-                  handleExceptions(exceptionHandler) {
-                    route ~ ping.toRoute { _ =>
-                      Future.successful {
-                        Right(TapirResponse.Default(SuccessCode))
-                      }
-                    }
-                  }
+                  handleExceptions(exceptionHandler)(routes)
                 }
               }
             }
