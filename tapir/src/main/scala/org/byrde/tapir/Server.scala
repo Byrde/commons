@@ -57,7 +57,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   
   def logger: Logger = self.provider.logger
   
-  def cors: CorsConfig = self.provider.config.cors
+  def corsConfig: CorsConfig = self.provider.config.corsConfig
   
   implicit val options: AkkaHttpServerOptions =
     AkkaHttpServerOptions.default.copy(decodeFailureHandler = decodeFailureHandler)
@@ -65,7 +65,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   private lazy val version: String =
     s"v${provider.config.version}"
   
-  private lazy val requestId: Directive1[IdHeader] =
+  private def requestId: Directive1[IdHeader] =
     extractRequestContext.flatMap { ctx =>
       provide {
         ctx
@@ -116,21 +116,14 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       }
     
   def handleEndpoints(endpoints: Seq[Endpoint[_, _, _, _]]): Route =
-    new SwaggerAkka((endpoints)
-      .toOpenAPI(provider.config.name, version).toYaml).routes
+    new SwaggerAkka(endpoints.toOpenAPI(provider.config.name, version).toYaml).routes
   
   def handleRoutes(routes: Route): Route =
-    cors {
-      requestId { id =>
-        addRequestId(id) {
-          addResponseId(id) {
-            extractRequest { request =>
-              Instant.now.toEpochMilli.pipe { start =>
-                bagAndTag(start, request) {
-                  handleExceptions(exceptionHandler)(routes)
-                }
-              }
-            }
+    (cors & requestId) { id =>
+      (addRequestId(id) & addResponseId(id) & extractRequest) { request =>
+        Instant.now.toEpochMilli.pipe { start =>
+          bagAndTag(start, request) {
+            handleExceptions(exceptionHandler)(routes)
           }
         }
       }

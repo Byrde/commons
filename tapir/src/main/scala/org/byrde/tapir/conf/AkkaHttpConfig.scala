@@ -11,7 +11,7 @@ trait AkkaHttpConfig {
 
   def port: Int
   
-  def cors: CorsConfig
+  def corsConfig: CorsConfig
 }
 
 object AkkaHttpConfig {
@@ -50,7 +50,7 @@ object AkkaHttpConfig {
   
       override def port: Int = _port
   
-      override def cors: CorsConfig = _cors
+      override def corsConfig: CorsConfig = _cors
     }
   }
 }

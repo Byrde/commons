@@ -2,38 +2,38 @@ package org.byrde.tapir.support
 
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives.respondWithHeaders
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{Directive, Directive0, Route}
 
 import org.byrde.tapir.conf.CorsConfig
 
 trait CorsSupport {
-  def cors: CorsConfig
+  def corsConfig: CorsConfig
 
   lazy val origins: Seq[RawHeader] =
-    cors.origins.map {
+    corsConfig.origins.map {
       RawHeader("Access-Control-Allow-Origin", _)
     }
 
   lazy val allowedMethods: Seq[RawHeader] =
-    cors.methods.map {
+    corsConfig.methods.map {
       RawHeader("Access-Control-Allow-Methods", _)
     }
 
   lazy val allowHeaders: Seq[RawHeader] =
-    cors.headers.map {
+    corsConfig.headers.map {
       RawHeader("Access-Control-Allow-Headers", _)
     }
 
   lazy val exposeHeaders: Seq[RawHeader] =
-    cors.headers.map {
+    corsConfig.headers.map {
       RawHeader("Access-Control-Expose-Headers", _)
     }
 
-  def cors(route: Route): Route =
+  def cors: Directive0 =
     respondWithHeaders(
       origins ++
         allowedMethods ++
         allowHeaders ++
         exposeHeaders
-    )(route)
+    )
 }

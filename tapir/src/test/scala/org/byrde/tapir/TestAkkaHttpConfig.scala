@@ -11,5 +11,5 @@ class TestAkkaHttpConfig extends AkkaHttpConfig {
   
   override def port: Int = 80
   
-  override def cors: CorsConfig = new TestCorsConfig
+  override def corsConfig: CorsConfig = new TestCorsConfig
 }
