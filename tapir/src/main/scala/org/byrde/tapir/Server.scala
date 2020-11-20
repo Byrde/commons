@@ -32,9 +32,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   self =>
   
   trait TapirRoutesMixin extends RouteSupport {
-    override def SuccessCode: Int = self.provider.SuccessCode
-  
-    override def ErrorCode: Int = self.provider.ErrorCode
+    override def successCode: Int = self.provider.successCode
     
     protected def endpoint[T <: TapirResponse](
       implicit encoder: Encoder[T],
@@ -51,15 +49,13 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   
   def mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse]
   
-  def SuccessCode: Int = self.provider.SuccessCode
-  
-  def ErrorCode: Int = self.provider.ErrorCode
+  def successCode: Int = self.provider.successCode
   
   def logger: Logger = self.provider.logger
   
   def corsConfig: CorsConfig = self.provider.config.corsConfig
   
-  implicit val options: AkkaHttpServerOptions =
+  implicit lazy val options: AkkaHttpServerOptions =
     AkkaHttpServerOptions.default.copy(decodeFailureHandler = decodeFailureHandler)
   
   private lazy val version: String =
@@ -94,7 +90,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       .in("ping")
       .toTapirRoute { _ =>
         Future.successful {
-          Right(TapirResponse.Default(SuccessCode))
+          Right(TapirResponse.Default(successCode))
         }
       }
   
@@ -152,6 +148,6 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
     ServerDefaults.decodeFailureHandler.copy(response = handleDecodeFailure)
   
   private def handleDecodeFailure(code: StatusCode, _message: String): DecodeFailureHandling =
-    (code, TapirResponse.Default(provider.ErrorCode))
+    (code, TapirResponse.Default(errorCode))
       .pipe(DecodeFailureHandling.response(statusCode.and(jsonBody[TapirErrorResponse]))(_))
 }

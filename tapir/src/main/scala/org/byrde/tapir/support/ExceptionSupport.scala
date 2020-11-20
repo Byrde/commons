@@ -13,9 +13,7 @@ import io.circe.generic.auto._
 
 import scala.util.ChainingSyntax
 
-trait ExceptionSupport extends CirceSupport with ChainingSyntax {
-  def ErrorCode: Int
-  
+trait ExceptionSupport extends CirceSupport with WithSuccessAndErrorCode with ChainingSyntax {
   def logger: Logger
   
   //Use ExceptionHandler for all server errors
@@ -28,7 +26,7 @@ trait ExceptionSupport extends CirceSupport with ChainingSyntax {
           logger.error(
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
           
-          ctx.complete((StatusCodes.InternalServerError, TapirResponse.Default(ErrorCode).asJson))
+          ctx.complete((StatusCodes.InternalServerError, TapirResponse.Default(errorCode).asJson))
         }
     }
 }

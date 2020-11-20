@@ -65,7 +65,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 200
-        assert(entity.code === SuccessCode)
+        assert(entity.code === successCode)
       }
     }
   }
@@ -77,7 +77,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 200
-        assert(entity.code === SuccessCode)
+        assert(entity.code === successCode)
       }
     }
   }
@@ -89,12 +89,12 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 400
-        assert(entity.code === ErrorCode)
+        assert(entity.code === errorCode)
       }
     }
   
     override lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
-      _ => Future.successful(Left(TapirResponse.Default(ErrorCode)))
+      _ => Future.successful(Left(TapirResponse.Default(errorCode)))
   }
   
   it should "return the status specified by the error mapper" in new Server {
@@ -104,7 +104,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 403
-        assert(entity.code === ErrorCode + 2)
+        assert(entity.code === errorCode + 2)
       }
     }
   
@@ -118,7 +118,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           .in("test")
           .toTapirRoute { _ =>
             Future
-              .successful(Left[Int, (String, String)](ErrorCode + 2))
+              .successful(Left[Int, (String, String)](errorCode + 2))
               .toOut(
                 {
                   case ((example, example1), code) =>
@@ -139,10 +139,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
       sttp.tapir.oneOf[TapirErrorResponse](
         statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Unauthorized!")) {
-          case ex: TapirErrorResponse if ex.code == ErrorCode + 1 => true
+          case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
         },
         statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Forbidden!")) {
-          case ex: TapirErrorResponse if ex.code == ErrorCode + 2 => true
+          case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
         }
       )
   
@@ -157,7 +157,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
 
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 401
-        assert(entity.code === ErrorCode + 1)
+        assert(entity.code === errorCode + 1)
       }
     }
   
@@ -167,7 +167,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 403
-        assert(entity.code === ErrorCode + 2)
+        assert(entity.code === errorCode + 2)
       }
     }
     
@@ -176,10 +176,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
       sttp.tapir.oneOf[TapirErrorResponse](
         statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Client exception!")) {
-          case ex: TapirErrorResponse if ex.code == ErrorCode + 1 => true
+          case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
         },
         statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Client exception!")) {
-          case ex: TapirErrorResponse if ex.code == ErrorCode + 2 => true
+          case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
         }
       )
 
@@ -188,7 +188,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         counter
           .pipe(_ + 1)
           .tap(counter = _)
-          .pipe(count => Future.successful(Left(TapirResponse.Default(ErrorCode + count))))
+          .pipe(count => Future.successful(Left(TapirResponse.Default(errorCode + count))))
   }
   
   it should "return a 500 when function completes with unexpected failure" in new TestServer {
@@ -198,7 +198,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 500
-        assert(entity.code === ErrorCode)
+        assert(entity.code === errorCode)
       }
     }
     
@@ -398,14 +398,14 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
       sttp.tapir.oneOf[TapirErrorResponse](
         statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Unauthorized!")) {
-          case ex: TapirErrorResponse if ex.code == ErrorCode + 1 => true
+          case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
         },
         statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Forbidden!")) {
-          case ex: TapirErrorResponse if ex.code == ErrorCode + 2 => true
+          case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
         }
       )
   
-    protected lazy val routes =
+    private lazy val routes =
       Seq(new TestRoute with TapirRoutesMixin)
   }
 }

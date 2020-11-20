@@ -4,20 +4,13 @@ import akka.http.scaladsl.server.Route
 
 import org.byrde.tapir._
 
-import io.circe.{Decoder, Encoder}
-
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
-import sttp.tapir.{Endpoint, Schema, Validator}
+import sttp.tapir.Endpoint
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.language.implicitConversions
 
-trait RouteSupport extends RequestSupport with ResponseSupport with RequestIdSupport {
-  def SuccessCode: Int
-  
-  def ErrorCode: Int
-  
+trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessAndErrorCode with RequestIdSupport {
   implicit def tapirRoute2TapirRoutes(route: TapirRoute): TapirRoutes =
     TapirRoutes(route)
   
@@ -44,19 +37,13 @@ trait RouteSupport extends RequestSupport with ResponseSupport with RequestIdSup
       success: (T, Int) => A,
       error: (TT, Int) => TapirErrorResponse =
         (_, code) => TapirResponse.Default(code)
-    )(
-      implicit encoder: Encoder[T],
-      decoder: Decoder[T],
-      schema: Schema[T],
-      validator: Validator[T],
-      ec: ExecutionContext
-    ): Future[Either[TapirErrorResponse, A]] =
+    )(implicit ec: ExecutionContext): Future[Either[TapirErrorResponse, A]] =
       future.map {
         case Right(succ) =>
-          Right(success(succ, SuccessCode))
+          Right(success(succ, successCode))
 
         case Left(err) =>
-          Left(error(err, ErrorCode))
+          Left(error(err, errorCode))
       }
   }
 }
