@@ -27,6 +27,17 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
       TapirRoutes(routes.value :+ route)
   }
   
+  implicit class RichUnitEndpoint[T](endpoint: Endpoint[Unit, TapirErrorResponse, T, AkkaStreams with WebSockets]) {
+    def toRoute(logic: () => Future[Either[TapirErrorResponse, T]]): Route =
+      sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(_ => logic())
+    
+    def toTapirRoute(logic: () => Future[Either[TapirErrorResponse, T]]): TapirRoute[Unit, TapirErrorResponse, T, AkkaStreams with WebSockets] =
+      toTapirRouteWithDirective(logic)(identity)
+    
+    def toTapirRouteWithDirective(logic: () => Future[Either[TapirErrorResponse, T]])(fn: Route => Route): TapirRoute[Unit, TapirErrorResponse, T, AkkaStreams with WebSockets] =
+      TapirRoute(endpoint, fn(endpoint.toRoute(logic)))
+  }
+  
   implicit class RichEndpoint[I, T](endpoint: Endpoint[I, TapirErrorResponse, T, AkkaStreams with WebSockets]) {
     def toRoute(logic: I => Future[Either[TapirErrorResponse, T]]): Route =
       sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(logic)

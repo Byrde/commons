@@ -26,7 +26,7 @@ import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
   class TestRoute(
-    fn: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]],
+    fn: () => Future[Either[TapirErrorResponse, TapirResponse.Default]],
     mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse]
   ) extends ChainingSyntax {
     self: Server#TapirRoutesMixin =>
@@ -49,8 +49,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     protected lazy val routes: Seq[TapirRoutesMixin] =
       Seq(new TestRoute(test, mapper) with TapirRoutesMixin)
   
-    protected lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
-      _ =>
+    protected def test: () => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
+      () =>
         Future
           .successful(Right[String, String]("Hello World!"))
           .toOut {
@@ -94,8 +94,9 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    override lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
-      _ => Future.successful(Left(TapirResponse.Default(errorCode)))
+    override lazy val test: () => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
+      () =>
+        Future.successful(Left(TapirResponse.Default(errorCode)))
   }
   
   it should "return a 404 on bogus path" in new TestServer {
@@ -105,8 +106,9 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
     
-    override lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
-      _ => Future.successful(Left(TapirResponse.Default(errorCode)))
+    override lazy val test: () => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
+      () =>
+        Future.successful(Left(TapirResponse.Default(errorCode)))
   }
   
   it should "return the status specified by the error mapper" in new Server {
@@ -138,18 +140,19 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint[Test](mapper = mapper)
           .in("test")
-          .toTapirRoute { _ =>
-            Future
-              .successful(Left[Int, (String, String)](errorCode + 2))
-              .toOut(
-                {
-                  case ((example, example1), code) =>
-                    Test(code, example, example1)
-                }, {
-                  case (code, _) =>
-                    TapirResponse.Default(code)
-                }
-              )
+          .toTapirRoute {
+            () =>
+              Future
+                .successful(Left[Int, (String, String)](errorCode + 2))
+                .toOut(
+                  {
+                    case ((example, example1), code) =>
+                      Test(code, example, example1)
+                  }, {
+                    case (code, _) =>
+                      TapirResponse.Default(code)
+                  }
+                )
           }
     
       override lazy val routes: TapirRoutes = test
@@ -195,8 +198,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         }
       )
 
-    override lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
-      _ =>
+    override def test: () => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
+      () =>
         counter
           .pipe(_ + 1)
           .tap(counter = _)
@@ -214,8 +217,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
     
-    override lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
-      _ => Future.failed(new Exception("Kaboom!"))
+    override lazy val test: () => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
+      () => Future.failed(new Exception("Kaboom!"))
   }
   
   it should "expose Swagger documentation" in new TestServer {
@@ -404,13 +407,14 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint[Test](mapper = mapper)
           .in("test")
-          .toTapirRoute { _ =>
-            Future
-              .successful(Right(("Hello World!", "Goodbye World!")))
-              .toOut {
-                case ((example, example1), code) =>
-                  Test(code, example, example1)
-              }
+          .toTapirRoute {
+            () =>
+              Future
+                .successful(Right(("Hello World!", "Goodbye World!")))
+                .toOut {
+                  case ((example, example1), code) =>
+                    Test(code, example, example1)
+                }
           }
     
       override lazy val routes: TapirRoutes = test
