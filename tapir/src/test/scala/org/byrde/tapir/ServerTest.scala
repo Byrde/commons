@@ -32,7 +32,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     self: Server#TapirRoutesMixin =>
     
     private lazy val test: TapirRoute[Unit, TapirErrorResponse, TapirResponse.Default, AkkaStreams with capabilities.WebSockets] =
-      endpoint[TapirResponse.Default](mapper)
+      endpoint[TapirResponse.Default](mapper = mapper)
         .in("test")
         .toTapirRoute(fn)
     
@@ -136,7 +136,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         )
       
       private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
-        endpoint[Test](mapper)
+        endpoint[Test](mapper = mapper)
           .in("test")
           .toTapirRoute { _ =>
             Future
@@ -248,7 +248,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: getTest
         |      responses:
         |        '200':
-        |          description: ''
+        |          description: Response Body.
         |          content:
         |            application/json:
         |              schema:
@@ -267,11 +267,13 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: Ping
         |      responses:
         |        '200':
-        |          description: ''
+        |          description: 'Default response! Success code: 100'
         |          content:
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
+        |              example:
+        |                code: 100
         |        '400':
         |          description: 'Client exception! Error code: 101'
         |          content:
@@ -294,8 +296,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleTapirRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
-  
-        println(actual)
         
         status.intValue shouldBe 200
         assert(actual === expected)
@@ -315,7 +315,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: getTest
         |      responses:
         |        '200':
-        |          description: ''
+        |          description: Response Body.
         |          content:
         |            application/json:
         |              schema:
@@ -338,11 +338,13 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: Ping
         |      responses:
         |        '200':
-        |          description: ''
+        |          description: 'Default response! Success code: 100'
         |          content:
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
+        |              example:
+        |                code: 100
         |        '400':
         |          description: 'Client exception! Error code: 101'
         |          content:
@@ -400,7 +402,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         )
     
       private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
-        endpoint[Test](mapper)
+        endpoint[Test](mapper = mapper)
           .in("test")
           .toTapirRoute { _ =>
             Future

@@ -120,7 +120,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
     jsonBody[T]
       .description(description)
       .pipe(out => example.fold(out)(out.example))
-      .pipe(sttp.tapir.endpoint.out)
+      .pipe(sttp.tapir.endpoint.out(_))
       .pipe(_.errorOut(mapper))
 
   def ping: TapirRoute[Unit, TapirErrorResponse, TapirResponse.Default, AkkaStreams with capabilities.WebSockets] =
