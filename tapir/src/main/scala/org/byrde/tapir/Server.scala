@@ -43,7 +43,7 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
     ): Endpoint[Unit, TapirErrorResponse, TapirResponse.Default, Any] =
       self.endpointAck(mapper)
     
-    protected def endpoint[T <: TapirResponse](
+    protected def endpoint[T](
       description: String = "Response Body.",
       example: Option[T] = Option.empty,
       mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] = defaultMapper
