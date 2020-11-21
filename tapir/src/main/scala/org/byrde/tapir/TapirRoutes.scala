@@ -1,17 +1,17 @@
 package org.byrde.tapir
 
 trait TapirRoutes {
-  def value: Seq[TapirRoute]
+  def value: Seq[TapirRoute[_, _, _, _]]
 }
 
 object TapirRoutes {
-  def apply(_route: TapirRoute): TapirRoutes =
+  def apply(_route: TapirRoute[_, _, _, _]): TapirRoutes =
     new TapirRoutes {
-      override def value: Seq[TapirRoute] = Seq(_route)
+      override def value: Seq[TapirRoute[_, _, _, _]] = Seq(_route)
     }
   
-  def apply(_routes: Seq[TapirRoute]): TapirRoutes =
+  def apply(_routes: Seq[TapirRoute[_, _, _, _]]): TapirRoutes =
     new TapirRoutes {
-      override def value: Seq[TapirRoute] = _routes
+      override def value: Seq[TapirRoute[_, _, _, _]] = _routes
     }
 }

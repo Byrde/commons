@@ -14,6 +14,8 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import sttp.capabilities
+import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.json.circe.jsonBody
@@ -26,7 +28,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   class TestRoute(fn: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]]) extends ChainingSyntax {
     self: Server#TapirRoutesMixin =>
     
-    private lazy val test: TapirRoute =
+    private lazy val test: TapirRoute[Unit, TapirErrorResponse, TapirResponse.Default, AkkaStreams with capabilities.WebSockets] =
       endpoint[TapirResponse.Default]
         .in("test")
         .toTapirRoute(fn)
@@ -97,6 +99,17 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       _ => Future.successful(Left(TapirResponse.Default(errorCode)))
   }
   
+  it should "return a 404 on bogus path" in new TestServer {
+    HttpRequest(HttpMethods.GET, "/mrgrlgrlgrl") ~> Route.seal(handleTapirRoutes(routes)) ~> {
+      check {
+        status.intValue shouldBe 404
+      }
+    }
+    
+    override lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
+      _ => Future.successful(Left(TapirResponse.Default(errorCode)))
+  }
+  
   it should "return the status specified by the error mapper" in new Server {
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleTapirRoutes(routes)) ~> {
       check {
@@ -113,7 +126,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     
       case class Test(code: Int, example: String, example1: String) extends TapirResponse
       
-      private lazy val test: TapirRoute =
+      private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint[Test]
           .in("test")
           .toTapirRoute { _ =>
@@ -377,7 +390,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       
       case class Test(code: Int, example: String, example1: String) extends TapirResponse
     
-      private lazy val test: TapirRoute =
+      private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint[Test]
           .in("test")
           .toTapirRoute { _ =>

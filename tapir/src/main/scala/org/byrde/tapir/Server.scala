@@ -17,6 +17,8 @@ import java.util.UUID
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 
+import sttp.capabilities
+import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.docs.openapi._
@@ -32,6 +34,8 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   self =>
   
   trait TapirRoutesMixin extends RouteSupport {
+    override implicit def options: AkkaHttpServerOptions = self.options
+    
     override def successCode: Int = self.provider.successCode
     
     protected def endpoint[T <: TapirResponse](
@@ -82,23 +86,26 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
   ): Endpoint[Unit, TapirErrorResponse, T, Any] =
     sttp.tapir.endpoint.out(jsonBody[T]).errorOut(mapper)
    
-  def ping: TapirRoute =
+  def ping: TapirRoute[Unit, TapirErrorResponse, TapirResponse.Default, AkkaStreams with capabilities.WebSockets] =
     endpoint[TapirResponse.Default]
+      .get
+      .in("ping")
       .name("Ping")
       .summary("Say hello!")
       .description("Standard API endpoint to say hello to the server.")
-      .get
-      .in("ping")
       .toTapirRoute { _ =>
         Future.successful {
           Right(TapirResponse.Default(successCode))
         }
       }
   
+  def handleTapirRoutes: Route =
+    handleTapirRoutes(Seq.empty)
+  
   def handleTapirRoutes[T <: TapirRoutesMixin](routes: Seq[T]): Route =
     routes
       .view
-      .foldLeft(Seq.empty[TapirRoute]) {
+      .foldLeft(Seq.empty[TapirRoute[_, _, _, _]]) {
         case (acc, elem) =>
           acc ++ elem.routes.value
       }
