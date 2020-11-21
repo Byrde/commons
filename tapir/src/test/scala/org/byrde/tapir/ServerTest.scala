@@ -25,11 +25,14 @@ import scala.concurrent.duration._
 import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
-  class TestRoute(fn: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]]) extends ChainingSyntax {
+  class TestRoute(
+    fn: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]],
+    mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse]
+  ) extends ChainingSyntax {
     self: Server#TapirRoutesMixin =>
     
     private lazy val test: TapirRoute[Unit, TapirErrorResponse, TapirResponse.Default, AkkaStreams with capabilities.WebSockets] =
-      endpoint[TapirResponse.Default]
+      endpoint[TapirResponse.Default](mapper)
         .in("test")
         .toTapirRoute(fn)
     
@@ -40,15 +43,11 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override lazy val provider: Provider =
       new TestProvider
   
-    override lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
-      sttp.tapir.oneOf[TapirErrorResponse](
-        statusMappingValueMatcher(StatusCode.BadRequest, jsonBody[TapirErrorResponse].description("Client exception!")) {
-          case _: TapirErrorResponse => true
-        }
-      )
+    protected def mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
+      defaultMapper
     
     protected lazy val routes: Seq[TapirRoutesMixin] =
-      Seq(new TestRoute(test) with TapirRoutesMixin)
+      Seq(new TestRoute(test, mapper) with TapirRoutesMixin)
   
     protected lazy val test: Unit => Future[Either[TapirErrorResponse, TapirResponse.Default]] =
       _ =>
@@ -125,9 +124,19 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       self: Server#TapirRoutesMixin =>
     
       case class Test(code: Int, example: String, example1: String) extends TapirResponse
+  
+      lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
+        sttp.tapir.oneOf[TapirErrorResponse](
+          statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Unauthorized!")) {
+            case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
+          },
+          statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Forbidden!")) {
+            case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
+          }
+        )
       
       private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
-        endpoint[Test]
+        endpoint[Test](mapper)
           .in("test")
           .toTapirRoute { _ =>
             Future
@@ -148,16 +157,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   
     override lazy val provider: Provider =
       new TestProvider
-  
-    override lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
-      sttp.tapir.oneOf[TapirErrorResponse](
-        statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Unauthorized!")) {
-          case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
-        },
-        statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Forbidden!")) {
-          case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
-        }
-      )
   
     protected lazy val routes: Seq[TapirRoutesMixin] =
       Seq(new TestRoute with TapirRoutesMixin)
@@ -255,11 +254,13 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |              schema:
         |                $ref: '#/components/schemas/Default'
         |        '400':
-        |          description: Client exception!
+        |          description: 'Client exception! Error code: 101'
         |          content:
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
+        |              example:
+        |                code: 101
         |  /ping:
         |    get:
         |      description: Standard API endpoint to say hello to the server.
@@ -272,11 +273,13 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |              schema:
         |                $ref: '#/components/schemas/Default'
         |        '400':
-        |          description: Client exception!
+        |          description: 'Client exception! Error code: 101'
         |          content:
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
+        |              example:
+        |                code: 101
         |components:
         |  schemas:
         |    Default:
@@ -291,6 +294,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleTapirRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
+  
+        println(actual)
         
         status.intValue shouldBe 200
         assert(actual === expected)
@@ -338,18 +343,14 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
-        |        '401':
-        |          description: Unauthorized!
+        |        '400':
+        |          description: 'Client exception! Error code: 101'
         |          content:
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
-        |        '403':
-        |          description: Forbidden!
-        |          content:
-        |            application/json:
-        |              schema:
-        |                $ref: '#/components/schemas/Default'
+        |              example:
+        |                code: 101
         |components:
         |  schemas:
         |    Default:
@@ -387,9 +388,19 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       self: Server#TapirRoutesMixin =>
       
       case class Test(code: Int, example: String, example1: String) extends TapirResponse
+  
+      private lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
+        sttp.tapir.oneOf[TapirErrorResponse](
+          statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Unauthorized!")) {
+            case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
+          },
+          statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Forbidden!")) {
+            case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
+          }
+        )
     
       private lazy val test: TapirRoute[Unit, TapirErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
-        endpoint[Test]
+        endpoint[Test](mapper)
           .in("test")
           .toTapirRoute { _ =>
             Future
@@ -405,16 +416,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   
     override lazy val provider: Provider =
       new TestProvider
-  
-    override lazy val mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
-      sttp.tapir.oneOf[TapirErrorResponse](
-        statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[TapirErrorResponse].description("Unauthorized!")) {
-          case ex: TapirErrorResponse if ex.code == errorCode + 1 => true
-        },
-        statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[TapirErrorResponse].description("Forbidden!")) {
-          case ex: TapirErrorResponse if ex.code == errorCode + 2 => true
-        }
-      )
   
     private lazy val routes =
       Seq(new TestRoute with TapirRoutesMixin)

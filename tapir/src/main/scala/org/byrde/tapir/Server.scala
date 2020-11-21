@@ -14,8 +14,8 @@ import org.byrde.tapir.support._
 import java.time.Instant
 import java.util.UUID
 
-import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
+import io.circe.{Decoder, Encoder}
 
 import sttp.capabilities
 import sttp.capabilities.akka.AkkaStreams
@@ -37,21 +37,28 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
     override implicit def options: AkkaHttpServerOptions = self.options
     
     override def successCode: Int = self.provider.successCode
+  
+    protected def endpointAck(
+      mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] = defaultMapper
+    ): Endpoint[Unit, TapirErrorResponse, TapirResponse.Default, Any] =
+      self.endpointAck(mapper)
     
     protected def endpoint[T <: TapirResponse](
+      description: String = "Response Body.",
+      example: Option[T] = Option.empty,
+      mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] = defaultMapper
+    )(
       implicit encoder: Encoder[T],
       decoder: Decoder[T],
       schema: Schema[T],
       validator: Validator[T],
     ): Endpoint[Unit, TapirErrorResponse, T, Any] =
-      self.endpoint[T]
+      self.endpoint[T](description, example, mapper)
     
     def routes: TapirRoutes
   }
   
   def provider: Provider
-  
-  def mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse]
   
   def successCode: Int = self.provider.successCode
   
@@ -78,16 +85,46 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       }
     }
   
-  def endpoint[T <: TapirResponse](
+  lazy val defaultMatcher: EndpointOutput.StatusMapping[TapirErrorResponse] =
+    statusMappingValueMatcher(
+      StatusCode.BadRequest,
+      jsonBody[TapirErrorResponse]
+        .description(s"Client exception! Error code: $errorCode")
+        .example(TapirResponse.Default(errorCode))
+    ) {
+      case err: TapirErrorResponse if err.code == errorCode => true
+    }
+  
+  lazy val defaultMapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] =
+    sttp.tapir.oneOf[TapirErrorResponse](defaultMatcher)
+  
+  def endpointAck(
+    mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] = defaultMapper
+  ): Endpoint[Unit, TapirErrorResponse, TapirResponse.Default, Any] =
+    sttp.tapir.endpoint.out {
+      jsonBody[TapirResponse.Default]
+        .description(s"Default response! Success code: $successCode")
+        .example(TapirResponse.Default(successCode))
+    }.errorOut(mapper)
+  
+  def endpoint[T](
+    description: String = "",
+    example: Option[T] = Option.empty,
+    mapper: EndpointOutput.OneOf[TapirErrorResponse, TapirErrorResponse] = defaultMapper
+  )(
     implicit encoder: Encoder[T],
     decoder: Decoder[T],
     schema: Schema[T],
     validator: Validator[T],
   ): Endpoint[Unit, TapirErrorResponse, T, Any] =
-    sttp.tapir.endpoint.out(jsonBody[T]).errorOut(mapper)
-   
+    jsonBody[T]
+      .description(description)
+      .pipe(out => example.fold(out)(out.example))
+      .pipe(sttp.tapir.endpoint.out)
+      .pipe(_.errorOut(mapper))
+
   def ping: TapirRoute[Unit, TapirErrorResponse, TapirResponse.Default, AkkaStreams with capabilities.WebSockets] =
-    endpoint[TapirResponse.Default]
+    endpointAck(mapper = defaultMapper)
       .get
       .in("ping")
       .name("Ping")
