@@ -91,7 +91,6 @@ trait Server extends RouteSupport with CorsSupport with ExceptionSupport {
       .get
       .in("ping")
       .name("Ping")
-      .summary("Say hello!")
       .description("Standard API endpoint to say hello to the server.")
       .toTapirRoute { _ =>
         Future.successful {

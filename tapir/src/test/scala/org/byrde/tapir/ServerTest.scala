@@ -262,7 +262,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |                $ref: '#/components/schemas/Default'
         |  /ping:
         |    get:
-        |      summary: Say hello!
         |      description: Standard API endpoint to say hello to the server.
         |      operationId: Ping
         |      responses:
@@ -330,7 +329,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |                $ref: '#/components/schemas/Default'
         |  /ping:
         |    get:
-        |      summary: Say hello!
         |      description: Standard API endpoint to say hello to the server.
         |      operationId: Ping
         |      responses:
