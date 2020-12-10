@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{MethodRejection, RejectionHandler}
 import akka.util.ByteString
 
-import org.byrde.http.server.{ByrdeResponse, Provider}
+import org.byrde.http.server.{Response, Provider}
 
 import io.circe.Printer
 import io.circe.generic.auto._
@@ -28,9 +28,9 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
       .handleAll[MethodRejection] { rejections =>
         respondWithHeader(Allow(rejections.map(_.supported))) {
           options {
-            rejectRequestEntityAndComplete(StatusCodes.OK -> ByrdeResponse.Default("Options", provider.errorCode))
+            rejectRequestEntityAndComplete(StatusCodes.OK -> Response.Default("Options", provider.errorCode))
           }
-        } ~ rejectRequestEntityAndComplete(StatusCodes.MethodNotAllowed -> ByrdeResponse.Default("Method Not Allowed", provider.errorCode))
+        } ~ rejectRequestEntityAndComplete(StatusCodes.MethodNotAllowed -> Response.Default("Method Not Allowed", provider.errorCode))
       }
       .result()
   
@@ -51,7 +51,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
               .utf8String
           
           parse(response)
-            .flatMap(_.as[ByrdeResponse.Default])
+            .flatMap(_.as[Response.Default])
             .map(_ => res)
             .getOrElse {
               res
@@ -62,7 +62,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
                       `application/json`,
                       ByteString {
                         Printer.noSpaces.printToByteBuffer(
-                          ByrdeResponse.Default(normalizeString(response), provider.errorCode).asJson,
+                          Response.Default(normalizeString(response), provider.errorCode).asJson,
                           `application/json`.charset.nioCharset()
                         )
                       }

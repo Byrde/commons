@@ -1,5 +1,5 @@
 package org.byrde.http
 
 package object server {
-  type ByrdeErrorResponse = ByrdeResponse.Default
+  type ErrorResponse = Response.Default
 }

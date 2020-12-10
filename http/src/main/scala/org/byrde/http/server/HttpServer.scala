@@ -32,44 +32,44 @@ import sttp.tapir.swagger.akkahttp.SwaggerAkka
 
 import scala.concurrent.Future
 
-trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandlingSupport with ExceptionHandlingSupport {
+trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSupport with ExceptionHandlingSupport {
   self =>
   
-  object Ack extends ByrdeResponse.Default("Success", successCode)
+  object Ack extends Response.Default("Success", successCode)
   
-  object Err extends ByrdeResponse.Default("Error", errorCode)
+  object Err extends Response.Default("Error", errorCode)
   
-  trait ByrdeRoutesMixin extends RouteSupport {
+  trait RoutesMixin extends RouteSupport {
     override implicit def options: AkkaHttpServerOptions = self.options
     
     override def successCode: Int = self.provider.successCode
     
-    def Ack: ByrdeHttpServer.this.Ack.type = self.Ack
+    def Ack: HttpServer.this.Ack.type = self.Ack
     
-    def Err: ByrdeHttpServer.this.Err.type = self.Err
+    def Err: HttpServer.this.Err.type = self.Err
   
     protected def endpointAck(
-      mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] = defaultMapper
-    ): Endpoint[Unit, ByrdeErrorResponse, ByrdeResponse.Default, Any] =
+      mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] = defaultMapper
+    ): Endpoint[Unit, ErrorResponse, Response.Default, Any] =
       self.endpointAck(mapper)
     
     protected def endpoint[T](
       description: String = "Response Body.",
       example: Option[T] = Option.empty,
-      mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] = defaultMapper
+      mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] = defaultMapper
     )(
       implicit encoder: Encoder[T],
       decoder: Decoder[T],
       schema: Schema[T],
       validator: Validator[T],
-    ): Endpoint[Unit, ByrdeErrorResponse, T, Any] =
+    ): Endpoint[Unit, ErrorResponse, T, Any] =
       self.endpoint[T](
         description,
         example,
         mapper
       )
     
-    def routes: ByrdeRoutes
+    def routes: Routes
   }
   
   def provider: Provider
@@ -99,24 +99,24 @@ trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandli
       }
     }
   
-  lazy val defaultMatcher: EndpointOutput.StatusMapping[ByrdeErrorResponse] =
+  lazy val defaultMatcher: EndpointOutput.StatusMapping[ErrorResponse] =
     statusMappingValueMatcher(
       StatusCode.BadRequest,
-      jsonBody[ByrdeErrorResponse]
+      jsonBody[ErrorResponse]
         .description(s"Client exception! Error code: $errorCode")
         .example(Err)
     ) {
-      case err: ByrdeErrorResponse if err.code == errorCode => true
+      case err: ErrorResponse if err.code == errorCode => true
     }
   
-  lazy val defaultMapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] =
-    sttp.tapir.oneOf[ByrdeErrorResponse](defaultMatcher)
+  lazy val defaultMapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
+    sttp.tapir.oneOf[ErrorResponse](defaultMatcher)
   
   def endpointAck(
-    mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] = defaultMapper
-  ): Endpoint[Unit, ByrdeErrorResponse, ByrdeResponse.Default, Any] =
+    mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] = defaultMapper
+  ): Endpoint[Unit, ErrorResponse, Response.Default, Any] =
     sttp.tapir.endpoint.out {
-      jsonBody[ByrdeResponse.Default]
+      jsonBody[Response.Default]
         .description(s"Default response! Success code: $successCode")
         .example(Ack)
     }.errorOut(mapper)
@@ -124,26 +124,26 @@ trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandli
   def endpoint[T](
     description: String = "Response Body.",
     example: Option[T] = Option.empty,
-    mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] = defaultMapper
+    mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] = defaultMapper
   )(
     implicit encoder: Encoder[T],
     decoder: Decoder[T],
     schema: Schema[T],
     validator: Validator[T],
-  ): Endpoint[Unit, ByrdeErrorResponse, T, Any] =
+  ): Endpoint[Unit, ErrorResponse, T, Any] =
     jsonBody[T]
       .description(description)
       .pipe(out => example.fold(out)(out.example))
       .pipe(sttp.tapir.endpoint.out(_))
       .pipe(_.errorOut(mapper))
 
-  def ping: ByrdeRoute[Unit, ByrdeErrorResponse, ByrdeResponse.Default, AkkaStreams with capabilities.WebSockets] =
+  def ping: org.byrde.http.server.Route[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
     endpointAck(mapper = defaultMapper)
       .get
       .in("ping")
       .name("Ping")
       .description("Standard API endpoint to say hello to the server.")
-      .toTapirRoute {
+      .toRoute {
         () =>
           Future.successful {
             Right(Ack)
@@ -153,10 +153,10 @@ trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandli
   def handleByrdeRoutes: Route =
     handleByrdeRoutes(Seq.empty)
   
-  def handleByrdeRoutes[T <: ByrdeRoutesMixin](routes: Seq[T]): Route =
+  def handleByrdeRoutes[T <: RoutesMixin](routes: Seq[T]): Route =
     routes
       .view
-      .foldLeft(Seq.empty[ByrdeRoute[_, _, _, _]]) {
+      .foldLeft(Seq.empty[org.byrde.http.server.Route[_, _, _, _]]) {
         case (acc, elem) =>
           acc ++ elem.routes.value
       }
@@ -184,7 +184,7 @@ trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandli
       }
     }
   
-  def start[T <: ByrdeRoutesMixin](routes: Seq[T])(implicit system: ActorSystem): Unit = {
+  def start[T <: RoutesMixin](routes: Seq[T])(implicit system: ActorSystem): Unit = {
     Http()
       .newServerAt(provider.config.interface, provider.config.port)
       .bind(handleByrdeRoutes(routes))
@@ -215,6 +215,6 @@ trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandli
     ServerDefaults.decodeFailureHandler.copy(response = handleDecodeFailure)
   
   private def handleDecodeFailure(code: StatusCode, message: String): DecodeFailureHandling =
-    (code, ByrdeResponse.Default(message, errorCode))
-      .pipe(DecodeFailureHandling.response(statusCode.and(jsonBody[ByrdeErrorResponse]))(_))
+    (code, Response.Default(message, errorCode))
+      .pipe(DecodeFailureHandling.response(statusCode.and(jsonBody[ErrorResponse]))(_))
 }

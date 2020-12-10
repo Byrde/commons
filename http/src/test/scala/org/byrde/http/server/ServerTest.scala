@@ -25,43 +25,43 @@ import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
   class TestRoute(
-    fn: () => Future[Either[ByrdeErrorResponse, ByrdeResponse.Default]],
-    mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse]
+    fn: () => Future[Either[ErrorResponse, Response.Default]],
+    mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse]
   ) extends ChainingSyntax {
-    self: ByrdeHttpServer#ByrdeRoutesMixin =>
+    self: HttpServer#RoutesMixin =>
     
-    private lazy val test: ByrdeRoute[Unit, ByrdeErrorResponse, ByrdeResponse.Default, AkkaStreams with capabilities.WebSockets] =
-      endpoint[ByrdeResponse.Default](mapper = mapper)
+    private lazy val test: org.byrde.http.server.Route[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
+      endpoint[Response.Default](mapper = mapper)
         .in("test")
-        .toTapirRoute(fn)
+        .toRoute(fn)
     
-    override lazy val routes: ByrdeRoutes = test
+    override lazy val routes: Routes = test
   }
   
-  trait TestServer extends ByrdeHttpServer {
+  trait TestServer extends HttpServer {
     override lazy val provider: Provider =
       new TestProvider
   
-    protected def mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] =
+    protected def mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
       defaultMapper
     
-    protected lazy val routes: Seq[ByrdeRoutesMixin] =
-      Seq(new TestRoute(test, mapper) with ByrdeRoutesMixin)
+    protected lazy val routes: Seq[RoutesMixin] =
+      Seq(new TestRoute(test, mapper) with RoutesMixin)
   
-    protected def test: () => Future[Either[ByrdeErrorResponse, ByrdeResponse.Default]] =
+    protected def test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
         Future
           .successful(Right[String, String]("Hello World!"))
           .toOut {
             case (_, code) =>
-              ByrdeResponse.Default("Error", code)
+              Response.Default("Error", code)
           }
   }
   
   "Server.ping" should "return successfully" in new TestServer {
     HttpRequest(HttpMethods.GET, "/ping") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 200
@@ -73,7 +73,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   "Server.routes" should "return a 200 when function completes successfully" in new TestServer {
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 200
@@ -85,7 +85,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   it should "return a 400 when function completes with controlled failure" in new TestServer {
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
       
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 400
@@ -93,9 +93,9 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    override lazy val test: () => Future[Either[ByrdeErrorResponse, ByrdeResponse.Default]] =
+    override lazy val test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
-        Future.successful(Left(ByrdeResponse.Default("Error", errorCode)))
+        Future.successful(Left(Response.Default("Error", errorCode)))
   }
   
   it should "return a 404 on bogus path" in new TestServer {
@@ -105,15 +105,15 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
     
-    override lazy val test: () => Future[Either[ByrdeErrorResponse, ByrdeResponse.Default]] =
+    override lazy val test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
-        Future.successful(Left(ByrdeResponse.Default("Error", errorCode)))
+        Future.successful(Left(Response.Default("Error", errorCode)))
   }
   
-  it should "return the status specified by the error mapper" in new ByrdeHttpServer {
+  it should "return the status specified by the error mapper" in new HttpServer {
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 403
@@ -122,24 +122,24 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     }
   
     class TestRoute extends ChainingSyntax {
-      self: ByrdeHttpServer#ByrdeRoutesMixin =>
+      self: HttpServer#RoutesMixin =>
     
-      case class Test(code: Int, example: String, example1: String) extends ByrdeResponse
+      case class Test(code: Int, example: String, example1: String) extends Response
   
-      lazy val mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] =
-        sttp.tapir.oneOf[ByrdeErrorResponse](
-          statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ByrdeErrorResponse].description("Unauthorized!")) {
-            case ex: ByrdeErrorResponse if ex.code == errorCode + 1 => true
+      lazy val mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
+        sttp.tapir.oneOf[ErrorResponse](
+          statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ErrorResponse].description("Unauthorized!")) {
+            case ex: ErrorResponse if ex.code == errorCode + 1 => true
           },
-          statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[ByrdeErrorResponse].description("Forbidden!")) {
-            case ex: ByrdeErrorResponse if ex.code == errorCode + 2 => true
+          statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[ErrorResponse].description("Forbidden!")) {
+            case ex: ErrorResponse if ex.code == errorCode + 2 => true
           }
         )
       
-      private lazy val test: ByrdeRoute[Unit, ByrdeErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
+      private lazy val test: org.byrde.http.server.Route[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint[Test](mapper = mapper)
           .in("test")
-          .toTapirRoute {
+          .toRoute {
             () =>
               Future
                 .successful(Left[Int, (String, String)](errorCode + 2))
@@ -149,25 +149,25 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                       Test(code, example, example1)
                   }, {
                     case (code, _) =>
-                      ByrdeResponse.Default("Error", code)
+                      Response.Default("Error", code)
                   }
                 )
           }
     
-      override lazy val routes: ByrdeRoutes = test
+      override lazy val routes: Routes = test
     }
   
     override lazy val provider: Provider =
       new TestProvider
   
-    protected lazy val routes: Seq[ByrdeRoutesMixin] =
-      Seq(new TestRoute with ByrdeRoutesMixin)
+    protected lazy val routes: Seq[RoutesMixin] =
+      Seq(new TestRoute with RoutesMixin)
   }
   
   it should "return a custom status code based on the error type when function completes with controlled failure" in new TestServer {
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
 
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 401
@@ -177,7 +177,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
       
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 403
@@ -187,28 +187,28 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     
     private var counter = 0
   
-    override lazy val mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] =
-      sttp.tapir.oneOf[ByrdeErrorResponse](
-        statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ByrdeErrorResponse].description("Client exception!")) {
-          case ex: ByrdeErrorResponse if ex.code == errorCode + 1 => true
+    override lazy val mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
+      sttp.tapir.oneOf[ErrorResponse](
+        statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ErrorResponse].description("Client exception!")) {
+          case ex: ErrorResponse if ex.code == errorCode + 1 => true
         },
-        statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[ByrdeErrorResponse].description("Client exception!")) {
-          case ex: ByrdeErrorResponse if ex.code == errorCode + 2 => true
+        statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[ErrorResponse].description("Client exception!")) {
+          case ex: ErrorResponse if ex.code == errorCode + 2 => true
         }
       )
 
-    override def test: () => Future[Either[ByrdeErrorResponse, ByrdeResponse.Default]] =
+    override def test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
         counter
           .pipe(_ + 1)
           .tap(counter = _)
-          .pipe(count => Future.successful(Left(ByrdeResponse.Default("Error", errorCode + count))))
+          .pipe(count => Future.successful(Left(Response.Default("Error", errorCode + count))))
   }
   
   it should "return a 500 when function completes with unexpected failure" in new TestServer {
     HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
-        val entity = responseAs[Json].as[ByrdeResponse.Default].get
+        val entity = responseAs[Json].as[Response.Default].get
         
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 500
@@ -216,7 +216,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
     
-    override lazy val test: () => Future[Either[ByrdeErrorResponse, ByrdeResponse.Default]] =
+    override lazy val test: () => Future[Either[ErrorResponse, Response.Default]] =
       () => Future.failed(new Exception("Kaboom!"))
   }
   
@@ -311,7 +311,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     }
   }
   
-  it should "expose OpenAPI documentation (beta)" in new ByrdeHttpServer {
+  it should "expose OpenAPI documentation (beta)" in new HttpServer {
     private val expected =
       """openapi: 3.0.3
         |info:
@@ -400,24 +400,24 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     }
   
     class TestRoute extends ChainingSyntax {
-      self: ByrdeHttpServer#ByrdeRoutesMixin =>
+      self: HttpServer#RoutesMixin =>
       
-      case class Test(code: Int, example: String, example1: String) extends ByrdeResponse
+      case class Test(code: Int, example: String, example1: String) extends Response
   
-      private lazy val mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] =
-        sttp.tapir.oneOf[ByrdeErrorResponse](
-          statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ByrdeErrorResponse].description("Unauthorized!")) {
-            case ex: ByrdeErrorResponse if ex.code == errorCode + 1 => true
+      private lazy val mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
+        sttp.tapir.oneOf[ErrorResponse](
+          statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ErrorResponse].description("Unauthorized!")) {
+            case ex: ErrorResponse if ex.code == errorCode + 1 => true
           },
-          statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[ByrdeErrorResponse].description("Forbidden!")) {
-            case ex: ByrdeErrorResponse if ex.code == errorCode + 2 => true
+          statusMappingValueMatcher(StatusCode.Forbidden, jsonBody[ErrorResponse].description("Forbidden!")) {
+            case ex: ErrorResponse if ex.code == errorCode + 2 => true
           }
         )
     
-      private lazy val test: ByrdeRoute[Unit, ByrdeErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
+      private lazy val test: org.byrde.http.server.Route[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint[Test](mapper = mapper)
           .in("test")
-          .toTapirRoute {
+          .toRoute {
             () =>
               Future
                 .successful(Right(("Hello World!", "Goodbye World!")))
@@ -427,13 +427,13 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 }
           }
     
-      override lazy val routes: ByrdeRoutes = test
+      override lazy val routes: Routes = test
     }
   
     override lazy val provider: Provider =
       new TestProvider
   
     private lazy val routes =
-      Seq(new TestRoute with ByrdeRoutesMixin)
+      Seq(new TestRoute with RoutesMixin)
   }
 }

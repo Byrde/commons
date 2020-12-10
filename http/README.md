@@ -11,7 +11,7 @@ Library to scaffold a Akka Http based Tapir server.
 ```resolvers += "byrde-libraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/"```
 
 ## Quickstart
-When building an AkkaHttp server, you can extend `org.byrde.http.server.ByrdeHttpServer` for out of the box configurations on things
+When building an AkkaHttp server, you can extend `org.byrde.http.server.HttpServer` for out of the box configurations on things
 such as: 
 - Request & Response Handling
   - CORS

@@ -3,7 +3,7 @@ package org.byrde.http.server.support
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.ExceptionHandler
 
-import org.byrde.http.server.ByrdeResponse
+import org.byrde.http.server.Response
 import org.byrde.logging.Logger
 import org.byrde.support.IdGenerator
 import org.byrde.http.server.logging.HttpRequestLog
@@ -25,7 +25,7 @@ trait ExceptionHandlingSupport extends CirceSupport with WithSuccessAndErrorCode
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", ex)
           logger.error(
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
-          ctx.complete((StatusCodes.InternalServerError, ByrdeResponse.Default(ex.getMessage, errorCode).asJson))
+          ctx.complete((StatusCodes.InternalServerError, Response.Default(ex.getMessage, errorCode).asJson))
         }
     }
 }
