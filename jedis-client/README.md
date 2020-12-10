@@ -1,4 +1,4 @@
-# Jedis Client [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/jedis-client_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/jedis-client_2.13/latest/)
+# Jedis Client
 
 Jedis client implementation and wrapper for the [redis-client](https://github.com/Byrde/commons/tree/master/redis-client) library
 

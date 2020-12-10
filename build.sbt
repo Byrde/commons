@@ -105,7 +105,7 @@ val `jedis-client` =
     .dependsOn(`redis-client`)
     .settings(CommonsSettings)
 
-val `tapir` =
+val `http` =
   project
     .dependsOn(
       logging,
@@ -117,7 +117,7 @@ val root =
   Project("commons", file("."))
     .settings(RootSettings)
     .aggregate(
-      `tapir`,
+      `http`,
       gcs,
       pubsub,
       email,

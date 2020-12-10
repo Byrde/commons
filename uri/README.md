@@ -1,4 +1,4 @@
-# URI [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/uri_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/uri_2.13/latest/)
+# URI
 
 Library to help format and handle uris.
 

@@ -1,4 +1,4 @@
-# Service Response [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/service-response_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/service-response_2.13/latest/)
+# Service Response
 
 Library to enrich service request + responses, and serialization utilities using circe.
 

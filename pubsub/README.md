@@ -1,4 +1,4 @@
-# PubSub [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/pubsub_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/pubsub_2.13/latest/)
+# PubSub
 
 Wrapper for the PubSub Alpakka connector.
 

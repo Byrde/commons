@@ -1,4 +1,4 @@
-# Slick [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/slick_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/slick_2.13/latest/)
+# Slick
 
 Library to get setup with basic project structuring and utilities.
 

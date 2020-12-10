@@ -1,4 +1,4 @@
-# Utils Libraries [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/utils_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/utils_2.13/latest/)
+# Utils Libraries
 
 ## How to install
 

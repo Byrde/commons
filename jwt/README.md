@@ -1,4 +1,4 @@
-# JWT [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/jwt_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/jwt_2.13/latest/)
+# JWT
 
 Library to facilitate encoding/decoding jwts.
 

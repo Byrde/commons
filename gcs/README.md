@@ -1,4 +1,4 @@
-# GCS [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/gcs_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/gcs_2.13/latest/)
+# GCS
 
 Wrapper for the GCS Alpakka connector.
 

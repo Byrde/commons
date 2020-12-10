@@ -1,4 +1,4 @@
-# Email [![Latest Version @ Cloudsmith](https://api-prd.cloudsmith.io/badges/version/byrde/libraries/maven/email_2.13/latest/x/?render=true)](https://cloudsmith.io/~byrde/repos/libraries/packages/detail/maven/email_2.13/latest/)
+# Email
 
 Scala `javax.mail` wrapper for sending emails.
 
