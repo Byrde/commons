@@ -43,6 +43,10 @@ trait ByrdeHttpServer extends RouteSupport with CorsSupport with RejectionHandli
     override implicit def options: AkkaHttpServerOptions = self.options
     
     override def successCode: Int = self.provider.successCode
+    
+    def Ack: ByrdeHttpServer.this.Ack.type = self.Ack
+    
+    def Err: ByrdeHttpServer.this.Err.type = self.Err
   
     protected def endpointAck(
       mapper: EndpointOutput.OneOf[ByrdeErrorResponse, ByrdeErrorResponse] = defaultMapper
