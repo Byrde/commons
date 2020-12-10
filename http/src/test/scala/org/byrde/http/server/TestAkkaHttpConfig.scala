@@ -1,4 +1,4 @@
-package org.byrde.http
+package org.byrde.http.server
 
 import org.byrde.http.server.conf.{AkkaHttpConfig, CorsConfig}
 

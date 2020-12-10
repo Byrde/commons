@@ -1,8 +1,7 @@
-package org.byrde.http
+package org.byrde.http.server
 
-import org.byrde.http.server.Provider
-import org.byrde.logging.Logger
 import org.byrde.http.server.conf.AkkaHttpConfig
+import org.byrde.logging.Logger
 
 class TestProvider extends Provider {
   override def successCode: Int = 100

@@ -1,11 +1,10 @@
-package org.byrde.http
+package org.byrde.http.server
 
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
-import org.byrde.http.server.{ByrdeErrorResponse, ByrdeHttpServer, ByrdeResponse, ByrdeRoute, ByrdeRoutes, Provider}
 import org.byrde.support.EitherSupport
 
 import io.circe.Json
@@ -305,8 +304,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
-  
-        println(actual)
         
         status.intValue shouldBe 200
         assert(actual === expected)
@@ -396,8 +393,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
-        
-        println(actual)
         
         status.intValue shouldBe 200
         assert(actual === expected)
