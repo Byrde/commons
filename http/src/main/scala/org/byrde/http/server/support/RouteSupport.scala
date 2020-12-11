@@ -2,114 +2,89 @@ package org.byrde.http.server.support
 
 import akka.http.scaladsl.server._
 
-import org.byrde.http.server.{Response, Route, Routes, _}
+import org.byrde.http.server._
 
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
 import sttp.tapir._
 import sttp.tapir.server.akkahttp._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
+import scala.language.implicitConversions
 import scala.util.ChainingSyntax
 
 trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessAndErrorCode with RequestIdSupport with ChainingSyntax {
+  private lazy val bearerAuthMatcher =
+    auth.bearer[String].map(Token.apply(_))(_.value)
+  
   implicit def options: AkkaHttpServerOptions
   
-  implicit def route2Routes(route: Route[_, _, _, _]): Routes =
+  implicit def route2Routes(route: org.byrde.http.server.Route[_, _, _, _]): Routes =
     Routes(route)
   
-  implicit class ChainTapirRoute(route: Route[_, _, _, _]) {
-    def ~ (_route: Route[_, _, _, _]): Routes =
+  implicit class ChainRoute(route: org.byrde.http.server.Route[_, _, _, _]) {
+    def ~ (_route: org.byrde.http.server.Route[_, _, _, _]): Routes =
       Routes(Seq(route, _route))
   }
   
-  implicit class ChainTapirRoutes(routes: Routes) {
-    def ~ (route: Route[_, _, _, _]): Routes =
+  implicit class ChainRoutes(routes: Routes) {
+    def ~ (route: org.byrde.http.server.Route[_, _, _, _]): Routes =
       Routes(routes.value :+ route)
   }
   
   implicit class RichUnitEndpoint[T](endpoint: Endpoint[Unit, ErrorResponse, T, AkkaStreams with WebSockets]) {
-    def toRoute(logic: () => Future[Either[ErrorResponse, T]]): Route[Unit, ErrorResponse, T, AkkaStreams with WebSockets] =
-      Route(endpoint, sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(_ => logic()))
-    
-    def toRouteWithDirective[R](directive: Directive1[R])(
-      logic: R => Future[Either[ErrorResponse, T]]
-    ): Route[Unit, ErrorResponse, T, AkkaStreams with WebSockets] =
-      Route(
-        endpoint,
-        directive { dependency =>
+    protected class AuthenticatedEndpoint[R](endpoint: Endpoint[Token, ErrorResponse, T, AkkaStreams with WebSockets])(directive: Token => Directive1[R]) {
+      def toRoute(
+        logic: R => Future[Either[ErrorResponse, T]]
+      ): org.byrde.http.server.Route[Token, ErrorResponse, T, AkkaStreams with WebSockets] =
+        org.byrde.http.server.Route(
+          endpoint,
           sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toDirective {
-            case (_, completion) =>
-              completion(logic(dependency))
+            case (token, completion) =>
+              directive(token) { dependency =>
+                completion(logic(dependency))
+              }
           }
-        }
-      )
+        )
+    }
   
-    def toRouteWithAuthDirective[R](directive: String => Directive1[R])(
-      logic: R => Future[Either[ErrorResponse, T]]
-    ): Route[String, ErrorResponse, T, AkkaStreams with WebSockets] =
-      endpoint
-        .in(auth.bearer[String])
-        .pipe { endpoint =>
-          Route(
-            endpoint,
-            sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toDirective {
-              case (token, completion) =>
-                directive(token) { dependency =>
-                  completion(logic(dependency))
-                }
-            }
-          )
-        }
+    def auth[R](directive: Token => Directive1[R]): AuthenticatedEndpoint[R] =
+      new AuthenticatedEndpoint(endpoint.in(bearerAuthMatcher))(directive)
+    
+    def toRoute(logic: () => Future[Either[ErrorResponse, T]]): org.byrde.http.server.Route[Unit, ErrorResponse, T, AkkaStreams with WebSockets] =
+      org.byrde.http.server.Route(endpoint, sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(_ => logic()))
+  
+    def toAuthenticatedRoute[R](
+      directive: Token => Directive1[R]
+    )(logic: R => Future[Either[ErrorResponse, T]]): org.byrde.http.server.Route[Token, ErrorResponse, T, AkkaStreams with WebSockets] =
+      endpoint.auth(directive).toRoute(logic)
   }
   
   implicit class RichEndpoint[I, T](endpoint: Endpoint[I, ErrorResponse, T, AkkaStreams with WebSockets]) {
-    def toRoute(logic: I => Future[Either[ErrorResponse, T]]): Route[I, ErrorResponse, T, AkkaStreams with WebSockets] =
-      Route(endpoint, sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(logic))
-  
-    def toRouteWithDirective[R](directive: Directive1[R])(
-      logic: (I, R) => Future[Either[ErrorResponse, T]]
-    ): Route[I, ErrorResponse, T, AkkaStreams with WebSockets] =
-      Route(
-        endpoint,
-        directive { dependency =>
+    protected class AuthenticatedEndpoint[R](endpoint: Endpoint[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets])(directive: Token => Directive1[R]) {
+      def toRoute(
+        logic: I => R => Future[Either[ErrorResponse, T]]
+      ): org.byrde.http.server.Route[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets] =
+        org.byrde.http.server.Route(
+          endpoint,
           sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toDirective {
-            case (input, completion) =>
-              completion(logic(input, dependency))
+            case ((input, token), completion) =>
+              directive(token) { dependency =>
+                completion(logic(input)(dependency))
+              }
           }
-        }
-      )
+        )
+    }
   
-    def toRouteWithAuthDirective[R](directive: String => Directive1[R])(
-      logic: (I, R) => Future[Either[ErrorResponse, T]]
-    ): Route[(I, String), ErrorResponse, T, AkkaStreams with WebSockets] =
-      endpoint
-        .in(auth.bearer[String])
-        .pipe { endpoint =>
-          Route(
-            endpoint,
-            sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toDirective {
-              case ((input, token), completion) =>
-                directive(token) { dependency =>
-                  completion(logic(input, dependency))
-                }
-            }
-          )
-        }
-  }
-  
-  implicit class RichResponse[T, TT](future: Future[Either[TT, T]]) {
-    def toOut[A <: Response](
-      success: (T, Int) => A,
-      error: (TT, Int) => ErrorResponse =
-        (_, code) => Response.Default("Error", code)
-    )(implicit ec: ExecutionContext): Future[Either[ErrorResponse, A]] =
-      future.map {
-        case Right(succ) =>
-          Right(success(succ, successCode))
-
-        case Left(err) =>
-          Left(error(err, errorCode))
-      }
+    def auth[R](directive: Token => Directive1[R]): AuthenticatedEndpoint[R] =
+      new AuthenticatedEndpoint(endpoint.in(bearerAuthMatcher))(directive)
+    
+    def toRoute(logic: I => Future[Either[ErrorResponse, T]]): org.byrde.http.server.Route[I, ErrorResponse, T, AkkaStreams with WebSockets] =
+      org.byrde.http.server.Route(endpoint, sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(logic))
+    
+    def toAuthenticatedRoute[R](
+      directive: Token => Directive1[R]
+    )(logic: I => R => Future[Either[ErrorResponse, T]]): org.byrde.http.server.Route[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets] =
+      endpoint.auth(directive).toRoute(logic)
   }
 }

@@ -5,6 +5,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
+import org.byrde.http.server.support.WithSuccessAndErrorCode
 import org.byrde.support.EitherSupport
 
 import io.circe.Json
@@ -19,7 +20,7 @@ import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.json.circe.jsonBody
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.ChainingSyntax
 
@@ -38,7 +39,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override lazy val routes: Routes = test
   }
   
-  trait TestServer extends HttpServer {
+  trait TestServer extends HttpServer with ServerTest.ServerTestSupport {
     override lazy val provider: Provider =
       new TestProvider
   
@@ -121,7 +122,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends ChainingSyntax {
+    class TestRoute extends ChainingSyntax with ServerTest.ServerTestSupport {
       self: HttpServer#RoutesMixin =>
     
       case class Test(code: Int, example: String, example1: String) extends Response
@@ -399,7 +400,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends ChainingSyntax {
+    class TestRoute extends ChainingSyntax with ServerTest.ServerTestSupport {
       self: HttpServer#RoutesMixin =>
       
       case class Test(code: Int, example: String, example1: String) extends Response
@@ -435,5 +436,26 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   
     private lazy val routes =
       Seq(new TestRoute with RoutesMixin)
+  }
+}
+
+object ServerTest {
+  trait ServerTestSupport {
+    self: WithSuccessAndErrorCode =>
+    
+    implicit class RichResponse[T, TT](future: Future[Either[TT, T]]) {
+      def toOut[A <: Response](
+        success: (T, Int) => A,
+        error: (TT, Int) => ErrorResponse =
+        (_, code) => Response.Default("Error", code)
+      )(implicit ec: ExecutionContext): Future[Either[ErrorResponse, A]] =
+        future.map {
+          case Right(succ) =>
+            Right(success(succ, successCode))
+          
+          case Left(err) =>
+            Left(error(err, errorCode))
+        }
+    }
   }
 }
