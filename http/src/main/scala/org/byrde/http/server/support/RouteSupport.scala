@@ -12,7 +12,7 @@ import sttp.model.StatusCode
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.server._
 import sttp.tapir.server.akkahttp.AkkaHttpServerOptions
-import sttp.tapir.{Endpoint, auth, statusCode}
+import sttp.tapir.{Endpoint, EndpointOutput, auth, statusCode, statusMappingValueMatcher}
 
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -27,6 +27,19 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
   
   implicit def route2Routes(route: Route[_, _, _, _]): Seq[Route[_, _, _, _]] =
     Seq(route)
+  
+  lazy val defaultMatcher: EndpointOutput.StatusMapping[ErrorResponse] =
+    statusMappingValueMatcher(
+      StatusCode.BadRequest,
+      jsonBody[ErrorResponse]
+        .description(s"Client exception! Error code: $errorCode")
+        .example(Response.Default("Error", errorCode))
+    ) {
+      case err: ErrorResponse if err.code == errorCode => true
+    }
+  
+  lazy val defaultMapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
+    sttp.tapir.oneOf[ErrorResponse](defaultMatcher)
   
   implicit class RichUnitEndpoint[T](endpoint: Endpoint[Unit, ErrorResponse, T, AkkaStreams with WebSockets]) {
     protected class AuthenticatedEndpoint[R](
