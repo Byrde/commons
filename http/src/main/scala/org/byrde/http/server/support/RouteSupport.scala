@@ -15,7 +15,6 @@ import sttp.tapir.server.akkahttp.AkkaHttpServerOptions
 import sttp.tapir.{Endpoint, EndpointOutput, auth, statusCode, statusMappingValueMatcher}
 
 import scala.concurrent.Future
-import scala.language.implicitConversions
 import scala.util.ChainingSyntax
 
 trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessAndErrorCode with RequestIdSupport with ChainingSyntax {
@@ -24,9 +23,6 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
   
   private implicit lazy val options: AkkaHttpServerOptions =
     AkkaHttpServerOptions.default.copy(decodeFailureHandler = decodeFailureHandler)
-  
-  implicit def route2Routes(route: Route[_, _, _, _]): Seq[Route[_, _, _, _]] =
-    Seq(route)
   
   lazy val defaultMatcher: EndpointOutput.StatusMapping[ErrorResponse] =
     statusMappingValueMatcher(
@@ -47,8 +43,8 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
     )(directive: Token => Directive1[R]) {
       def toRoute(
         logic: R => Future[Either[ErrorResponse, T]]
-      ): org.byrde.http.server.Route[Token, ErrorResponse, T, AkkaStreams with WebSockets] =
-        org.byrde.http.server.Route(
+      ): org.byrde.http.server.RouteWrapper[Token, ErrorResponse, T, AkkaStreams with WebSockets] =
+        org.byrde.http.server.RouteWrapper(
           endpoint,
           sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toDirective {
             case (token, completion) =>
@@ -64,8 +60,8 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
     
     def toRoute(
       logic: () => Future[Either[ErrorResponse, T]]
-    ): org.byrde.http.server.Route[Unit, ErrorResponse, T, AkkaStreams with WebSockets] =
-      org.byrde.http.server.Route(
+    ): org.byrde.http.server.RouteWrapper[Unit, ErrorResponse, T, AkkaStreams with WebSockets] =
+      org.byrde.http.server.RouteWrapper(
         endpoint,
         sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(_ => logic())
       )
@@ -74,7 +70,7 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
       directive: Token => Directive1[R]
     )(
       logic: R => Future[Either[ErrorResponse, T]]
-    ): org.byrde.http.server.Route[Token, ErrorResponse, T, AkkaStreams with WebSockets] =
+    ): org.byrde.http.server.RouteWrapper[Token, ErrorResponse, T, AkkaStreams with WebSockets] =
       endpoint.bearerAuth(directive).toRoute(logic)
   }
   
@@ -84,8 +80,8 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
     )(directive: Token => Directive1[R]) {
       def toRoute(
         logic: I => R => Future[Either[ErrorResponse, T]]
-      ): org.byrde.http.server.Route[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets] =
-        org.byrde.http.server.Route(
+      ): org.byrde.http.server.RouteWrapper[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets] =
+        org.byrde.http.server.RouteWrapper(
           endpoint,
           sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toDirective {
             case ((input, token), completion) =>
@@ -101,8 +97,8 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
     
     def toRoute(
       logic: I => Future[Either[ErrorResponse, T]]
-    ): org.byrde.http.server.Route[I, ErrorResponse, T, AkkaStreams with WebSockets] =
-      org.byrde.http.server.Route(
+    ): org.byrde.http.server.RouteWrapper[I, ErrorResponse, T, AkkaStreams with WebSockets] =
+      org.byrde.http.server.RouteWrapper(
         endpoint,
         sttp.tapir.server.akkahttp.RichAkkaHttpEndpoint(endpoint).toRoute(logic)
       )
@@ -111,7 +107,7 @@ trait RouteSupport extends RequestSupport with ResponseSupport with WithSuccessA
       directive: Token => Directive1[R]
     )(
       logic: I => R => Future[Either[ErrorResponse, T]]
-    ): org.byrde.http.server.Route[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets] =
+    ): org.byrde.http.server.RouteWrapper[(I, Token), ErrorResponse, T, AkkaStreams with WebSockets] =
       endpoint.bearerAuth(directive).toRoute(logic)
   }
   

@@ -53,7 +53,7 @@ trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSup
       }
     }
 
-  def ping: org.byrde.http.server.Route[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
+  def ping: org.byrde.http.server.RouteWrapper[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
     endpoint
       .out {
         jsonBody[Response.Default]
@@ -67,7 +67,7 @@ trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSup
       .description("Standard API endpoint to say hello to the server.")
       .toRoute(() => Future.successful(Right(Response.Default("Success", successCode))))
   
-  def handleRoutes(routes: Routes): Route =
+  def handleRoutes(routes: RoutesWrapper): Route =
     routes
       .routes
       .view
@@ -95,7 +95,7 @@ trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSup
       }
     }
   
-  def start(routes: Routes)(implicit system: ActorSystem): Unit = {
+  def start(routes: RoutesWrapper)(implicit system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
       .bind(handleRoutes(routes))
