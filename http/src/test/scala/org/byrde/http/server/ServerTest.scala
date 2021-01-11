@@ -6,7 +6,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 
 import org.byrde.http.server.conf.AkkaHttpConfig
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
-import org.byrde.http.server.support.{RouteSupport, WithSuccessAndErrorCode}
+import org.byrde.http.server.support.{MaterializedRouteSupport, WithSuccessAndErrorCode}
 import org.byrde.logging.Logger
 import org.byrde.support.EitherSupport
 
@@ -31,15 +31,15 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override val successCode: Int,
     fn: () => Future[Either[ErrorResponse, Response.Default]],
     mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse]
-  ) extends ChainingSyntax with RoutesWrapper with RouteSupport {
-    private lazy val test: org.byrde.http.server.RouteWrapper[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
+  ) extends ChainingSyntax with Routes with MaterializedRouteSupport {
+    private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
       endpoint
         .in("test")
         .out(jsonBody[Response.Default])
         .errorOut(mapper)
         .toRoute(fn)
     
-    override lazy val routes =
+    override lazy val routes: MaterializedRoutes =
       Seq(test)
   }
   
@@ -55,7 +55,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     protected def mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
       defaultMapper
     
-    protected lazy val routes: RoutesWrapper =
+    protected lazy val routes: Routes =
       new TestRoute(successCode, test, mapper)
   
     protected def test: () => Future[Either[ErrorResponse, Response.Default]] =
@@ -141,7 +141,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends RoutesWrapper with RouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
+    class TestRoute extends Routes with MaterializedRouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
   
       override def successCode: Int = self.successCode
@@ -156,7 +156,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           }
         )
       
-      private lazy val test: org.byrde.http.server.RouteWrapper[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
+      private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint
           .in("test")
           .out(jsonBody[Test])
@@ -176,10 +176,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 )
           }
     
-      override lazy val routes: Routes = test
+      override lazy val routes: MaterializedRoutes = test
     }
   
-    protected lazy val routes: RoutesWrapper =
+    protected lazy val routes: Routes =
       new TestRoute()
   }
   
@@ -428,7 +428,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends RoutesWrapper with RouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
+    class TestRoute extends Routes with MaterializedRouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
   
       override def successCode: Int = self.successCode
@@ -443,7 +443,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           }
         )
     
-      private lazy val test: org.byrde.http.server.RouteWrapper[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
+      private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint
           .in("test")
           .out(jsonBody[Test])
@@ -458,7 +458,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 }
           }
     
-      override lazy val routes: Seq[org.byrde.http.server.RouteWrapper[_, _, _, _]] = test
+      override lazy val routes: MaterializedRoutes = test
     }
   
     private lazy val routes =

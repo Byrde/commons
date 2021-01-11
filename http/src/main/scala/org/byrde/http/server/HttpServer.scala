@@ -28,7 +28,7 @@ import sttp.tapir.swagger.akkahttp.SwaggerAkka
 
 import scala.concurrent.Future
 
-trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSupport with ExceptionHandlingSupport {
+trait HttpServer extends MaterializedRouteSupport with CorsSupport with RejectionHandlingSupport with ExceptionHandlingSupport {
   self =>
   
   def config: AkkaHttpConfig
@@ -53,7 +53,7 @@ trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSup
       }
     }
 
-  def ping: org.byrde.http.server.RouteWrapper[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
+  def ping: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
     endpoint
       .out {
         jsonBody[Response.Default]
@@ -67,7 +67,7 @@ trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSup
       .description("Standard API endpoint to say hello to the server.")
       .toRoute(() => Future.successful(Right(Response.Default("Success", successCode))))
   
-  def handleRoutes(routes: RoutesWrapper): Route =
+  def handleRoutes(routes: Routes): Route =
     routes
       .routes
       .view
@@ -95,7 +95,7 @@ trait HttpServer extends RouteSupport with CorsSupport with RejectionHandlingSup
       }
     }
   
-  def start(routes: RoutesWrapper)(implicit system: ActorSystem): Unit = {
+  def start(routes: Routes)(implicit system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
       .bind(handleRoutes(routes))
