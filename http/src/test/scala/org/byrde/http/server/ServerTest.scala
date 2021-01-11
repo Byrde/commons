@@ -4,8 +4,10 @@ import akka.http.scaladsl.model.{HttpMethods, HttpRequest}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 
+import org.byrde.http.server.conf.AkkaHttpConfig
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
-import org.byrde.http.server.support.WithSuccessAndErrorCode
+import org.byrde.http.server.support.{RouteSupport, WithSuccessAndErrorCode}
+import org.byrde.logging.Logger
 import org.byrde.support.EitherSupport
 
 import io.circe.Json
@@ -26,28 +28,35 @@ import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
   class TestRoute(
+    override val successCode: Int,
     fn: () => Future[Either[ErrorResponse, Response.Default]],
     mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse]
-  ) extends ChainingSyntax {
-    self: HttpServer#RoutesMixin =>
-    
+  ) extends ChainingSyntax with Routes with RouteSupport {
     private lazy val test: org.byrde.http.server.Route[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
-      endpoint[Response.Default](mapper = mapper)
+      endpoint
         .in("test")
+        .out(jsonBody[Response.Default])
+        .errorOut(mapper)
         .toRoute(fn)
     
-    override lazy val routes: Routes = test
+    override lazy val routes: Seq[org.byrde.http.server.Route[_, _, _, _]] =
+      Seq(test)
   }
   
   trait TestServer extends HttpServer with ServerTest.ServerTestSupport {
-    override lazy val provider: Provider =
-      new TestProvider
+    override lazy val successCode: Int = 100
   
+    override lazy val config: AkkaHttpConfig =
+      new TestAkkaHttpConfig
+  
+    override lazy val logger: Logger =
+      new TestLogger
+    
     protected def mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
       defaultMapper
     
-    protected lazy val routes: Seq[RoutesMixin] =
-      Seq(new TestRoute(test, mapper) with RoutesMixin)
+    protected lazy val routes: Routes =
+      new TestRoute(successCode, test, mapper)
   
     protected def test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
@@ -60,7 +69,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   "Server.ping" should "return successfully" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/ping") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/ping") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -72,7 +81,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   "Server.routes" should "return a 200 when function completes successfully" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -84,7 +93,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a 400 when function completes with controlled failure" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
       
@@ -100,7 +109,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a 404 on bogus path" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/mrgrlgrlgrl") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/mrgrlgrlgrl") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         status.intValue shouldBe 404
       }
@@ -112,7 +121,17 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return the status specified by the error mapper" in new HttpServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    self =>
+  
+    override lazy val successCode: Int = 100
+  
+    override lazy val config: AkkaHttpConfig =
+      new TestAkkaHttpConfig
+  
+    override lazy val logger: Logger =
+      new TestLogger
+    
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -122,10 +141,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends ChainingSyntax with ServerTest.ServerTestSupport {
-      self: HttpServer#RoutesMixin =>
-    
+    class TestRoute extends Routes with RouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
+  
+      override def successCode: Int = self.successCode
   
       lazy val mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
         sttp.tapir.oneOf[ErrorResponse](
@@ -138,8 +157,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         )
       
       private lazy val test: org.byrde.http.server.Route[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
-        endpoint[Test](mapper = mapper)
+        endpoint
           .in("test")
+          .out(jsonBody[Test])
+          .errorOut(mapper)
           .toRoute {
             () =>
               Future
@@ -155,18 +176,15 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 )
           }
     
-      override lazy val routes: Routes = test
+      override lazy val routes: Seq[org.byrde.http.server.Route[_, _, _, _]] = test
     }
   
-    override lazy val provider: Provider =
-      new TestProvider
-  
-    protected lazy val routes: Seq[RoutesMixin] =
-      Seq(new TestRoute with RoutesMixin)
+    protected lazy val routes: Routes =
+      new TestRoute()
   }
   
   it should "return a custom status code based on the error type when function completes with controlled failure" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
 
@@ -176,7 +194,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
       
@@ -207,7 +225,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a 500 when function completes with unexpected failure" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -222,7 +240,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "expose Swagger documentation" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/docs/index.html?url=/docs/docs.yaml") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs/index.html?url=/docs/docs.yaml") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 200
@@ -231,7 +249,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "redirect /docs to Swagger documentation" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/docs") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 308
@@ -251,7 +269,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: getTest
         |      responses:
         |        '200':
-        |          description: Response Body.
+        |          description: ''
         |          content:
         |            application/json:
         |              schema:
@@ -302,7 +320,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |          type: integer
         |""".stripMargin
     
-    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
         
@@ -313,6 +331,16 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "expose OpenAPI documentation (beta)" in new HttpServer {
+    self =>
+  
+    override lazy val successCode: Int = 100
+  
+    override lazy val config: AkkaHttpConfig =
+      new TestAkkaHttpConfig
+  
+    override lazy val logger: Logger =
+      new TestLogger
+    
     private val expected =
       """openapi: 3.0.3
         |info:
@@ -324,7 +352,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: getTest
         |      responses:
         |        '200':
-        |          description: Response Body.
+        |          description: ''
         |          content:
         |            application/json:
         |              schema:
@@ -391,7 +419,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |          type: string
         |""".stripMargin
     
-    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleByrdeRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
         
@@ -400,11 +428,11 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends ChainingSyntax with ServerTest.ServerTestSupport {
-      self: HttpServer#RoutesMixin =>
-      
+    class TestRoute extends Routes with RouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
   
+      override def successCode: Int = self.successCode
+      
       private lazy val mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
         sttp.tapir.oneOf[ErrorResponse](
           statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ErrorResponse].description("Unauthorized!")) {
@@ -416,8 +444,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         )
     
       private lazy val test: org.byrde.http.server.Route[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
-        endpoint[Test](mapper = mapper)
+        endpoint
           .in("test")
+          .out(jsonBody[Test])
+          .errorOut(mapper)
           .toRoute {
             () =>
               Future
@@ -428,14 +458,11 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 }
           }
     
-      override lazy val routes: Routes = test
+      override lazy val routes: Seq[org.byrde.http.server.Route[_, _, _, _]] = test
     }
   
-    override lazy val provider: Provider =
-      new TestProvider
-  
     private lazy val routes =
-      Seq(new TestRoute with RoutesMixin)
+      new TestRoute
   }
 }
 

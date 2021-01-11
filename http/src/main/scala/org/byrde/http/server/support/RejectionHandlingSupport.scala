@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{MethodRejection, RejectionHandler}
 import akka.util.ByteString
 
-import org.byrde.http.server.{Response, Provider}
+import org.byrde.http.server.Response
 
 import io.circe.Printer
 import io.circe.generic.auto._
@@ -16,9 +16,7 @@ import io.circe.syntax._
 
 import scala.annotation.tailrec
 
-trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
-  def provider: Provider
-  
+trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with WithSuccessAndErrorCode {
   lazy val handlers: Set[RejectionHandler] =
     Set.empty
   
@@ -28,9 +26,11 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
       .handleAll[MethodRejection] { rejections =>
         respondWithHeader(Allow(rejections.map(_.supported))) {
           options {
-            rejectRequestEntityAndComplete(StatusCodes.OK -> Response.Default("Options", provider.errorCode))
+            rejectRequestEntityAndComplete(StatusCodes.OK -> Response.Default("Options", errorCode))
           }
-        } ~ rejectRequestEntityAndComplete(StatusCodes.MethodNotAllowed -> Response.Default("Method Not Allowed", provider.errorCode))
+        } ~ rejectRequestEntityAndComplete(
+          StatusCodes.MethodNotAllowed -> Response.Default("Method Not Allowed", errorCode)
+        )
       }
       .result()
   
@@ -62,7 +62,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
                       `application/json`,
                       ByteString {
                         Printer.noSpaces.printToByteBuffer(
-                          Response.Default(normalizeString(response), provider.errorCode).asJson,
+                          Response.Default(normalizeString(response), errorCode).asJson,
                           `application/json`.charset.nioCharset()
                         )
                       }
@@ -74,7 +74,10 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
           res
       }
   
-  private def registerHandlers(initialHandler: RejectionHandler, handlersToBeRegistered: Set[RejectionHandler]): RejectionHandler = {
+  private def registerHandlers(
+    initialHandler: RejectionHandler,
+    handlersToBeRegistered: Set[RejectionHandler]
+  ): RejectionHandler = {
     @tailrec
     def innerRegisterHandlers(iterator: Iterator[RejectionHandler], innerHandler: RejectionHandler): RejectionHandler =
       if (iterator.hasNext)

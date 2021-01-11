@@ -6,6 +6,9 @@ trait Route[I, E, O, -R] {
   def endpoint: Endpoint[I, E, O, R]
   
   def route: akka.http.scaladsl.server.Route
+  
+  def ~ (_route: org.byrde.http.server.Route[_, _, _, _]): Seq[org.byrde.http.server.Route[_, _, _, _]] =
+    Seq(this, _route)
 }
 
 object Route {
