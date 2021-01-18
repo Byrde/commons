@@ -16,19 +16,21 @@ import org.byrde.logging.Logger
 import java.time.Instant
 import java.util.UUID
 
-import io.circe.generic.auto._
-
 import sttp.capabilities
 import sttp.capabilities.akka.AkkaStreams
 import sttp.tapir._
 import sttp.tapir.docs.openapi._
-import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
 
 import scala.concurrent.Future
 
-trait HttpServer extends MaterializedRouteSupport with CorsSupport with RejectionHandlingSupport with ExceptionHandlingSupport {
+trait HttpServer
+  extends EndpointSupport
+    with CodeMapperSupport
+    with CorsSupport
+    with RejectionHandlingSupport
+    with ExceptionHandlingSupport {
   self =>
   
   def config: AkkaHttpConfig
@@ -53,21 +55,17 @@ trait HttpServer extends MaterializedRouteSupport with CorsSupport with Rejectio
       }
     }
 
-  def ping: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
+  def ping: MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
     endpoint
-      .out {
-        jsonBody[Response.Default]
-          .description(s"Default response! Success code: $successCode")
-          .example(Response.Default("Success", successCode))
-      }
+      .out(ackOutput)
       .errorOut(defaultMapper)
       .get
       .in("ping")
       .name("Ping")
       .description("Standard API endpoint to say hello to the server.")
-      .toRoute(() => Future.successful(Right(Response.Default("Success", successCode))))
+      .route(() => Future.successful(Right(Response.Default("Success", successCode))))
   
-  def handleRoutes(routes: Routes): Route =
+  def handleRoutes(routes: MaterializedRoutes): Route =
     routes
       .routes
       .view
@@ -82,7 +80,7 @@ trait HttpServer extends MaterializedRouteSupport with CorsSupport with Rejectio
       }
     
   def handleEndpoints(endpoints: Seq[Endpoint[_, _, _, _]]): Route =
-    new SwaggerAkka(endpoints.toOpenAPI(config.name, version).toYaml).routes
+    new SwaggerAkka(OpenAPIDocsInterpreter.toOpenAPI(endpoints, config.name, version).toYaml).routes
   
   def handleAkkaRoutes(routes: Route): Route =
     (cors & requestId) { id =>
@@ -95,7 +93,7 @@ trait HttpServer extends MaterializedRouteSupport with CorsSupport with Rejectio
       }
     }
   
-  def start(routes: Routes)(implicit system: ActorSystem): Unit = {
+  def start(routes: MaterializedRoutes)(implicit system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
       .bind(handleRoutes(routes))

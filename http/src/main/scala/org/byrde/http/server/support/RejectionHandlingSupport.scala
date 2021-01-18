@@ -16,7 +16,7 @@ import io.circe.syntax._
 
 import scala.annotation.tailrec
 
-trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with WithSuccessAndErrorCode {
+trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with CodeSupport {
   lazy val handlers: Set[RejectionHandler] =
     Set.empty
   
@@ -46,9 +46,18 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with W
             _status.intValue
           
           val response =
-            ent
-              .data
-              .utf8String
+            ent.data.utf8String
+          
+          def entity =
+            HttpEntity(
+              `application/json`,
+              ByteString {
+                Printer.noSpaces.printToByteBuffer(
+                  Response.Default(normalizeString(response), errorCode).asJson,
+                  `application/json`.charset.nioCharset()
+                )
+              }
+            )
           
           parse(response)
             .flatMap(_.as[Response.Default])
@@ -56,18 +65,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with W
             .getOrElse {
               res
                 .withStatus(status)
-                .withEntity(
-                  entity =
-                    HttpEntity(
-                      `application/json`,
-                      ByteString {
-                        Printer.noSpaces.printToByteBuffer(
-                          Response.Default(normalizeString(response), errorCode).asJson,
-                          `application/json`.charset.nioCharset()
-                        )
-                      }
-                    )
-                )
+                .withEntity(entity)
             }
         
         case res =>

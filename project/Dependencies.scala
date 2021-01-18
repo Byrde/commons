@@ -17,7 +17,7 @@ object Dependencies extends DependencyBuilders {
     "0.13.0"
   
   val TapirVersion: String =
-    "0.17.0-M8"
+    "0.17.4"
 
   val AkkaDependencies =
     Seq(
@@ -36,12 +36,14 @@ object Dependencies extends DependencyBuilders {
   
   val TapirDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.akka"           %% "akka-http-testkit"          % AkkaHttpVersion % "test" exclude("com.typesafe.akka", "akka-streams_2.13"),
-      "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server"     % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
-      "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-akka-http" % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"         % TapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml"   % TapirVersion,
-      "com.softwaremill.sttp.tapir" %% "tapir-json-circe"           % TapirVersion
+      "com.typesafe.akka"             %% "akka-http-testkit"          % AkkaHttpVersion % "test" exclude("com.typesafe.akka", "akka-streams_2.13"),
+      "com.softwaremill.sttp.tapir"   %% "tapir-akka-http-server"     % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui-akka-http" % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir"   %% "tapir-openapi-docs"         % TapirVersion,
+      "com.softwaremill.sttp.tapir"   %% "tapir-openapi-circe-yaml"   % TapirVersion,
+      "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % TapirVersion,
+      "com.softwaremill.sttp.client3" %% "core"                       % "3.0.0",
+      "com.softwaremill.sttp.client3" %% "akka-http-backend"          % "3.0.0"
     ) ++ AkkaDependencies
 
   val CompressorDependencies: Seq[ModuleID] =

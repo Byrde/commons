@@ -25,7 +25,7 @@ case class Path(path: Seq[String], queries: Queries = Queries.empty) {
     copy(queries = queries withQueries _queries)
 
   override def toString: String =
-    (if (path.nonEmpty) path.mkString("/", "/", "") else "").trim + queries.toString
+    (if (path.nonEmpty) path.mkString("/", "/", "") else "/").trim + queries.toString
 }
 
 object Path {

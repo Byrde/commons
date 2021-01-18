@@ -13,7 +13,7 @@ import io.circe.generic.auto._
 
 import scala.util.ChainingSyntax
 
-trait ExceptionHandlingSupport extends CirceSupport with WithSuccessAndErrorCode with ChainingSyntax {
+trait ExceptionHandlingSupport extends CirceSupport with CodeSupport with ChainingSyntax {
   def logger: Logger
   
   //Use ExceptionHandler for all server errors

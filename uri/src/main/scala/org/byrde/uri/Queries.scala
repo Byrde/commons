@@ -36,6 +36,9 @@ case class Queries(queries: Set[(String, String)]) extends AnyVal {
 object Queries {
   val empty: Queries =
     Queries(Set.empty[(String, String)])
+  
+  def apply(query: (String, String)): Queries =
+    Queries(Set(query))
 
   def fromString(value: String): Queries =
     fromURL(new URL(context, value))

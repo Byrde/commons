@@ -6,7 +6,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 
 import org.byrde.http.server.conf.AkkaHttpConfig
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
-import org.byrde.http.server.support.{MaterializedRouteSupport, WithSuccessAndErrorCode}
+import org.byrde.http.server.support.{CodeSupport, EndpointSupport, CodeMapperSupport}
 import org.byrde.logging.Logger
 import org.byrde.support.EitherSupport
 
@@ -20,7 +20,8 @@ import sttp.capabilities
 import sttp.capabilities.akka.AkkaStreams
 import sttp.model.StatusCode
 import sttp.tapir._
-import sttp.tapir.json.circe.jsonBody
+import sttp.tapir.json.circe._
+import sttp.tapir.generic.auto._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
@@ -28,18 +29,17 @@ import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
   class TestRoute(
-    override val successCode: Int,
     fn: () => Future[Either[ErrorResponse, Response.Default]],
     mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse]
-  ) extends ChainingSyntax with Routes with MaterializedRouteSupport {
+  ) extends ChainingSyntax with MaterializedRoutes with EndpointSupport {
     private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
       endpoint
         .in("test")
         .out(jsonBody[Response.Default])
         .errorOut(mapper)
-        .toRoute(fn)
+        .route(fn)
     
-    override lazy val routes: MaterializedRoutes =
+    override lazy val routes: Routes =
       Seq(test)
   }
   
@@ -55,8 +55,8 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     protected def mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
       defaultMapper
     
-    protected lazy val routes: Routes =
-      new TestRoute(successCode, test, mapper)
+    protected lazy val routes: MaterializedRoutes =
+      new TestRoute(test, mapper)
   
     protected def test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
@@ -141,11 +141,15 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends Routes with MaterializedRouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
+    class TestRoute extends MaterializedRoutes
+      with EndpointSupport
+      with CodeSupport
+      with ChainingSyntax
+      with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
   
       override def successCode: Int = self.successCode
-  
+      
       lazy val mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
         sttp.tapir.oneOf[ErrorResponse](
           statusMappingValueMatcher(StatusCode.Unauthorized, jsonBody[ErrorResponse].description("Unauthorized!")) {
@@ -161,7 +165,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           .in("test")
           .out(jsonBody[Test])
           .errorOut(mapper)
-          .toRoute {
+          .route {
             () =>
               Future
                 .successful(Left[Int, (String, String)](errorCode + 2))
@@ -176,10 +180,10 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 )
           }
     
-      override lazy val routes: MaterializedRoutes = test
+      override lazy val routes: Routes = test
     }
   
-    protected lazy val routes: Routes =
+    protected lazy val routes: MaterializedRoutes =
       new TestRoute()
   }
   
@@ -428,7 +432,12 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    class TestRoute extends Routes with MaterializedRouteSupport with ChainingSyntax with ServerTest.ServerTestSupport {
+    class TestRoute
+      extends MaterializedRoutes
+        with CodeSupport
+        with CodeMapperSupport
+        with ChainingSyntax
+        with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
   
       override def successCode: Int = self.successCode
@@ -448,7 +457,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           .in("test")
           .out(jsonBody[Test])
           .errorOut(mapper)
-          .toRoute {
+          .route {
             () =>
               Future
                 .successful(Right(("Hello World!", "Goodbye World!")))
@@ -458,7 +467,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
                 }
           }
     
-      override lazy val routes: MaterializedRoutes = test
+      override lazy val routes: Routes = test
     }
   
     private lazy val routes =
@@ -468,7 +477,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
 
 object ServerTest {
   trait ServerTestSupport {
-    self: WithSuccessAndErrorCode =>
+    self: CodeSupport =>
     
     implicit class RichResponse[T, TT](future: Future[Either[TT, T]]) {
       def toOut[A <: Response](

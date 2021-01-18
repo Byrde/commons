@@ -24,18 +24,23 @@ trait CirceSupport {
   
   def mediaTypes: Seq[MediaType.WithFixedCharset] = List(`application/json`)
   
-  private def sourceByteStringMarshaller(mediaType: MediaType.WithFixedCharset): Marshaller[SourceOf[ByteString], MessageEntity] = Marshaller[SourceOf[ByteString], MessageEntity] { _ =>
-    value =>
-      try FastFuture.successful {
-        Marshalling.WithFixedContentType(mediaType, () => HttpEntity(contentType = mediaType, data = value)) :: Nil
-      } catch {
-        case NonFatal(e) => FastFuture.failed(e)
-      }
-  }
+  private def sourceByteStringMarshaller(
+    mediaType: MediaType.WithFixedCharset
+  ): Marshaller[SourceOf[ByteString], MessageEntity] =
+    Marshaller[SourceOf[ByteString], MessageEntity] { _ =>
+      value =>
+        try FastFuture.successful {
+          Marshalling.WithFixedContentType(mediaType, () => HttpEntity(contentType = mediaType, data = value)) :: Nil
+        } catch {
+          case NonFatal(e) => FastFuture.failed(e)
+        }
+    }
   
   private val jsonSourceStringMarshaller = Marshaller.oneOf(mediaTypes: _*)(sourceByteStringMarshaller)
   
-  private def jsonSource[A](entitySource: SourceOf[A])(implicit encoder: Encoder[A], printer: Printer, support: JsonEntityStreamingSupport): SourceOf[ByteString] =
+  private def jsonSource[A](
+    entitySource: SourceOf[A]
+  )(implicit encoder: Encoder[A], printer: Printer, support: JsonEntityStreamingSupport): SourceOf[ByteString] =
     entitySource.map(encoder.apply).map(printer.printToByteBuffer).map(ByteString(_)).via(support.framingRenderer)
   
   /**
@@ -98,7 +103,9 @@ trait CirceSupport {
    *
    * @tparam A type to decode
    * @return unmarshaller for `Source[A, _]` */
-  implicit def sourceUnmarshaller[A: Decoder](implicit support: JsonEntityStreamingSupport = EntityStreamingSupport.json()): FromEntityUnmarshaller[SourceOf[A]] =
+  implicit def sourceUnmarshaller[A: Decoder](
+    implicit support: JsonEntityStreamingSupport = EntityStreamingSupport.json()
+  ): FromEntityUnmarshaller[SourceOf[A]] =
     Unmarshaller.withMaterializer[HttpEntity, SourceOf[A]] { implicit ec => implicit mat => entity =>
       def asyncParse(bs: ByteString) = Unmarshal(bs).to[A]
       
@@ -116,7 +123,10 @@ trait CirceSupport {
    *
    * @tparam A type to encode
    * @return marshaller for any `SourceOf[A]` value */
-  implicit def sourceMarshaller[A](implicit writes: Encoder[A], printer: Printer = Printer.noSpaces, support: JsonEntityStreamingSupport = EntityStreamingSupport.json()): ToEntityMarshaller[SourceOf[A]] =
+  implicit def sourceMarshaller[A](
+    implicit writes: Encoder[A], printer: Printer = Printer.noSpaces,
+    support: JsonEntityStreamingSupport = EntityStreamingSupport.json()
+  ): ToEntityMarshaller[SourceOf[A]] =
     jsonSourceStringMarshaller.compose(jsonSource[A])
   
   implicit final def safeUnmarshaller[A: Decoder]: FromEntityUnmarshaller[Either[io.circe.Error, A]] =
