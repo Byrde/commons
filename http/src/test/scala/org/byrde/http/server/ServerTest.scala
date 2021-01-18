@@ -69,7 +69,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   "Server.ping" should "return successfully" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/ping") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/ping") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -81,7 +81,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   "Server.routes" should "return a 200 when function completes successfully" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -93,7 +93,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a 400 when function completes with controlled failure" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
       
@@ -109,7 +109,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a 404 on bogus path" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/mrgrlgrlgrl") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/mrgrlgrlgrl") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         status.intValue shouldBe 404
       }
@@ -131,7 +131,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     override lazy val logger: Logger =
       new TestLogger
     
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -188,7 +188,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a custom status code based on the error type when function completes with controlled failure" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
 
@@ -198,7 +198,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       }
     }
   
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
       
@@ -229,7 +229,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "return a 500 when function completes with unexpected failure" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/test") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val entity = responseAs[Json].as[Response.Default].get
         
@@ -244,7 +244,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "expose Swagger documentation" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/docs/index.html?url=/docs/docs.yaml") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs/index.html?url=/docs/docs.yaml") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 200
@@ -253,7 +253,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   }
   
   it should "redirect /docs to Swagger documentation" in new TestServer {
-    HttpRequest(HttpMethods.GET, "/docs") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         assert(response.header[IdHeader].isDefined)
         status.intValue shouldBe 308
@@ -324,7 +324,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |          type: integer
         |""".stripMargin
     
-    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
         
@@ -423,7 +423,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |          type: string
         |""".stripMargin
     
-    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleRoutes(routes)) ~> {
+    HttpRequest(HttpMethods.GET, "/docs/docs.yaml") ~> Route.seal(handleMaterializedRoutes(routes)) ~> {
       check {
         val actual = response.entity.toStrict(1.seconds).map(_.data.utf8String).futureValue
         

@@ -65,7 +65,7 @@ trait HttpServer
       .description("Standard API endpoint to say hello to the server.")
       .route(() => Future.successful(Right(Response.Default("Success", successCode))))
   
-  def handleRoutes(routes: MaterializedRoutes): Route =
+  def handleMaterializedRoutes(routes: MaterializedRoutes): Route =
     routes
       .routes
       .view
@@ -76,13 +76,13 @@ trait HttpServer
       }
       .pipe {
         case (routes, endpoints) =>
-          handleAkkaRoutes(routes ~ handleEndpoints(endpoints))
+          handleRoute(routes ~ handleEndpoints(endpoints))
       }
     
   def handleEndpoints(endpoints: Seq[Endpoint[_, _, _, _]]): Route =
     new SwaggerAkka(OpenAPIDocsInterpreter.toOpenAPI(endpoints, config.name, version).toYaml).routes
   
-  def handleAkkaRoutes(routes: Route): Route =
+  def handleRoute(routes: Route): Route =
     (cors & requestId) { id =>
       (addRequestId(id) & addResponseId(id) & extractRequest) { request =>
         Instant.now.toEpochMilli.pipe { start =>
@@ -96,7 +96,7 @@ trait HttpServer
   def start(routes: MaterializedRoutes)(implicit system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
-      .bind(handleRoutes(routes))
+      .bind(handleMaterializedRoutes(routes))
     
     logger.info(s"${config.name} started on ${config.interface}:${config.port}")
   }

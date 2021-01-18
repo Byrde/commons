@@ -28,16 +28,16 @@ trait MaterializedRoutes {
   
   def ~ (route: org.byrde.http.server.MaterializedRoute[_, _, _, _]): MaterializedRoutes =
     new MaterializedRoutes {
-      override def routes: Routes = self.routes :+ route
+      override lazy val routes: Routes = self.routes :+ route
     }
   
   def ~ (_routes: Routes): MaterializedRoutes =
     new MaterializedRoutes {
-      override def routes: Routes = self.routes ++ _routes
+      override lazy val routes: Routes = self.routes ++ _routes
     }
   
   def ~ (_routes: MaterializedRoutes): MaterializedRoutes =
     new MaterializedRoutes {
-      override def routes: Routes = self.routes ++ _routes.routes
+      override lazy val routes: Routes = self.routes ++ _routes.routes
     }
 }
