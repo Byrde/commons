@@ -2,39 +2,14 @@ package org.byrde.http.server.support
 
 import org.byrde.http.server._
 
-import io.circe.generic.auto._
-
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
-import sttp.model.StatusCode
-import sttp.tapir.generic.auto._
-import sttp.tapir.json.circe._
+import sttp.tapir.Endpoint
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
-import sttp.tapir.{Endpoint, EndpointIO, EndpointOutput, statusMappingValueMatcher}
 
 import scala.concurrent.Future
 
-trait EndpointSupport {
-  self: CodeSupport =>
-  
-  private lazy val defaultMatcher: EndpointOutput.StatusMapping[ErrorResponse] =
-    statusMappingValueMatcher(
-      StatusCode.BadRequest,
-      jsonBody[ErrorResponse]
-        .description(s"Client exception! Error code: $errorCode")
-        .example(Response.Default("Error", errorCode))
-    ) {
-      case err: ErrorResponse if err.code == errorCode => true
-    }
-  
-  lazy val defaultMapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
-    sttp.tapir.oneOf[ErrorResponse](defaultMatcher)
-  
-  lazy val ackOutput: EndpointIO.Body[String, Response.Default] =
-    jsonBody[Response.Default]
-      .description(s"Default response! Success code: $successCode")
-      .example(Response.Default("Success", successCode))
-  
+trait EndpointSupport extends CommonEndpointSupport with CodeSupport {
   implicit class Endpoint1[O](endpoint: Endpoint[Unit, ErrorResponse, O, AkkaStreams with WebSockets]) {
     def route(
       logic: () => Future[Either[ErrorResponse, O]]

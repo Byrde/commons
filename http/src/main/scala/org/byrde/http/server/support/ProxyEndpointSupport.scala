@@ -20,7 +20,7 @@ import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 
 import scala.util.{Failure, Success}
 
-trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with EndpointSupport {
+trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with CommonEndpointSupport with CodeSupport  {
   self: CodeSupport =>
   
   def client: SttpClient

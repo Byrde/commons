@@ -11,7 +11,7 @@ import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 
 import scala.concurrent.Future
 
-trait AunthenticatedEndpointSupport {
+trait AunthenticationEndpointSupport extends CommonEndpointSupport with CodeSupport {
   self =>
   
   protected case class AuthenticatedInputEndpoint[I, O, R](
