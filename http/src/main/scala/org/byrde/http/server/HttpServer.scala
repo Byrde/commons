@@ -27,7 +27,6 @@ import scala.concurrent.Future
 
 trait HttpServer
   extends EndpointSupport
-    with CodeMapperSupport
     with CorsSupport
     with RejectionHandlingSupport
     with ExceptionHandlingSupport {

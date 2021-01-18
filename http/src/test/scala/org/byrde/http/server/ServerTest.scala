@@ -6,7 +6,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 
 import org.byrde.http.server.conf.AkkaHttpConfig
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
-import org.byrde.http.server.support.{CodeSupport, EndpointSupport, CodeMapperSupport}
+import org.byrde.http.server.support.{CodeSupport, EndpointSupport}
 import org.byrde.logging.Logger
 import org.byrde.support.EitherSupport
 
@@ -29,13 +29,14 @@ import scala.util.ChainingSyntax
 
 class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with ScalatestRouteTest with EitherSupport {
   class TestRoute(
+    override val successCode: Int,
     fn: () => Future[Either[ErrorResponse, Response.Default]],
     mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse]
-  ) extends ChainingSyntax with MaterializedRoutes with EndpointSupport {
+  ) extends ChainingSyntax with MaterializedRoutes with EndpointSupport with CodeSupport {
     private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
       endpoint
         .in("test")
-        .out(jsonBody[Response.Default])
+        .out(ackOutput)
         .errorOut(mapper)
         .route(fn)
     
@@ -56,7 +57,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       defaultMapper
     
     protected lazy val routes: MaterializedRoutes =
-      new TestRoute(test, mapper)
+      new TestRoute(successCode, test, mapper)
   
     protected def test: () => Future[Either[ErrorResponse, Response.Default]] =
       () =>
@@ -273,11 +274,14 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
         |      operationId: getTest
         |      responses:
         |        '200':
-        |          description: ''
+        |          description: 'Default response! Success code: 100'
         |          content:
         |            application/json:
         |              schema:
         |                $ref: '#/components/schemas/Default'
+        |              example:
+        |                message: Success
+        |                code: 100
         |        '400':
         |          description: 'Client exception! Error code: 101'
         |          content:
@@ -435,7 +439,6 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     class TestRoute
       extends MaterializedRoutes
         with CodeSupport
-        with CodeMapperSupport
         with ChainingSyntax
         with ServerTest.ServerTestSupport {
       case class Test(code: Int, example: String, example1: String) extends Response
@@ -487,10 +490,10 @@ object ServerTest {
       )(implicit ec: ExecutionContext): Future[Either[ErrorResponse, A]] =
         future.map {
           case Right(succ) =>
-            Right(success(succ, successCode))
+            Right(success(succ, self.successCode))
           
           case Left(err) =>
-            Left(error(err, errorCode))
+            Left(error(err, self.errorCode))
         }
     }
   }
