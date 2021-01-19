@@ -5,7 +5,7 @@ object Dependencies extends DependencyBuilders {
     "10.2.1"
 
   val AkkaVersion: String =
-    "2.5.31"
+    "2.5.32"
 
   val PlayVersion: String =
     "2.7.4"
