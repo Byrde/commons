@@ -17,7 +17,7 @@ object Dependencies extends DependencyBuilders {
     "0.13.0"
   
   val TapirVersion: String =
-    "0.17.4"
+    "0.17.6"
 
   val AkkaDependencies =
     Seq(
@@ -42,6 +42,7 @@ object Dependencies extends DependencyBuilders {
       "com.softwaremill.sttp.tapir"   %% "tapir-openapi-docs"         % TapirVersion,
       "com.softwaremill.sttp.tapir"   %% "tapir-openapi-circe-yaml"   % TapirVersion,
       "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % TapirVersion,
+      "com.softwaremill.sttp.tapir"   %% "tapir-sttp-client"          % TapirVersion,
       "com.softwaremill.sttp.client3" %% "core"                       % "3.0.0",
       "com.softwaremill.sttp.client3" %% "akka-http-backend"          % "3.0.0"
     ) ++ AkkaDependencies

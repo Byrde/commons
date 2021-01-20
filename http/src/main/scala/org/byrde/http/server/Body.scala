@@ -23,9 +23,9 @@ case class Body[O](value: O) {
 object Body {
   def fromSttpResponseBody[O](
     body: Either[String, String],
-    handleSuccess: String => Either[ErrorResponse, O],
-    handleFailure: String => Either[ErrorResponse, O],
-  ): Either[Body[ErrorResponse], Body[O]] =
+    handleSuccess: String => Either[JsonErrorResponse, O],
+    handleFailure: String => Either[JsonErrorResponse, O],
+  ): Either[Body[JsonErrorResponse], Body[O]] =
     body match {
       case Right(value) =>
         handleSuccess(value).map(Body.apply).left.map(Body.apply)

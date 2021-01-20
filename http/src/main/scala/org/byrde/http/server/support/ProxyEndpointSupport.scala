@@ -28,13 +28,13 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
   def logger: Logger
   
   protected case class ProxyEndpoint[I, O](
-    endpoint: Endpoint[I, ErrorResponse, O, AkkaStreams with WebSockets],
+    endpoint: Endpoint[I, JsonErrorResponse, O, AkkaStreams with WebSockets],
     url: Url,
-    handleSuccess: String => Either[ErrorResponse, O],
-    handleFailure: String => Either[ErrorResponse, O],
+    handleSuccess: String => Either[JsonErrorResponse, O],
+    handleFailure: String => Either[JsonErrorResponse, O],
     transformResponseHeaders: Seq[Header] => Seq[Header] = identity,
   )(directive: I => Directive1[client3.Request[Either[String, String], Any]]) {
-    def route(implicit encoder: Encoder[O]): MaterializedRoute[I, ErrorResponse, O, AkkaStreams with WebSockets] =
+    def route(implicit encoder: Encoder[O]): MaterializedRoute[I, JsonErrorResponse, O, AkkaStreams with WebSockets] =
       org.byrde.http.server.MaterializedRoute(endpoint, proxy)
   
     private def proxy(implicit encoder: Encoder[O]): Route =
@@ -59,17 +59,17 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
   }
   
   protected case class UnitProxyEndpointBuilder[O](
-    endpoint: Endpoint[Unit, ErrorResponse, O, AkkaStreams with WebSockets],
+    endpoint: Endpoint[Unit, JsonErrorResponse, O, AkkaStreams with WebSockets],
     url: Url,
-    handleSuccess: String => Either[ErrorResponse, O],
-    handleFailure: String => Either[ErrorResponse, O],
+    handleSuccess: String => Either[JsonErrorResponse, O],
+    handleFailure: String => Either[JsonErrorResponse, O],
     transformRequestHeaders: Seq[Header] => Seq[Header] = identity,
     transformResponseHeaders: Seq[Header] => Seq[Header] = identity,
   ) {
-    def handleSuccess(_handleSuccess: String => Either[ErrorResponse, O]): UnitProxyEndpointBuilder[O] =
+    def handleSuccess(_handleSuccess: String => Either[JsonErrorResponse, O]): UnitProxyEndpointBuilder[O] =
       copy(handleSuccess = _handleSuccess)
     
-    def handleFailure(_handleFailure: String => Either[ErrorResponse, O]): UnitProxyEndpointBuilder[O] =
+    def handleFailure(_handleFailure: String => Either[JsonErrorResponse, O]): UnitProxyEndpointBuilder[O] =
       copy(handleFailure = _handleFailure)
     
     def withRequestHeaders(transform: Seq[Header] => Seq[Header]): UnitProxyEndpointBuilder[O] =
@@ -92,17 +92,17 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
   }
   
   protected case class ProxyEndpointBuilder[I, O](
-    endpoint: Endpoint[I, ErrorResponse, O, AkkaStreams with WebSockets],
+    endpoint: Endpoint[I, JsonErrorResponse, O, AkkaStreams with WebSockets],
     url: Url,
-    handleSuccess: String => Either[ErrorResponse, O],
-    handleFailure: String => Either[ErrorResponse, O],
+    handleSuccess: String => Either[JsonErrorResponse, O],
+    handleFailure: String => Either[JsonErrorResponse, O],
     transformRequestHeaders: Seq[Header] => Seq[Header] = identity,
     transformResponseHeaders: Seq[Header] => Seq[Header] = identity,
   ) {
-    def handleSuccess(_handleSuccess: String => Either[ErrorResponse, O]): ProxyEndpointBuilder[I, O] =
+    def handleSuccess(_handleSuccess: String => Either[JsonErrorResponse, O]): ProxyEndpointBuilder[I, O] =
       copy(handleSuccess = _handleSuccess)
     
-    def handleFailure(_handleFailure: String => Either[ErrorResponse, O]): ProxyEndpointBuilder[I, O] =
+    def handleFailure(_handleFailure: String => Either[JsonErrorResponse, O]): ProxyEndpointBuilder[I, O] =
       copy(handleFailure = _handleFailure)
     
     def withRequestHeaders(transform: Seq[Header] => Seq[Header]): ProxyEndpointBuilder[I, O] =
@@ -110,6 +110,12 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
     
     def withResponseHeaders(transform: Seq[Header] => Seq[Header]): ProxyEndpointBuilder[I, O] =
       copy(transformResponseHeaders = transform)
+  
+    def withRequestHeaders(newHeaders: Seq[Header]): ProxyEndpointBuilder[I, O] =
+      copy(transformRequestHeaders = _ => newHeaders)
+  
+    def withResponseHeaders(newHeaders: Seq[Header]): ProxyEndpointBuilder[I, O] =
+      copy(transformResponseHeaders = _=> newHeaders)
     
     def materialize(implicit serializer: BodySerializer[I]): ProxyEndpoint[I, O] =
       ProxyEndpoint(
@@ -126,7 +132,7 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
       extractRequest.map(_.toSttpRequest(url, Body(input), transformRequestHeaders))
   }
   
-  implicit class ProxyEndpoint1[O](endpoint: Endpoint[Unit, ErrorResponse, O, AkkaStreams with WebSockets]) {
+  implicit class ProxyEndpoint1[O](endpoint: Endpoint[Unit, JsonErrorResponse, O, AkkaStreams with WebSockets]) {
     def proxy(url: Url)(implicit decoder: Decoder[O]): UnitProxyEndpointBuilder[O] =
       UnitProxyEndpointBuilder(
         endpoint,
@@ -138,22 +144,19 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
     private def decodeProxySuccessResponse(
       url: Url,
       string: String
-    )(implicit decoder: Decoder[O]): Either[ErrorResponse, O] =
+    )(implicit decoder: Decoder[O]): Either[JsonErrorResponse, O] =
       parse(string)
         .flatMap(_.as[O])
         .left
-        .map { err =>
-          logger.warning(s"Proxy: $url, error decoding: $string", err)
-          Response.Default(string, errorCode)
-        }
+        .map(throw _)
     
-    private def decodeProxyErrorResponse(url: Url, string: String): Either[ErrorResponse, O] = {
+    private def decodeProxyErrorResponse(url: Url, string: String): Either[JsonErrorResponse, O] = {
       logger.warning(s"Proxy: $url, error: $string")
-      Left(Response.Default(string, errorCode))
+      Left(parse(string).fold(throw _, JsonErrorResponse(_, errorCode)))
     }
   }
   
-  implicit class ProxyEndpoint2[I, O](endpoint: Endpoint[I, ErrorResponse, O, AkkaStreams with WebSockets]) {
+  implicit class ProxyEndpoint2[I, O](endpoint: Endpoint[I, JsonErrorResponse, O, AkkaStreams with WebSockets]) {
     def proxy(url: Url)(implicit decoder: Decoder[O]): ProxyEndpointBuilder[I, O] =
       ProxyEndpointBuilder(
         endpoint,
@@ -165,22 +168,19 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
     private def decodeProxySuccessResponse(
       url: Url,
       string: String
-    )(implicit decoder: Decoder[O]): Either[ErrorResponse, O] =
+    )(implicit decoder: Decoder[O]): Either[JsonErrorResponse, O] =
       parse(string)
         .flatMap(_.as[O])
         .left
-        .map { err =>
-          logger.warning(s"Proxy: $url, error decoding: $string", err)
-          Response.Default(string, errorCode)
-        }
+        .map(throw _)
   
-    private def decodeProxyErrorResponse(url: Url, string: String): Either[ErrorResponse, O] = {
+    private def decodeProxyErrorResponse(url: Url, string: String): Either[JsonErrorResponse, O] = {
       logger.warning(s"Proxy: $url, error: $string")
-      Left(Response.Default(string, errorCode))
+      Left(parse(string).fold(throw _, JsonErrorResponse(_, errorCode)))
     }
   }
   
-  implicit class ProxyEndpoint3(endpoint: Endpoint[Unit, ErrorResponse, Response.Default, AkkaStreams with WebSockets]) {
+  implicit class ProxyEndpoint3(endpoint: Endpoint[Unit, JsonErrorResponse, Response.Default, AkkaStreams with WebSockets]) {
     def proxy(url: Url): UnitProxyEndpointBuilder[Response.Default] =
       UnitProxyEndpointBuilder(
         endpoint,
@@ -189,16 +189,16 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
         decodeProxyErrorResponse(url, _),
       )
   
-    private def decodeProxySuccessResponse(string: String): Either[ErrorResponse, Response.Default] =
+    private def decodeProxySuccessResponse(string: String): Either[JsonErrorResponse, Response.Default] =
       Right(Response.Default(string, successCode))
   
-    private def decodeProxyErrorResponse(url: Url, string: String): Either[ErrorResponse, Response.Default] = {
+    private def decodeProxyErrorResponse(url: Url, string: String): Either[JsonErrorResponse, Response.Default] = {
       logger.warning(s"Proxy: $url, error: $string")
-      Left(Response.Default(string, errorCode))
+      Left(parse(string).fold(throw _, JsonErrorResponse(_, errorCode)))
     }
   }
   
-  implicit class ProxyEndpoint4[I](endpoint: Endpoint[I, ErrorResponse, Response.Default, AkkaStreams with WebSockets]) {
+  implicit class ProxyEndpoint4[I](endpoint: Endpoint[I, JsonErrorResponse, Response.Default, AkkaStreams with WebSockets]) {
     def proxy(url: Url): ProxyEndpointBuilder[I, Response.Default] =
       ProxyEndpointBuilder(
         endpoint,
@@ -207,12 +207,12 @@ trait ProxyEndpointSupport extends RequestSupport with ResponseSupport with Comm
         decodeProxyErrorResponse(url, _),
       )
   
-    private def decodeProxySuccessResponse(string: String): Either[ErrorResponse, Response.Default] =
+    private def decodeProxySuccessResponse(string: String): Either[JsonErrorResponse, Response.Default] =
       Right(Response.Default(string, successCode))
   
-    private def decodeProxyErrorResponse(url: Url, string: String): Either[ErrorResponse, Response.Default] = {
+    private def decodeProxyErrorResponse(url: Url, string: String): Either[JsonErrorResponse, Response.Default] = {
       logger.warning(s"Proxy: $url, error: $string")
-      Left(Response.Default(string, errorCode))
+      Left(parse(string).fold(throw _, JsonErrorResponse(_, errorCode)))
     }
   }
 }

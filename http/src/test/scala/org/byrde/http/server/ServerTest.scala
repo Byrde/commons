@@ -54,7 +54,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
       new TestLogger
     
     protected def mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
-      defaultMapper
+      errorMapper
     
     protected lazy val routes: MaterializedRoutes =
       new TestRoute(successCode, test, mapper)

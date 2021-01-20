@@ -57,7 +57,7 @@ trait HttpServer
   def ping: MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
     endpoint
       .out(ackOutput)
-      .errorOut(defaultMapper)
+      .errorOut(errorMapper)
       .get
       .in("ping")
       .name("Ping")
