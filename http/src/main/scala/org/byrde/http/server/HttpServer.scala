@@ -2,18 +2,15 @@ package org.byrde.http.server
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.RouteDirectives
 
 import org.byrde.http.server.conf.{AkkaHttpConfig, CorsConfig}
-import org.byrde.http.server.logging.HttpRequestTelemetryLog
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
 import org.byrde.http.server.support._
 import org.byrde.logging.Logger
 
-import java.time.Instant
 import java.util.UUID
 
 import sttp.capabilities
@@ -83,12 +80,13 @@ trait HttpServer
   
   def handleRoute(routes: Route): Route =
     (cors & requestId) { id =>
-      (addRequestId(id) & addResponseId(id) & extractRequest) { request =>
-        Instant.now.toEpochMilli.pipe { start =>
-          bagAndTag(start, request) {
-            (handleExceptions(exceptionHandler) & handleRejections(rejectionHandler))(routes)
-          }
-        }
+      (addRequestId(id) & addResponseId(id)) {
+        (handleExceptions(exceptionHandler) & handleRejections(rejectionHandler))(routes)
+//        Instant.now.toEpochMilli.pipe { start =>
+//          bagAndTag(start, request) {
+//
+//          }
+//        }
       }
     }
   
@@ -110,12 +108,12 @@ trait HttpServer
       id +: headers
     }
   
-  private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
-    mapResponse { response =>
-      logger.info(
-        "RequestResponseHandlingSupport.bagAndTag",
-        HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start)
-      )
-      response
-    }
+//  private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
+//    mapResponse { response =>
+//      logger.info(
+//        "RequestResponseHandlingSupport.bagAndTag",
+//        HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start)
+//      )
+//      response
+//    }
 }

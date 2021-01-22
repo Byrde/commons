@@ -25,7 +25,7 @@ trait ExceptionHandlingSupport extends CirceSupport with CodeSupport with Chaini
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", ex)
           logger.error(
             s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
-          ctx.complete((StatusCodes.InternalServerError, Response.Default(ex.getMessage, errorCode).asJson))
+          ctx.complete((StatusCodes.InternalServerError, Response.Default(Option(ex.getMessage).getOrElse("Error!"), errorCode).asJson))
         }
     }
 }
