@@ -13,10 +13,15 @@ import org.byrde.logging.Logger
 
 import java.util.UUID
 
+import io.circe.generic.auto._
+
 import sttp.capabilities
 import sttp.capabilities.akka.AkkaStreams
+import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.docs.openapi._
+import sttp.tapir.generic.auto._
+import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.swagger.akkahttp.SwaggerAkka
 
@@ -50,6 +55,19 @@ trait HttpServer
           .getOrElse(IdHeader(UUID.randomUUID.toString))
       }
     }
+  
+  private lazy val errorMatcher: EndpointOutput.StatusMapping[ErrorResponse] =
+    statusMappingValueMatcher(
+      StatusCode.BadRequest,
+      jsonBody[ErrorResponse]
+        .description(s"Client exception! Error code: $errorCode")
+        .example(Response.Default("Error", errorCode))
+    ) {
+      case err: ErrorResponse if err.code == errorCode => true
+    }
+  
+  lazy val errorMapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse] =
+    sttp.tapir.oneOf[ErrorResponse](errorMatcher)
 
   def ping: MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
     endpoint
