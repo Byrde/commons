@@ -22,7 +22,7 @@ case class TimeRange(start: Instant, end: Instant) extends Serializable {
     val ∆ = interval.toMillis
     require(∆ > 0, "Can't slice by a negative number!")
 
-    (∆ * floor(start.toEpochMilli / ∆)).toLong
+    (∆ * floor(start.toEpochMilli.toDouble / ∆)).toLong
       .until(end.toEpochMilli)
       .by(∆)
       .map(ofEpochMilli)

@@ -79,7 +79,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with C
     @tailrec
     def innerRegisterHandlers(iterator: Iterator[RejectionHandler], innerHandler: RejectionHandler): RejectionHandler =
       if (iterator.hasNext)
-        innerRegisterHandlers(iterator, innerHandler.withFallback(iterator.next))
+        innerRegisterHandlers(iterator, innerHandler.withFallback(iterator.next()))
       else
         innerHandler
     

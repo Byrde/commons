@@ -8,8 +8,8 @@ val RootSettings =
 val CommonsSettings =
   Seq(
     version := Option(System.getProperty("version")).getOrElse("SNAPSHOT"),
-    organization := Option(System.getProperty("organization")).getOrElse("org.byrde"),
-    scalaVersion := Option(System.getProperty("scalaVersion")).getOrElse("2.13.1"),
+    organization := "org.byrde",
+    scalaVersion := "2.13.3",
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers ++=
@@ -33,7 +33,8 @@ val CommonsSettings =
         "-Ywarn-dead-code",
         "-language:_",
         "-target:jvm-1.8",
-        "-encoding", "UTF-8"
+        "-encoding", "UTF-8",
+        "-Wconf:cat=lint-byname-implicit:silent"
       ),
     packageOptions +=
       Package.ManifestAttributes(
