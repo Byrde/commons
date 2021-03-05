@@ -2,48 +2,60 @@ package org.byrde.jwt.conf
 
 import com.typesafe.config.Config
 
+import pdi.jwt.JwtAlgorithm
 import pdi.jwt.algorithms.JwtHmacAlgorithm
-import pdi.jwt.{JwtAlgorithm, JwtClaim}
 
 case class JwtConfig(
-  tokenName: String,
-  private val secret: String,
+  issuer: String,
+  expirationSeconds: Long,
   encryptionAlgorithm: JwtHmacAlgorithm,
+  private val secret: String,
   saltOpt: Option[String] = None
 ) {
+  def withSalt(salt: String): JwtConfig =
+    copy(saltOpt = Some(salt))
+  
   lazy val signature: String =
     saltOpt.fold(secret)(_ + "_" + secret)
 }
 
 object JwtConfig {
   def apply(config: Config): JwtConfig =
-    apply("token", "signature", "encryption", config)
+    apply(
+      "issuer",
+      "expiration",
+      "encryption",
+      "secret",
+      config
+    )
 
   def apply(
-    _token: String,
-    _signature: String,
+    _issuer: String,
+    _expiration: String,
     _encryption: String,
+    _secret: String,
     config: Config
   ): JwtConfig = {
-    val token =
-      config
-        .getString(_token)
-
-    val signature =
-      config
-        .getString(_signature)
-
+    val issuer =
+      config.getString(_issuer)
+    
+    val expiration =
+      config.getLong(_expiration)
+    
     val encryption =
-      config
-        .getString(_encryption)
+      config.getString(_encryption)
+  
+    val secret =
+      config.getString(_secret)
 
-    build(token, signature, encryption)
+    build(issuer, expiration, encryption, secret)
   }
 
   private def build[T](
-    token: String,
-    signature: String,
+    issuer: String,
+    expiration: Long,
     _encryption: String,
+    secret: String,
   ): JwtConfig = {
     val encryption =
       _encryption match {
@@ -59,13 +71,12 @@ object JwtConfig {
         case _ =>
           JwtAlgorithm.HS256
       }
-
-    JwtClaim
-
+    
     JwtConfig(
-      token,
-      signature,
+      issuer,
+      expiration,
       encryption,
+      secret
     )
   }
 }

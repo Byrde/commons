@@ -1,47 +1,52 @@
 package org.byrde.jwt
 
-import org.byrde.jwt.claims.Claims
 import org.byrde.jwt.conf.JwtConfig
 import org.byrde.jwt.support.JwtSupport
 import org.byrde.jwt.support.validation.JwtValidationError.{Expired, Invalid}
 
-import java.time.Instant
+import io.circe.generic.auto._
+import io.circe.generic.semiauto._
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
-import io.circe.generic.auto._
-
 import pdi.jwt.JwtAlgorithm
 
 class JwtSpec extends AnyFlatSpec with Matchers {
-  private case class Claim(sub: String, org: String, typ: String, loc: String, acc: String)
+  private case class Claims(org: String, typ: String, loc: String, acc: String)
 
-  private implicit val config: JwtConfig =
-    JwtConfig("test", "test", JwtAlgorithm.HS256)
-
-  private val claim = Claim("test", "test", "test", "test", "test")
+  private val claims = Claims("test", "test", "test", "test")
 
   "Jwt.encode" should "encode correctly encode/decode" in {
-    val claims = Claims(expiration = Some(Instant.now.plusSeconds(3600).getEpochSecond), claim = Some(claim))
-
-    JwtSupport.decode[Claim](JwtSupport.encode(claims)) shouldBe Right(claim)
+    implicit val config: JwtConfig = JwtConfig("test", 5000L, JwtAlgorithm.HS256, "test")
+    JwtSupport.validateJwt[Claims](JwtSupport.issueJwt(claims)) shouldBe Right(claims)
+  }
+  
+  it should "succeed if the subject is provided and matches" in {
+    implicit val config: JwtConfig = JwtConfig("test", 5000L, JwtAlgorithm.HS256, "test")
+    JwtSupport.validateJwt[Claims](JwtSupport.issueJwt(claims, subject = Some("test")), subject = Some("test")) shouldBe Right(claims)
   }
 
   "Jwt.decode" should "fail on expired token" in {
-    val claims = Claims(expiration = Some(Instant.now.minusSeconds(3600).getEpochSecond), claim = Some(claim))
-
-    val validationError = JwtSupport.decode[Claim](JwtSupport.encode(claims)).swap.toOption.get.asInstanceOf[Expired]
-
+    implicit val config: JwtConfig = JwtConfig("test", -1L, JwtAlgorithm.HS256, "test")
+    val validationError = JwtSupport.validateJwt[Claims](JwtSupport.issueJwt(claims)).swap.toOption.get.asInstanceOf[Expired]
     validationError shouldBe Expired(validationError.message)
   }
 
   it should "fail on invalid token" in {
-    val claims = Claims(expiration = Some(Instant.now.plusSeconds(3600).getEpochSecond), claim = Some(claim))
-
-    val config1: JwtConfig = config.copy(secret = "test1")
-    val validationError = JwtSupport.decode[Claim](JwtSupport.encode(claims)(config1)).swap.toOption.get.asInstanceOf[Invalid]
-
+    implicit val config: JwtConfig = JwtConfig("test", 5000L, JwtAlgorithm.HS256, "test")
+    val validationError = JwtSupport.validateJwt[Claims](JwtSupport.issueJwt(claims)(config.copy(secret = "test1"), deriveEncoder[Claims])).swap.toOption.get.asInstanceOf[Invalid]
+    validationError shouldBe Invalid(validationError.message)
+  }
+  
+  it should "fail if the issuer does not match" in {
+    implicit val config: JwtConfig = JwtConfig("test", 5000L, JwtAlgorithm.HS256, "test")
+    val validationError = JwtSupport.validateJwt[Claims](JwtSupport.issueJwt(claims)(config.copy(issuer = "test1"), deriveEncoder[Claims])).swap.toOption.get.asInstanceOf[Invalid]
+    validationError shouldBe Invalid(validationError.message)
+  }
+  
+  it should "fail if the subject is provided but does not match" in {
+    implicit val config: JwtConfig = JwtConfig("test", 5000L, JwtAlgorithm.HS256, "test")
+    val validationError = JwtSupport.validateJwt[Claims](JwtSupport.issueJwt(claims, subject = Some("test")), subject = Some("test1")).swap.toOption.get.asInstanceOf[Invalid]
     validationError shouldBe Invalid(validationError.message)
   }
 }
