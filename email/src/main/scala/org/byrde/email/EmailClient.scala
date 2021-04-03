@@ -8,7 +8,7 @@ import org.byrde.email.request.EmailRequest
 import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
 import javax.mail.{Message, Transport}
 
-class Email(config: EmailConfig) {
+class EmailClient(config: EmailConfig) {
   def sendMessage(request: EmailRequest): Unit =
     Transport.send(buildEmail(request))
 
