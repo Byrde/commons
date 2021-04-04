@@ -13,7 +13,7 @@ import scala.util.ChainingSyntax
 
 class EmailClient(config: EmailConfig) extends ChainingSyntax {
   def sendMessage(request: EmailRequest): Unit =
-    Transport.send(buildEmail(request))
+    Transport.send(buildEmail(request), config.user, config.password)
 
   private def buildEmail(request: EmailRequest): MimeMessage =
     buildEmail(request.recipient, request.subject)(buildBody(request))

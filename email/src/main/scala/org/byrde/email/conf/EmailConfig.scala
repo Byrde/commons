@@ -7,7 +7,7 @@ import javax.mail.{PasswordAuthentication, Session}
 
 import scala.util.{ChainingSyntax, Try}
 
-case class EmailConfig(host: String, email: String, password: String, port: Int, from: String) extends ChainingSyntax {
+case class EmailConfig(host: String, user: String, password: String, port: Int, from: String) extends ChainingSyntax {
   private def properties: Properties =
     new Properties()
       .tap(_.put("mail.smtp.host", host))
@@ -27,27 +27,21 @@ case class EmailConfig(host: String, email: String, password: String, port: Int,
       }
 
   def sessionFromConfig: Session =
-    Session.getInstance(
-      properties,
-      new javax.mail.Authenticator() {
-        override def getPasswordAuthentication: PasswordAuthentication =
-          new PasswordAuthentication(email, password)
-      }
-    )
+    Session.getInstance(properties)
 }
 
 object EmailConfig {
   def apply(config: Config): EmailConfig =
-    apply("host", "email", "password", "port", "from")(config)
+    apply("host", "user", "password", "port", "from")(config)
 
-  def apply(_host: String, _email: String, _password: String, _port: String, _from: String)(config: Config): EmailConfig = {
+  def apply(_host: String, _user: String, _password: String, _port: String, _from: String)(config: Config): EmailConfig = {
     val host =
       config
         .getString(_host)
 
-    val email =
+    val user =
       config
-        .getString(_email)
+        .getString(_user)
 
     val password =
       config
@@ -58,8 +52,9 @@ object EmailConfig {
         .getInt(_port)
 
     val from =
-      Try(config.getString(_from)).getOrElse(email)
+      config
+        .getString(_from)
 
-    EmailConfig(host, email, password, port, from)
+    EmailConfig(host, user, password, port, from)
   }
 }
