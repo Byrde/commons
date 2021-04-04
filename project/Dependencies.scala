@@ -50,7 +50,7 @@ object Dependencies extends DependencyBuilders {
   val CompressorDependencies: Seq[ModuleID] =
     Seq("com.googlecode.htmlcompressor" % "htmlcompressor" % "1.5.2")
 
-  val EmailDependencies: Seq[ModuleID] =
+  val SmtpDependencies: Seq[ModuleID] =
     Seq(
       "javax"       % "javaee-api"  % "7.0",
       "javax.mail"  % "mail"        % "1.4",

@@ -24,6 +24,14 @@ object Email {
     case _ =>
       Left(EmailInvalid)
   }
+  
+  val fromStringUnsafe: String => Email = {
+    case EmailRegex(recipient, domain, domainSuffix) =>
+      types.Email(recipient.toLowerCase, domain.toLowerCase, domainSuffix.toLowerCase)
+    
+    case email =>
+      throw new Exception(s"Invalid email! ($email)")
+  }
 }
 
 case class Email(recipient: Recipient, domain: Domain, domainSuffix: DomainSuffix) {

@@ -2,6 +2,8 @@ package org.byrde.http.server
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.headers.CacheDirectives.{`max-age`, `no-cache`, `no-store`, `no-transform`, `private`}
+import akka.http.scaladsl.model.headers.{RawHeader, `Cache-Control`, `Strict-Transport-Security`}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.directives.RouteDirectives
@@ -98,21 +100,18 @@ trait HttpServer
   
   def handleRoute(routes: Route): Route =
     (cors & requestId) { id =>
-      (addRequestId(id) & addResponseId(id)) {
+      (addRequestId(id) & addResponseId(id) & securityHeaders) {
         (handleExceptions(exceptionHandler) & handleRejections(rejectionHandler))(routes)
-//        Instant.now.toEpochMilli.pipe { start =>
-//          bagAndTag(start, request) {
-//
-//          }
-//        }
       }
     }
   
   def start(routes: MaterializedRoutes)(implicit system: ActorSystem): Unit = {
-    Http()
-      .newServerAt(config.interface, config.port)
-      .bind(handleMaterializedRoutes(routes))
-    
+    val binding =
+      Http()
+        .newServerAt(config.interface, config.port)
+        .bind(handleMaterializedRoutes(routes))
+  
+    system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global))
     logger.info(s"${config.name} started on ${config.interface}:${config.port}")
   }
   
@@ -126,12 +125,14 @@ trait HttpServer
       id +: headers
     }
   
-//  private def bagAndTag(start: Long, request: HttpRequest): Directive0 =
-//    mapResponse { response =>
-//      logger.info(
-//        "RequestResponseHandlingSupport.bagAndTag",
-//        HttpRequestTelemetryLog(request, response.status.intValue, System.currentTimeMillis() - start)
-//      )
-//      response
-//    }
+  private def securityHeaders: Directive0 =
+    mapResponseHeaders { response =>
+      response
+        .pipe(_.filterNot(_.lowercaseName() == "server"))
+        .pipe(_.filterNot(_.lowercaseName() == "strict-transport-security"))
+        .pipe(_.filterNot(_.lowercaseName() == "cache-control"))
+        .pipe(_ :+ RawHeader("server", "server"))
+        .pipe(_ :+ `Strict-Transport-Security`(16070400L, includeSubDomains = true))
+        .pipe(_ :+ `Cache-Control`(`private`(), `no-cache`, `no-store`, `max-age`(0), `no-transform`))
+    }
 }

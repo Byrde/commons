@@ -10,9 +10,19 @@ case class GCSConfig(
 )
 
 object GCSConfig {
-
   type Bucket = String
-
+  
+  /**
+   * e.g configuration:
+   * {
+   *   project-id = "projectId"
+   *   client-email = "client@email.com"
+   *   private-key = ${privateKey}
+   * }
+   *
+   * @param config - Typesafe config adhering to above example.
+   * @return
+   */
   def apply(config: Config): GCSConfig =
     apply("bucket", "chunk", config)
 
@@ -25,5 +35,4 @@ object GCSConfig {
       config.getString(_bucket),
       config.getBytes(_chunk).toInt
     )
-
 }

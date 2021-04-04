@@ -79,9 +79,6 @@ val slick =
 val uri =
   project.settings(CommonsSettings)
 
-val email =
-  project.settings(CommonsSettings)
-
 val logging =
   project.settings(CommonsSettings)
 
@@ -94,6 +91,11 @@ val `scala-logging` =
 val utils =
   project
     .dependsOn(uri)
+    .settings(CommonsSettings)
+
+val smtp =
+  project
+    .dependsOn(utils)
     .settings(CommonsSettings)
 
 val `redis-client` =
@@ -121,7 +123,7 @@ val root =
       `http`,
       gcs,
       pubsub,
-      email,
+      smtp,
       `jwt`,
       logging,
       `scala-logging`,

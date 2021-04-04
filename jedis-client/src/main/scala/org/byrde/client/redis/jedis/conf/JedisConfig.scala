@@ -20,7 +20,20 @@ case class JedisConfig(
 ) extends RedisConfig
 
 object JedisConfig {
-
+  /**
+   * e.g configuration:
+   * {
+   *   uri: "redis://u:password@localhost:6379"
+   *   host: "localhost"
+   *   port: 6379
+   *   password: "password"
+   *   timeout: 2000
+   *   database: 0
+   * }
+   * 
+   * @param config - Typesafe config adhering to above example.
+   * @return
+   */
   def apply(config: Config): JedisConfig = {
     val redisUri =
       Try(config.getString("uri")).map(new URI(_))
@@ -85,5 +98,4 @@ object JedisConfig {
 
     poolConfig
   }
-
 }

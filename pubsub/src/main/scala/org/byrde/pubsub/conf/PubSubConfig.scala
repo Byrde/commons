@@ -10,6 +10,17 @@ case class PubSubConfig(
 )
 
 object PubSubConfig {
+  /**
+   * e.g configuration:
+   * {
+   *   project-id = "projectId"
+   *   client-email = "client@email.com"
+   *   private-key = ${privateKey}
+   * }
+   *
+   * @param config - Typesafe config adhering to above example.
+   * @return
+   */
   def apply(config: Config): PubSubConfig =
     apply("project-id", "client-email", "private-key", config)
   
