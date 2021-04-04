@@ -53,7 +53,8 @@ object Dependencies extends DependencyBuilders {
   val EmailDependencies: Seq[ModuleID] =
     Seq(
       "javax"       % "javaee-api"  % "7.0",
-      "javax.mail"  % "mail"        % "1.4"
+      "javax.mail"  % "mail"        % "1.4",
+      "org.jsoup"   % "jsoup"       % "1.13.1"
     )
 
   val JwtDependencies: Seq[ModuleID] =
