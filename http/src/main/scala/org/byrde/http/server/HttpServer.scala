@@ -131,7 +131,7 @@ trait HttpServer
         .pipe(_.filterNot(_.lowercaseName() == "server"))
         .pipe(_.filterNot(_.lowercaseName() == "strict-transport-security"))
         .pipe(_.filterNot(_.lowercaseName() == "cache-control"))
-        .pipe(_ :+ RawHeader("server", "server"))
+        .pipe(_ :+ RawHeader("server", "api"))
         .pipe(_ :+ `Strict-Transport-Security`(16070400L, includeSubDomains = true))
         .pipe(_ :+ `Cache-Control`(`private`(), `no-cache`, `no-store`, `max-age`(0), `no-transform`))
     }

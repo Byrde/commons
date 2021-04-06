@@ -10,7 +10,7 @@ import org.jsoup.Jsoup
 
 import scala.util.ChainingSyntax
 
-class Smtp(config: SmtpConfig) extends ChainingSyntax {
+class SmtpClient(config: SmtpConfig) extends ChainingSyntax {
   def send(request: SmtpRequest): Unit =
     Transport.send(buildEmail(request), config.user, config.password)
 

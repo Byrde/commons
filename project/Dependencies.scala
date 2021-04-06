@@ -17,7 +17,7 @@ object Dependencies extends DependencyBuilders {
     "0.13.0"
   
   val TapirVersion: String =
-    "0.17.6"
+    "0.17.19"
 
   val AkkaDependencies =
     Seq(
