@@ -14,8 +14,7 @@ import io.circe.syntax._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Publisher(config: conf.PubSubConfig)(implicit ec: ExecutionContext, system: ActorSystem) {
-  
+abstract class Publisher(config: conf.PubSubConfig)(implicit ec: ExecutionContext, system: ActorSystem) {
   private lazy val _printer: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
   
@@ -29,9 +28,8 @@ class Publisher(config: conf.PubSubConfig)(implicit ec: ExecutionContext, system
       .map(_ => ())
   
   private def convertMessage[T](env: Envelope[T])(implicit encoder: Encoder[T]): PublishMessage =
-    PublishMessage(new String(Base64.getEncoder.encode(env.asJson.printWith(_printer).getBytes)))
+    PublishMessage(Base64.getEncoder.encodeToString(env.asJson.printWith(_printer).getBytes))
 
   private def flow(topic: Topic): Flow[PublishRequest, Seq[String], NotUsed] =
     GooglePubSub.publish(topic, _config)
-  
 }

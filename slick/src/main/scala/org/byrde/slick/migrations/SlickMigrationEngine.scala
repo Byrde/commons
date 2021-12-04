@@ -33,7 +33,7 @@ class SlickMigrationEngine(
       applicationId,
       status,
       dateApplied
-    ) <> (MigrationRow.tupled, MigrationRow.unapply)
+    ) <> ((MigrationRow.apply _).tupled, MigrationRow.unapply)
   }
 
   private val MigrationTable = TableQuery[MigrationTable]

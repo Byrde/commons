@@ -89,10 +89,9 @@ object JedisConfig {
     Try(config.getBoolean("pool.testOnBorrow")).foreach(poolConfig.setTestOnBorrow)
     Try(config.getBoolean("pool.testOnReturn")).foreach(poolConfig.setTestOnReturn)
     Try(config.getBoolean("pool.testWhileIdle")).foreach(poolConfig.setTestWhileIdle)
-    Try(config.getLong("pool.timeBetweenEvictionRunsMillis")).foreach(poolConfig.setTimeBetweenEvictionRunsMillis)
+    Try(config.getDuration("pool.timeBetweenEvictionRunsMillis")).foreach(poolConfig.setTimeBetweenEvictionRuns)
     Try(config.getInt("pool.numTestsPerEvictionRun")).foreach(poolConfig.setNumTestsPerEvictionRun)
-    Try(config.getLong("pool.minEvictableIdleTimeMillis")).foreach(poolConfig.setMinEvictableIdleTimeMillis)
-    Try(config.getLong("pool.softMinEvictableIdleTimeMillis")).foreach(poolConfig.setSoftMinEvictableIdleTimeMillis)
+    Try(config.getDuration("pool.minEvictableIdleTimeMillis")).foreach(poolConfig.setSoftMinEvictableIdleTime)
     Try(config.getBoolean("pool.lifo")).foreach(poolConfig.setLifo)
     Try(config.getBoolean("pool.blockWhenExhausted")).foreach(poolConfig.setBlockWhenExhausted)
 

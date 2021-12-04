@@ -7,9 +7,6 @@ Abstraction for a Redis Client.
 * add to your dependencies library dependencies:
 ```libraryDependencies += "org.byrde" %% "redis-client" % "VERSION"```
 
-* add this resolver to your resolvers dependencies:
-```resolvers += "byrde-libraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/"```
-
 ## Quickstart
 This library defines a common interface for implementing a redis client.
 Compatible implementations:

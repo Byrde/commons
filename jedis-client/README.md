@@ -7,9 +7,6 @@ Jedis client implementation and wrapper for the [redis-client](https://github.co
 * add to your dependencies library dependencies:
 ```libraryDependencies += "org.byrde" %% "jedis-client" % "VERSION"```
 
-* add this resolver to your resolvers dependencies:
-```resolvers += "byrde-libraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/"```
-
 ## Quickstart
 This library is compatible implementation of the [redis-client](https://github.com/Byrde/commons/tree/master/redis-client) library
 

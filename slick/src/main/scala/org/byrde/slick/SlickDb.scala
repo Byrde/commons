@@ -6,7 +6,6 @@ import scala.concurrent.Future
 
 trait SlickDb[R <: SlickRole] {
   self: SlickProfile[R] =>
-  
     private val underlyingDb =
       config.jdbc.db
 
@@ -16,5 +15,4 @@ trait SlickDb[R <: SlickRole] {
 
     def shutdown: Future[Unit] =
       underlyingDb.shutdown
-  
 }

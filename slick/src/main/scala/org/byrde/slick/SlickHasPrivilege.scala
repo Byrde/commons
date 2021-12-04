@@ -10,7 +10,6 @@ import scala.annotation.implicitNotFound
 class SlickHasPrivilege[R <: SlickRole, +E <: Effect](profile: SlickProfile[R])
 
 object SlickHasPrivilege {
-  
   implicit def SlaveCanRead(implicit profile: SlickProfile[Slave]): Slave SlickHasPrivilege profile.api.Effect.Read =
     null
 
@@ -28,5 +27,4 @@ object SlickHasPrivilege {
 
   implicit def MasterCanAll(implicit profile: SlickProfile[Master]): Master SlickHasPrivilege profile.api.Effect.All =
     null
-  
 }

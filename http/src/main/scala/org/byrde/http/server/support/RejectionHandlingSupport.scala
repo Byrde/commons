@@ -1,12 +1,5 @@
 package org.byrde.http.server.support
 
-import akka.http.scaladsl.model.MediaTypes.`application/json`
-import akka.http.scaladsl.model.headers.Allow
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{MethodRejection, RejectionHandler}
-import akka.util.ByteString
-
 import org.byrde.http.server.Response
 
 import io.circe.Printer
@@ -14,9 +7,16 @@ import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 
+import akka.http.scaladsl.model.MediaTypes.`application/json`
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.Allow
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{MethodRejection, RejectionHandler}
+import akka.util.ByteString
+
 import scala.annotation.tailrec
 
-trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with CodeSupport {
+trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
   lazy val handlers: Set[RejectionHandler] =
     Set.empty
   
@@ -26,10 +26,10 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with C
       .handleAll[MethodRejection] { rejections =>
         respondWithHeader(Allow(rejections.map(_.supported))) {
           options {
-            rejectRequestEntityAndComplete(StatusCodes.OK -> Response.Default("Options", errorCode))
+            rejectRequestEntityAndComplete(StatusCodes.OK -> Response.Default("Options"))
           }
         } ~ rejectRequestEntityAndComplete(
-          StatusCodes.MethodNotAllowed -> Response.Default("Method Not Allowed", errorCode)
+          StatusCodes.MethodNotAllowed -> Response.Default("Method Not Allowed")
         )
       }
       .result()
@@ -53,7 +53,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport with C
               `application/json`,
               ByteString {
                 Printer.noSpaces.printToByteBuffer(
-                  Response.Default(normalizeString(response), errorCode).asJson,
+                  Response.Default(normalizeString(response)).asJson,
                   `application/json`.charset.nioCharset()
                 )
               }

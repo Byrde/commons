@@ -1,9 +1,13 @@
 package org.byrde.http.server
 
 trait Response {
-  def code: Int
+  def message: String
 }
 
 object Response {
-  case class Default(message: String, code: Int) extends Response
+  case object Ack extends Response {
+    override def message: String = "Success"
+  }
+  
+  case class Default(message: String) extends Response
 }

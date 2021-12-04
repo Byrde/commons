@@ -4,36 +4,35 @@ import net.logstash.logback.marker.Markers._
 import scala.jdk.CollectionConverters._
 
 class ScalaLogger(name: String) extends Logger {
-
   private val logger = com.typesafe.scalalogging.Logger(name)
 
-  override def debug(msg: String): Unit =
+  override def logDebug(msg: String): Unit =
     logger.debug(msg)
   
-  override def debug(msg: String, extras: Log): Unit =
+  override def logDebug(msg: String, extras: Log): Unit =
     logger.debug(msg, appendEntries(extras.asMap.asJava))
 
-  override def info(msg: String): Unit =
+  override def logInfo(msg: String): Unit =
     logger.info(msg)
   
-  override def info(msg: String, extras: Log): Unit =
+  override def logInfo(msg: String, extras: Log): Unit =
     logger.info(msg, appendEntries(extras.asMap.asJava))
 
-  override def warning(msg: String): Unit =
+  override def logWarning(msg: String): Unit =
     logger.warn(msg)
   
-  override def warning(msg: String, extras: Log): Unit =
+  override def logWarning(msg: String, extras: Log): Unit =
     logger.warn(msg, appendEntries(extras.asMap.asJava))
   
-  override def warning(msg: String, cause: Throwable): Unit =
+  override def logWarning(msg: String, cause: Throwable): Unit =
     logger.warn(msg, cause)
 
-  override def error(msg: String): Unit =
+  override def logError(msg: String): Unit =
     logger.error(msg)
   
-  override def error(msg: String, extras: Log): Unit =
+  override def logError(msg: String, extras: Log): Unit =
     logger.error(msg, appendEntries(extras.asMap.asJava))
 
-  override def error(msg: String, cause: Throwable): Unit =
+  override def logError(msg: String, cause: Throwable): Unit =
     logger.error(msg, cause)
 }

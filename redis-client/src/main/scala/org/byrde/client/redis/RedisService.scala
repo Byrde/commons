@@ -5,7 +5,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.Future
 
 trait RedisService {
-
   def keys(pattern: String): Future[Either[RedisClientError, Set[String]]]
 
   def get(key: Key): Future[Either[RedisClientError, Option[String]]]
@@ -15,6 +14,5 @@ trait RedisService {
   def del(key: Key): Future[Either[RedisClientError, Long]]
 
   def ttl(key: Key): Future[Either[RedisClientError, Long]]
-
 }
 

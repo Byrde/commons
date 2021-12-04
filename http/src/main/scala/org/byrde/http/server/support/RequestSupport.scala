@@ -1,7 +1,6 @@
 package org.byrde.http.server.support
 
 import akka.http.scaladsl.model.{HttpMethod, HttpMethods, HttpRequest}
-
 import org.byrde.http.server.{Body, Header}
 import org.byrde.uri.Url
 
@@ -41,6 +40,9 @@ trait RequestSupport {
   
       case HttpMethods.DELETE =>
         sttp.client3.basicRequest.delete(url)
+
+      case _ =>
+        throw new Exception("Invalid request method!")
     }
   
     private implicit def url2Uri(url: Url): Uri =

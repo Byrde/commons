@@ -38,7 +38,7 @@ abstract class Subscriber[T](
       .map(convertMessage)
       .map {
         case Right(innerMessage) =>
-          logger.info(s"Handling message for subscription: $subscription")
+          logger.logInfo(s"Handling message for subscription: $subscription")
           handle(innerMessage).map(_ => message.ackId)
 
         case Left(err) =>
@@ -51,7 +51,7 @@ abstract class Subscriber[T](
       .mapAsync(config.batch) { message =>
         process(message).recoverWith {
           case err =>
-            logger.error(s"Error processing message for subscription: $subscription", err)
+            logger.logError(s"Error processing message for subscription: $subscription", err)
             Future.failed(err)
         }
       }

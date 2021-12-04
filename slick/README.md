@@ -7,9 +7,6 @@ Library to get setup with basic project structuring and utilities.
 * add to your dependencies library dependencies:
 ```libraryDependencies += "org.byrde" %% "slick" % "VERSION"```
 
-* add this resolver to your resolvers dependencies:
-```resolvers += "byrde-libraries" at "https://dl.cloudsmith.io/public/byrde/libraries/maven/"```
-
 ## Quickstart
 Follow this guide to get setup with roles, migrations, structure, and convenience when working with Slick. 
 

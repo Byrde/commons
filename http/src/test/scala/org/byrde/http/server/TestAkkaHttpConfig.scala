@@ -1,8 +1,8 @@
 package org.byrde.http.server
 
-import org.byrde.http.server.conf.{AkkaHttpConfig, CorsConfig}
+import org.byrde.http.server.conf.{ServerConfig, CorsConfig}
 
-class TestAkkaHttpConfig extends AkkaHttpConfig {
+class TestAkkaHttpConfig extends ServerConfig {
   override def name: String = "test"
   
   override def version: String = "1.0"

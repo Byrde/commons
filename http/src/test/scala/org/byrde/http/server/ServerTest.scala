@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.{HttpMethods, HttpRequest}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 
-import org.byrde.http.server.conf.AkkaHttpConfig
+import org.byrde.http.server.conf.ServerConfig
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
 import org.byrde.http.server.support.{CodeSupport, EndpointSupport}
 import org.byrde.logging.Logger
@@ -33,7 +33,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
     fn: () => Future[Either[ErrorResponse, Response.Default]],
     mapper: EndpointOutput.OneOf[ErrorResponse, ErrorResponse]
   ) extends ChainingSyntax with MaterializedRoutes with EndpointSupport with CodeSupport {
-    private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
+    private lazy val test: org.byrde.http.server.MaterializedEndpoint[Unit, ErrorResponse, Response.Default, AkkaStreams with capabilities.WebSockets] =
       endpoint
         .in("test")
         .out(ackOutput)
@@ -47,7 +47,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   trait TestServer extends HttpServer with ServerTest.ServerTestSupport {
     override lazy val successCode: Int = 100
   
-    override lazy val config: AkkaHttpConfig =
+    override lazy val config: ServerConfig =
       new TestAkkaHttpConfig
   
     override lazy val logger: Logger =
@@ -126,7 +126,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   
     override lazy val successCode: Int = 100
   
-    override lazy val config: AkkaHttpConfig =
+    override lazy val config: ServerConfig =
       new TestAkkaHttpConfig
   
     override lazy val logger: Logger =
@@ -161,7 +161,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           }
         )
       
-      private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
+      private lazy val test: org.byrde.http.server.MaterializedEndpoint[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint
           .in("test")
           .out(jsonBody[Test])
@@ -343,7 +343,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
   
     override lazy val successCode: Int = 100
   
-    override lazy val config: AkkaHttpConfig =
+    override lazy val config: ServerConfig =
       new TestAkkaHttpConfig
   
     override lazy val logger: Logger =
@@ -455,7 +455,7 @@ class ServerTest extends AnyFlatSpec with Matchers with ScalaFutures with Scalat
           }
         )
     
-      private lazy val test: org.byrde.http.server.MaterializedRoute[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
+      private lazy val test: org.byrde.http.server.MaterializedEndpoint[Unit, ErrorResponse, Test, AkkaStreams with capabilities.WebSockets] =
         endpoint
           .in("test")
           .out(jsonBody[Test])

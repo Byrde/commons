@@ -3,18 +3,17 @@ package org.byrde.client.redis
 import java.io._
 import org.byrde.support.EitherSupport
 
+import java.util.Base64
+
 import io.circe.parser._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, Printer}
-
-import org.apache.commons.codec.binary.Base64
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Try, Using}
 
 abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) extends RedisExecutor[R] with EitherSupport {
-  
   private val _printer: Printer =
     Printer.noSpaces.copy(dropNullValues = true)
 
@@ -55,7 +54,7 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
     val (prefix, baos) =
       processSetValue(value)
   
-    Using(baos)(data => new String(Base64.encodeBase64(data.toByteArray))).toEither match {
+    Using(baos)(data => Base64.getEncoder.encodeToString(data.toByteArray)).toEither match {
       case Right(value) =>
         val redisV = prefix + "-" + value
         executor.execute(_.set(redisK, redisV, expiration))
@@ -81,7 +80,7 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
     val innerData: Seq[String] =
       data.split("-").toIndexedSeq
 
-    (innerData.head, Base64.decodeBase64(innerData.last)) match {
+    (innerData.head, Base64.getDecoder.decode(innerData.last)) match {
       case ("oos", bytes) =>
         withDataInputStream(bytes)(_.readUTF())
           .toEither
@@ -138,5 +137,4 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
         dos.writeUTF(value.asJson.printWith(_printer))
         "oos" -> baos
     }
-
 }

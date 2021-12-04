@@ -11,7 +11,6 @@ import akka.util.ByteString
 import scala.concurrent.{ExecutionContext, Future}
 
 class GCSClient(config: GCSConfig)(implicit ec: ExecutionContext, system: ActorSystem) {
-
   def upload(name: String, content: Source[ByteString, _]): Future[Unit] =
     content.runWith(sink(name)).map(_ => ())
 
@@ -25,5 +24,4 @@ class GCSClient(config: GCSConfig)(implicit ec: ExecutionContext, system: ActorS
       ),
       config.chunk
     )
-
 }

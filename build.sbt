@@ -9,7 +9,7 @@ val CommonsSettings =
   Seq(
     version := Option(System.getProperty("version")).getOrElse("SNAPSHOT"),
     organization := "org.byrde",
-    scalaVersion := "2.13.3",
+    scalaVersion := "2.13.6",
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
     resolvers ++=
@@ -88,19 +88,19 @@ val pubsub  =
 val `scala-logging` =
   project.dependsOn(logging).settings(CommonsSettings)
 
-val utils =
+val support =
   project
     .dependsOn(uri)
     .settings(CommonsSettings)
 
 val smtp =
   project
-    .dependsOn(utils)
+    .dependsOn(support)
     .settings(CommonsSettings)
 
 val `redis-client` =
   project
-    .dependsOn(utils)
+    .dependsOn(support)
     .settings(CommonsSettings)
 
 val `jedis-client` =
@@ -111,8 +111,8 @@ val `jedis-client` =
 val `http` =
   project
     .dependsOn(
-      logging,
-      utils
+      `scala-logging`,
+      support
     )
     .settings(CommonsSettings)
 
@@ -129,8 +129,7 @@ val root =
       `scala-logging`,
       `redis-client`,
       `jedis-client`,
-      `service-response`,
       slick,
       uri,
-      utils,
+      support,
     )

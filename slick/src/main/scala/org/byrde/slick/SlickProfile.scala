@@ -5,7 +5,6 @@ import org.byrde.slick.conf.SlickDatabaseConfig
 import slick.jdbc.JdbcProfile
 
 trait SlickProfile[R <: SlickRole] {
-	
 	def config: SlickDatabaseConfig[R]
 
 	implicit val profile: JdbcProfile =
@@ -13,5 +12,4 @@ trait SlickProfile[R <: SlickRole] {
 
 	implicit val api: profile.API =
 		profile.api
-	
 }

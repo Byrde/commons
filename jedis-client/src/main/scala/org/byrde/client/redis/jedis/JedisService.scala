@@ -11,7 +11,6 @@ import scala.jdk.CollectionConverters._
 import scala.util.Using
 
 class JedisService(val config: JedisConfig)(implicit ec: ExecutionContext) extends RedisService {
-  
   private lazy val pool =
     new JedisPool(
       config.poolConfig,
@@ -43,7 +42,7 @@ class JedisService(val config: JedisConfig)(implicit ec: ExecutionContext) exten
           if (expiration == Duration.Inf)
             0
           else
-            expiration.toSeconds.toInt
+            expiration.toSeconds.toLong
         
         jedis.set(key, value)
         

@@ -123,6 +123,9 @@ object SmtpConfig {
 
         case (_, Some("25")) =>
           SmtpConnectionType.Unsecured
+
+        case _ =>
+          throw new Exception("Invalid connection type!")
       }
 
     SmtpConfig(host, user, password, from, `type`)
