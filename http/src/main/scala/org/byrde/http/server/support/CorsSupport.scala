@@ -22,6 +22,6 @@ trait CorsSupport {
     RawHeader("Access-Control-Expose-Headers", _)
   }
   
-  def cors(config: CorsConfig): Directive0 =
+  def corsDirective(config: CorsConfig): Directive0 =
     respondWithHeaders(origins(config) ++ allowedMethods(config) ++ allowHeaders(config) ++ exposeHeaders(config))
 }

@@ -3,7 +3,7 @@ package org.byrde.http.server
 import org.byrde.http.server.conf.ServerConfig
 import org.byrde.http.server.support.{CorsSupport, ExceptionHandlingSupport, MaterializedEndpointSupport, RejectionHandlingSupport, RequestIdSupport}
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
-import org.byrde.logging.ScalaLogging
+import org.byrde.logging.Logger
 
 import io.circe.generic.auto._
 
@@ -27,13 +27,14 @@ import scala.concurrent.Future
 import scala.util.ChainingSyntax
 
 trait Server
-  extends ScalaLogging
-    with MaterializedEndpointSupport
+  extends MaterializedEndpointSupport
     with CorsSupport
     with RequestIdSupport
     with ExceptionHandlingSupport
     with RejectionHandlingSupport
     with ChainingSyntax {
+  self: Logger =>
+  
   private lazy val ackOutput: EndpointIO.Body[String, Response.Default] =
     jsonBody[Response.Default]
       .description(s"Default response!")
@@ -49,7 +50,7 @@ trait Server
       .errorOut(jsonBody[ErrorResponse.Default])
       .toMaterializedEndpoint(Future.successful(Right(Response.Default("Success"))))
   
-  private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(config: ServerConfig): Route =
+  private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit config: ServerConfig, logger: Logger): Route =
     endpoints
       .view
       .pipe(_ :+ ping)
@@ -59,18 +60,18 @@ trait Server
       }
       .pipe {
         case (routes, endpoints) =>
-          handleRoute(routes ~ handleEndpoints(endpoints)(config))(config)
+          handleRoute(routes ~ handleEndpoints(endpoints)(config))(config, logger)
       }
   
-  private def handleEndpoints(endpoints: Seq[AnyEndpoint])(config: ServerConfig): Route =
+  private def handleEndpoints(endpoints: Seq[AnyEndpoint])(implicit config: ServerConfig): Route =
     AkkaHttpServerInterpreter().toRoute {
       SwaggerUI[Future](OpenAPIDocsInterpreter().toOpenAPI(endpoints, config.name, config.version).toYaml)
     }
   
-  private def handleRoute(routes: Route)(config: ServerConfig): Route =
-    (cors(config.corsConfig) & requestId) { id =>
+  private def handleRoute(routes: Route)(implicit config: ServerConfig, logger: Logger): Route =
+    (corsDirective(config.corsConfig) & requestId) { id =>
       (addRequestId(id) & addResponseId(id) & securityHeaders) {
-        (handleExceptions(exceptionHandler) & handleRejections(rejectionHandler))(routes)
+        (handleExceptions(exceptionHandler(logger)) & handleRejections(rejectionHandler))(routes)
       }
     }
   
@@ -95,10 +96,10 @@ trait Server
         .pipe(_ :+ `Cache-Control`(`private`(), `no-cache`, `no-store`, `max-age`(0), `no-transform`))
     }
   
-  def start(endpoints: AnyMaterializedEndpoints = Seq.empty)(implicit config: ServerConfig, system: ActorSystem): Unit = {
+  def start(endpoints: AnyMaterializedEndpoints = Seq.empty)(implicit config: ServerConfig, logger: Logger, system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
-      .bind(handleMaterializedEndpoints(endpoints)(config))
+      .bind(handleMaterializedEndpoints(endpoints))
       .tap(binding => system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global)))
     
     logInfo(s"${config.name} started on ${config.interface}:${config.port}")

@@ -14,12 +14,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{MethodRejection, RejectionHandler}
 import akka.util.ByteString
 
-import scala.annotation.tailrec
-
 trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
-  lazy val handlers: Set[RejectionHandler] =
-    Set.empty
-  
   private lazy val default: RejectionHandler =
     RejectionHandler
       .newBuilder()
@@ -35,7 +30,7 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
       .result()
   
   private lazy val cachedHandler: RejectionHandler =
-    registerHandlers(default, handlers)
+    default
       .withFallback(RejectionHandler.default)
   
   lazy val rejectionHandler: RejectionHandler =
@@ -72,19 +67,19 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
           res
       }
   
-  private def registerHandlers(
-    initialHandler: RejectionHandler,
-    handlersToBeRegistered: Set[RejectionHandler]
-  ): RejectionHandler = {
-    @tailrec
-    def innerRegisterHandlers(iterator: Iterator[RejectionHandler], innerHandler: RejectionHandler): RejectionHandler =
-      if (iterator.hasNext)
-        innerRegisterHandlers(iterator, innerHandler.withFallback(iterator.next()))
-      else
-        innerHandler
-    
-    innerRegisterHandlers(handlersToBeRegistered.iterator, initialHandler)
-  }
+//  private def registerHandlers(
+//    initialHandler: RejectionHandler,
+//    handlersToBeRegistered: Set[RejectionHandler]
+//  ): RejectionHandler = {
+//    @tailrec
+//    def innerRegisterHandlers(iterator: Iterator[RejectionHandler], innerHandler: RejectionHandler): RejectionHandler =
+//      if (iterator.hasNext)
+//        innerRegisterHandlers(iterator, innerHandler.withFallback(iterator.next()))
+//      else
+//        innerHandler
+//
+//    innerRegisterHandlers(handlersToBeRegistered.iterator, initialHandler)
+//  }
   
   private def stripLeadingAndTrailingQuotes(value: String): String = {
     var tmp =

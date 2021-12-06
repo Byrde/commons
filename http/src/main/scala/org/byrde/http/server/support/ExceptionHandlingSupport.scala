@@ -2,7 +2,7 @@ package org.byrde.http.server.support
 
 import org.byrde.http.server.Response
 import org.byrde.http.server.logging.HttpRequestLog
-import org.byrde.logging.ScalaLogging
+import org.byrde.logging.Logger
 
 import java.util.UUID
 
@@ -14,11 +14,11 @@ import akka.http.scaladsl.server.ExceptionHandler
 
 import scala.util.ChainingSyntax
 
-trait ExceptionHandlingSupport extends ScalaLogging with CirceSupport with ChainingSyntax {
-  lazy val exceptionHandler: ExceptionHandler = ExceptionHandler { case ex => ctx =>
+trait ExceptionHandlingSupport extends CirceSupport with ChainingSyntax {
+  def exceptionHandler(logger: Logger): ExceptionHandler = ExceptionHandler { case ex => ctx =>
     generateId().pipe { id =>
-      logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", ex)
-      logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
+      logger.logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", ex)
+      logger.logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
       ctx.complete((StatusCodes.InternalServerError, Response.Default(Option(ex.getMessage).getOrElse("Error!")).asJson))
     }
   }
