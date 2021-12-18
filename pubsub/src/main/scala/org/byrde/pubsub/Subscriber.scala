@@ -1,11 +1,5 @@
 package org.byrde.pubsub
 
-import akka.Done
-import akka.actor.{ActorSystem, Cancellable}
-import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
-import akka.stream.alpakka.googlecloud.pubsub.{AcknowledgeRequest, PubSubConfig, ReceivedMessage}
-import akka.stream.scaladsl.{RestartSource, Sink, Source}
-
 import org.byrde.logging.Logger
 
 import java.util.Base64
@@ -13,6 +7,12 @@ import java.util.Base64
 import io.circe.Decoder
 import io.circe.generic.auto._
 import io.circe.parser._
+
+import akka.Done
+import akka.actor.{ActorSystem, Cancellable}
+import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
+import akka.stream.alpakka.googlecloud.pubsub._
+import akka.stream.scaladsl.{RestartSource, Sink, Source}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
