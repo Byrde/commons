@@ -1,11 +1,11 @@
 package org.byrde.http.server.support
 
 import org.byrde.http.server._
+import org.byrde.uri.Url
 
 import sttp.capabilities.WebSockets
 import sttp.capabilities.akka.AkkaStreams
-import sttp.client3.SttpBackend
-import sttp.model.Uri
+import sttp.client3.{SttpBackend, UriContext}
 import sttp.tapir._
 import sttp.tapir.client.sttp.SttpClientInterpreter
 import sttp.tapir.server.PartialServerEndpoint
@@ -19,7 +19,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
     partialEndpoint: PartialServerEndpoint[A, U, Unit, ErrorResponse.Default, O, AkkaStreams with WebSockets, Future]
   ) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      url: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[A, Unit, ErrorResponse.Default, O, AkkaStreams with WebSockets] =
       SttpClientInterpreter()
@@ -27,7 +27,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
           partialEndpoint
             .endpoint
             .copy(securityInput = EndpointIO.Empty(Codec.idPlain(), EndpointIO.Info.empty)),
-          Some(uri)
+          Some(uri"${url.toString}")
         )
         .pipe { fn =>
           partialEndpoint.toMaterializedEndpoint { _ =>
@@ -43,7 +43,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
     partialEndpoint: PartialServerEndpoint[A, U, I, ErrorResponse.Default, O, AkkaStreams with WebSockets, Future]
   ) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      url: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[A, I, ErrorResponse.Default, O, AkkaStreams with WebSockets] =
       SttpClientInterpreter()
@@ -51,7 +51,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
           partialEndpoint
             .endpoint
             .copy(securityInput = EndpointIO.Empty(Codec.idPlain(), EndpointIO.Info.empty)),
-          Some(uri)
+          Some(uri"${url.toString}")
         )
         .pipe { fn =>
           partialEndpoint.toMaterializedEndpoint {
@@ -68,7 +68,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
     partialServerEndpoint: PartialServerEndpoint[A, U, Unit, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets, Future]
   ) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      uri: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[A, Unit, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets] =
       AuthenticatedProxyEndpoint1(partialServerEndpoint).toProxyMaterializedEndpoint(uri, headers)
@@ -78,21 +78,21 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
     partialServerEndpoint: PartialServerEndpoint[A, U, I, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets, Future]
   ) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      url: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[A, I, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets] =
-      AuthenticatedProxyEndpoint2(partialServerEndpoint).toProxyMaterializedEndpoint(uri, headers)
+      AuthenticatedProxyEndpoint2(partialServerEndpoint).toProxyMaterializedEndpoint(url, headers)
   }
   
   implicit class ProxyEndpoint1[O](endpoint: Endpoint[Unit, Unit, ErrorResponse.Default, O, AkkaStreams with WebSockets]) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      url: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[Unit, Unit, ErrorResponse.Default, O, AkkaStreams with WebSockets] =
       SttpClientInterpreter()
         .toRequestThrowDecodeFailures(
           endpoint,
-          Some(uri)
+          Some(uri"${url.toString}")
         )
         .pipe { fn =>
           endpoint.toMaterializedEndpoint {
@@ -106,13 +106,13 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
   
   implicit class ProxyEndpoint2[I, O](endpoint: Endpoint[Unit, I, ErrorResponse.Default, O, AkkaStreams with WebSockets]) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      url: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[Unit, I, ErrorResponse.Default, O, AkkaStreams with WebSockets] =
       SttpClientInterpreter()
         .toRequestThrowDecodeFailures(
           endpoint,
-          Some(uri)
+          Some(uri"${url.toString}")
         )
         .pipe { fn =>
           endpoint.toMaterializedEndpoint { input =>
@@ -126,7 +126,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
   
   implicit class ProxyEndpoint3(endpoint: Endpoint[Unit, Unit, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets]) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      uri: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[Unit, Unit, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets] =
       ProxyEndpoint1(endpoint).toProxyMaterializedEndpoint(uri, headers)
@@ -134,7 +134,7 @@ trait ProxyMaterializedEndpointSupport extends MaterializedEndpointSupport {
   
   implicit class ProxyEndpoint4[I](endpoint: Endpoint[Unit, I, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets]) {
     def toProxyMaterializedEndpoint(
-      uri: Uri,
+      uri: Url,
       headers: Map[String, String] = Map.empty,
     )(implicit backend: SttpBackend[Future, AkkaStreams with WebSockets]): MaterializedEndpoint[Unit, I, ErrorResponse.Default, Response.Default, AkkaStreams with WebSockets] =
       ProxyEndpoint2(endpoint).toProxyMaterializedEndpoint(uri, headers)

@@ -33,8 +33,6 @@ trait Server
     with ExceptionHandlingSupport
     with RejectionHandlingSupport
     with ChainingSyntax {
-  self: Logger =>
-  
   private lazy val ackOutput: EndpointIO.Body[String, Response.Default] =
     jsonBody[Response.Default]
       .description(s"Default response!")
@@ -96,12 +94,14 @@ trait Server
         .pipe(_ :+ `Cache-Control`(`private`(), `no-cache`, `no-store`, `max-age`(0), `no-transform`))
     }
   
-  def start(endpoints: AnyMaterializedEndpoints = Seq.empty)(implicit config: ServerConfig, logger: Logger, system: ActorSystem): Unit = {
+  def start(
+    endpoints: AnyMaterializedEndpoints = Seq.empty
+  )(implicit config: ServerConfig, logger: Logger, system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
       .bind(handleMaterializedEndpoints(endpoints))
       .tap(binding => system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global)))
     
-    logInfo(s"${config.name} started on ${config.interface}:${config.port}")
+    logger.logInfo(s"${config.name} started on ${config.interface}:${config.port}")
   }
 }
