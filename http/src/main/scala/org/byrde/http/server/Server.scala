@@ -95,11 +95,12 @@ trait Server
     }
   
   def start(
+    config: ServerConfig,
     endpoints: AnyMaterializedEndpoints = Seq.empty
-  )(implicit config: ServerConfig, logger: Logger, system: ActorSystem): Unit = {
+  )(implicit logger: Logger, system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
-      .bind(handleMaterializedEndpoints(endpoints))
+      .bind(handleMaterializedEndpoints(endpoints)(config, logger))
       .tap(binding => system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global)))
     
     logger.logInfo(s"${config.name} started on ${config.interface}:${config.port}")

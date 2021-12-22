@@ -25,7 +25,7 @@ trait EitherSupport {
   
   implicit class GetEither[T, TT <: Throwable](value: Either[TT, T]) {
     @inline def get: T =
-      value.right.get
+      value.fold(ex => throw new Exception("Get on left!", ex), identity)
   }
 }
 
