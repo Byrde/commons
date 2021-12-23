@@ -1,6 +1,6 @@
 package org.byrde.http.server.support
 
-import org.byrde.http.server.Response
+import org.byrde.http.server.Ack
 
 import io.circe.Printer
 import io.circe.generic.auto._
@@ -21,17 +21,16 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
       .handleAll[MethodRejection] { rejections =>
         respondWithHeader(Allow(rejections.map(_.supported))) {
           options {
-            rejectRequestEntityAndComplete(StatusCodes.OK -> Response.Default("Options"))
+            rejectRequestEntityAndComplete(StatusCodes.OK -> Ack("Options"))
           }
         } ~ rejectRequestEntityAndComplete(
-          StatusCodes.MethodNotAllowed -> Response.Default("Method Not Allowed")
+          StatusCodes.MethodNotAllowed -> Ack("Method Not Allowed")
         )
       }
       .result()
   
   private lazy val cachedHandler: RejectionHandler =
-    default
-      .withFallback(RejectionHandler.default)
+    default.withFallback(RejectionHandler.default)
   
   lazy val rejectionHandler: RejectionHandler =
     cachedHandler
@@ -48,14 +47,14 @@ trait RejectionHandlingSupport extends RejectionSupport with CirceSupport {
               `application/json`,
               ByteString {
                 Printer.noSpaces.printToByteBuffer(
-                  Response.Default(normalizeString(response)).asJson,
+                  Ack(normalizeString(response)).asJson,
                   `application/json`.charset.nioCharset()
                 )
               }
             )
           
           parse(response)
-            .flatMap(_.as[Response.Default])
+            .flatMap(_.as[Ack])
             .map(_ => res)
             .getOrElse {
               res

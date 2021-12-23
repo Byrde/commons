@@ -33,10 +33,10 @@ trait Server
     with ExceptionHandlingSupport
     with RejectionHandlingSupport
     with ChainingSyntax {
-  private lazy val ackOutput: EndpointIO.Body[String, Response.Default] =
-    jsonBody[Response.Default]
+  private lazy val ackOutput: EndpointIO.Body[String, Ack] =
+    jsonBody[Ack]
       .description(s"Default response!")
-      .example(Response.Default("Success"))
+      .example(Ack("Success"))
   
   private def ping =
     endpoint
@@ -45,8 +45,7 @@ trait Server
       .in("ping")
       .name("Ping")
       .description("Standard API endpoint to say hello to the server.")
-      .errorOut(jsonBody[ErrorResponse.Default])
-      .toMaterializedEndpoint(Future.successful(Right(Response.Default("Success"))))
+      .toMaterializedEndpoint(Future.successful(Right(Ack("Success"))))
   
   private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit config: ServerConfig, logger: Logger): Route =
     endpoints
