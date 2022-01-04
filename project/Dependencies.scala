@@ -40,9 +40,11 @@ object Dependencies extends DependencyBuilders {
     )
 
   val AlpakkaGCS =
+    //TODO: Use vanilla Java libraries (pubsub, gcs, etc..)
     Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-storage" % AlpakkaVersion)
   
   val AlpakkaPubSub =
+    //TODO: Use vanilla Java libraries (pubsub, gcs, etc..)
     Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-pub-sub" % AlpakkaVersion)
   
   val TapirDependencies: Seq[ModuleID] =
@@ -68,7 +70,7 @@ object Dependencies extends DependencyBuilders {
     )
 
   val JwtDependencies: Seq[ModuleID] =
-    Seq("com.github.jwt-scala" %% "jwt-circe" % "9.0.2")
+    Seq("com.github.jwt-scala" %% "jwt-circe" % "9.0.3")
 
   val RedisDependencies: Seq[ModuleID] =
     Seq("redis.clients" % "jedis" % "3.7.0")

@@ -70,9 +70,6 @@ val gcs  =
 val `jwt` =
   project.settings(CommonsSettings)
 
-val `service-response` =
-  project.settings(CommonsSettings)
-
 val slick =
   project.settings(CommonsSettings)
 
