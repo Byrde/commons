@@ -14,10 +14,11 @@ trait MaterializedEndpointSupport {
   implicit class AuthenticatedEndpoint1[A, U, E, O](
     partialServerEndpoint: PartialServerEndpoint[A, U, Unit, E, O, AkkaStreams with WebSockets, Future]
   ) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: U => Future[Either[E, O]]
     ): MaterializedEndpoint[A, Unit, E, O, AkkaStreams with WebSockets] =
       MaterializedEndpoint(
+        hide,
         partialServerEndpoint.endpoint,
         AkkaHttpServerInterpreter().toRoute(partialServerEndpoint.serverLogic(auth => _ => logic(auth)))
       )
@@ -26,10 +27,11 @@ trait MaterializedEndpointSupport {
   implicit class AuthenticatedEndpoint2[A, U, I, E, O](
     partialServerEndpoint: PartialServerEndpoint[A, U, I, E, O, AkkaStreams with WebSockets, Future]
   ) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: (U, I) => Future[Either[E, O]]
     ): MaterializedEndpoint[A, I, E, O, AkkaStreams with WebSockets] =
       MaterializedEndpoint(
+        hide,
         partialServerEndpoint.endpoint,
         AkkaHttpServerInterpreter().toRoute(
           partialServerEndpoint.serverLogic(auth => input => logic(auth, input))
@@ -40,46 +42,46 @@ trait MaterializedEndpointSupport {
   implicit class AuthenticatedEndpoint3[A, U, E](
     partialServerEndpoint: PartialServerEndpoint[A, U, Unit, E, Ack, AkkaStreams with WebSockets, Future]
   ) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: U => Future[Either[E, Ack]]
     ): MaterializedEndpoint[A, Unit, E, Ack, AkkaStreams with WebSockets] =
-      AuthenticatedEndpoint1(partialServerEndpoint).toMaterializedEndpoint(logic)
+      AuthenticatedEndpoint1(partialServerEndpoint).toMaterializedEndpoint(hide)(logic)
   }
   
   implicit class AuthenticatedEndpoint4[A, U, I, E](
     partialServerEndpoint: PartialServerEndpoint[A, U, I, E, Ack, AkkaStreams with WebSockets, Future]
   ) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: (U, I) => Future[Either[E, Ack]]
     ): MaterializedEndpoint[A, I, E, Ack, AkkaStreams with WebSockets] =
-      AuthenticatedEndpoint2(partialServerEndpoint).toMaterializedEndpoint(logic)
+      AuthenticatedEndpoint2(partialServerEndpoint).toMaterializedEndpoint(hide)(logic)
   }
   
   implicit class Endpoint1[E, O](endpoint: Endpoint[Unit, Unit, E, O, AkkaStreams with WebSockets]) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: => Future[Either[E, O]]
     ): MaterializedEndpoint[Unit, Unit, E, O, AkkaStreams with WebSockets] =
-      MaterializedEndpoint(endpoint, AkkaHttpServerInterpreter().toRoute(endpoint.serverLogic(_ => logic)))
+      MaterializedEndpoint(hide, endpoint, AkkaHttpServerInterpreter().toRoute(endpoint.serverLogic(_ => logic)))
   }
   
   implicit class Endpoint2[I, E, O](endpoint: Endpoint[Unit, I, E, O, AkkaStreams with WebSockets]) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: I => Future[Either[E, O]]
     ): MaterializedEndpoint[Unit, I, E, O, AkkaStreams with WebSockets] =
-      MaterializedEndpoint(endpoint, AkkaHttpServerInterpreter().toRoute(endpoint.serverLogic[Future](logic)))
+      MaterializedEndpoint(hide, endpoint, AkkaHttpServerInterpreter().toRoute(endpoint.serverLogic[Future](logic)))
   }
   
   implicit class Endpoint3[E](endpoint: Endpoint[Unit, Unit, E, Ack, AkkaStreams with WebSockets]) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: => Future[Either[E, Ack]]
     ): MaterializedEndpoint[Unit, Unit, E, Ack, AkkaStreams with WebSockets] =
-      Endpoint1(endpoint).toMaterializedEndpoint(logic)
+      Endpoint1(endpoint).toMaterializedEndpoint(hide)(logic)
   }
   
   implicit class Endpoint4[I, E](endpoint: Endpoint[Unit, I, E, Ack, AkkaStreams with WebSockets]) {
-    def toMaterializedEndpoint(
+    def toMaterializedEndpoint(hide: Boolean = false)(
       logic: I => Future[Either[E, Ack]]
     ): MaterializedEndpoint[Unit, I, E, Ack, AkkaStreams with WebSockets] =
-      Endpoint2(endpoint).toMaterializedEndpoint(logic)
+      Endpoint2(endpoint).toMaterializedEndpoint(hide)(logic)
   }
 }

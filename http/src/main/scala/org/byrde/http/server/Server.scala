@@ -45,7 +45,7 @@ trait Server
       .in("ping")
       .name("Ping")
       .description("Standard API endpoint to say hello to the server.")
-      .toMaterializedEndpoint(Future.successful(Right(Ack("Success"))))
+      .toMaterializedEndpoint()(Future.successful(Right(Ack("Success"))))
   
   private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit config: ServerConfig, logger: Logger): Route =
     endpoints
@@ -53,7 +53,7 @@ trait Server
       .pipe(_ :+ ping)
       .foldLeft[(Route, Seq[AnyEndpoint])]((RouteDirectives.reject, Seq.empty[AnyEndpoint])) {
         case ((routes, endpoints), elem) =>
-          (routes ~ elem.route, endpoints :+ elem.endpoint)
+          (routes ~ elem.route, if (elem.hide) endpoints else endpoints :+ elem.endpoint)
       }
       .pipe {
         case (routes, endpoints) =>
