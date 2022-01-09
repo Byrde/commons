@@ -13,51 +13,63 @@ import io.circe.Decoder
 import io.circe.generic.auto._
 import io.circe.parser.parse
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util._
 import scala.util.chaining._
 
-trait Subscriber {
+trait Subscriber extends AutoCloseable {
+  private val _subscribers: mutable.Map[String, com.google.cloud.pubsub.v1.Subscriber] =
+    mutable.Map()
+  
+  def createSubscription(
+    credentials: Credentials,
+    project: String,
+    subscription: Subscription,
+    topic: Topic
+  ): Future[Unit] =
+    Future {
+      SubscriptionAdminClient
+        .create {
+          SubscriptionAdminSettings
+            .newBuilder()
+            .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+            .build()
+        }
+        .createSubscription {
+          com.google.pubsub.v1.Subscription
+            .newBuilder()
+            .setName(SubscriptionName.of(project, subscription).toString)
+            .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
+            .setAckDeadlineSeconds(10)
+            .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
+            .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
+            .setRetryPolicy {
+              com.google.pubsub.v1.RetryPolicy
+                .newBuilder()
+                .setMinimumBackoff(Duration.newBuilder().setSeconds(1).build())
+                .setMaximumBackoff(Duration.newBuilder().setSeconds(180).build())
+            }
+            .build()
+        }
+    }
+    .map(_ => ())
+    .recover {
+      case _: AlreadyExistsException =>
+        Future.unit
+    }
+  
   def subscribe[T](
     credentials: Credentials,
     project: String,
     subscription: Subscription,
     topic: Topic
   )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
-    (for {
-      _ <-
-        Try {
-          logger.logInfo(s"Creating subscription: $subscription")
-          SubscriptionAdminClient
-            .create {
-              SubscriptionAdminSettings
-                .newBuilder()
-                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-                .build()
-            }
-            .createSubscription {
-              com.google.pubsub.v1.Subscription
-                .newBuilder()
-                .setName(SubscriptionName.of(project, subscription).toString)
-                .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
-                .setAckDeadlineSeconds(10)
-                .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
-                .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
-                .setRetryPolicy {
-                  com.google.pubsub.v1.RetryPolicy
-                    .newBuilder()
-                    .setMinimumBackoff(Duration.newBuilder().setSeconds(1).build())
-                    .setMaximumBackoff(Duration.newBuilder().setSeconds(180).build())
-                }
-                .build()
-            }
-        }.recover {
-          case _: AlreadyExistsException =>
-            ()
-        }
+    for {
+      _ <- createSubscription(credentials, project, subscription, topic)
       subscriber <-
-        Try {
+        Future {
           logger.logInfo(s"Creating subscriber: $subscription")
           com.google.cloud.pubsub.v1.Subscriber
             .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(fn))
@@ -68,24 +80,15 @@ trait Subscriber {
             }
             .build()
         }
-    } yield subscriber).pipe {
-      case Success(subscriber) =>
-        logger.logInfo(s"Starting subscriber $subscription!")
-        for {
-          _ <-
-            Future.unit
-          _ <-
-            Future(subscriber.awaitRunning())
-              .recoverWith {
-                case ex =>
-                  logger.logError("Error starting subscriber!", ex)
-                  Future(subscriber.awaitTerminated()).flatMap(_ => Future.failed(ex))
-              }
-        } yield ()
-
-      case Failure(exception) =>
-        Future.failed(exception)
-    }
+      _ <-
+        Future(subscriber.startAsync().awaitRunning())
+          .recoverWith {
+            case ex =>
+              logger.logError("Error starting subscriber!", ex)
+              Future(subscriber.stopAsync().awaitTerminated()).flatMap(_ => Future.failed(ex))
+          }
+      _ <- Future(_subscribers.update(subscription, subscriber))
+    } yield ()
   
   private def receiver[T](
     fn: Envelope[T] => Future[_],
@@ -110,6 +113,9 @@ trait Subscriber {
           ()
       }
   }
+  
+  override def close(): Unit =
+    _subscribers.values.foreach(_.stopAsync().awaitTerminated())
 }
 
 object Subscriber extends Subscriber

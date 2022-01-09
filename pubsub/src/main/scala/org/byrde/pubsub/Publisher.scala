@@ -17,12 +17,32 @@ import io.circe.syntax._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.chaining._
-import scala.util.{Failure, Success, Try}
 
 trait Publisher extends JavaFutureSupport with AutoCloseable {
   private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
     mutable.Map()
+  
+  def createTopic(
+    credentials: Credentials,
+    project: String,
+    topic: String
+  )(implicit logger: Logger): Future[Unit] =
+    Future {
+      logger.logInfo(s"Creating topic: $topic")
+      TopicAdminClient
+        .create {
+          TopicAdminSettings
+            .newBuilder()
+            .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+            .build()
+        }
+        .createTopic(TopicName.ofProjectTopicName(project, topic).toString)
+    }
+    .map(_ => ())
+    .recover {
+      case _: AlreadyExistsException =>
+        Future.unit
+    }
   
   def publish[T](
     credentials: Credentials,
@@ -31,26 +51,12 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
   )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
     _publishers
       .get(env.topic)
-      .map(Success.apply)
+      .map(Future.successful)
       .getOrElse {
         for {
-          _ <-
-            Try {
-              logger.logInfo(s"Creating topic: ${env.topic}")
-              TopicAdminClient
-                .create {
-                  TopicAdminSettings
-                    .newBuilder()
-                    .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-                    .build()
-                }
-                .createTopic(TopicName.ofProjectTopicName(project, env.topic).toString)
-            }.recover {
-              case _: AlreadyExistsException =>
-                ()
-            }
+          _ <- createTopic(credentials, project, env.topic)
           publisher <-
-            Try {
+            Future {
               logger.logInfo(s"Creating publisher: ${env.topic}")
               com.google.cloud.pubsub.v1.Publisher
                 .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
@@ -62,19 +68,15 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
                 .build
             }
           _ <-
-            Try(_publishers.update(env.topic, publisher))
+            Future(_publishers.update(env.topic, publisher))
         } yield publisher
       }
-      .pipe {
-        case Success(publisher) =>
-          logger.logInfo(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
-          publisher
-            .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
-            .asScala
-            .map(_ => ())
-
-        case Failure(exception) =>
-          Future.failed(exception)
+      .map { publisher =>
+        logger.logInfo(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
+        publisher
+          .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
+          .asScala
+          .map(_ => ())
       }
   
   override def close(): Unit =
