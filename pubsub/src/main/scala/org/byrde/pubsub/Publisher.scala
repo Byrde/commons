@@ -1,10 +1,11 @@
 package org.byrde.pubsub
 
 import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
+import com.google.api.gax.rpc.AlreadyExistsException
 import com.google.auth.Credentials
 import com.google.cloud.pubsub.v1.{TopicAdminClient, TopicAdminSettings}
 import com.google.protobuf.ByteString
-import com.google.pubsub.v1.PubsubMessage
+import com.google.pubsub.v1.{PubsubMessage, TopicName}
 
 import org.byrde.logging.Logger
 import org.byrde.support.JavaFutureSupport
@@ -25,6 +26,7 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
   
   def publish[T](
     credentials: Credentials,
+    project: String,
     env: Envelope[T]
   )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
     _publishers
@@ -42,13 +44,16 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
                     .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
                     .build()
                 }
-                .createTopic(env.topic)
+                .createTopic(TopicName.ofProjectTopicName(project, env.topic).toString)
+            }.recover {
+              case _: AlreadyExistsException =>
+                ()
             }
           publisher <-
             Try {
               logger.logInfo(s"Creating publisher: ${env.topic}")
               com.google.cloud.pubsub.v1.Publisher
-                .newBuilder(env.topic)
+                .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
                 .setCredentialsProvider {
                   new CredentialsProvider {
                     override def getCredentials: Credentials = credentials

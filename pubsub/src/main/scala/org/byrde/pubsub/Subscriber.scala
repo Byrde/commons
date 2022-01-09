@@ -1,9 +1,11 @@
 package org.byrde.pubsub
 
 import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
+import com.google.api.gax.rpc.AlreadyExistsException
 import com.google.auth.Credentials
 import com.google.cloud.pubsub.v1.{MessageReceiver, SubscriptionAdminClient, SubscriptionAdminSettings}
 import com.google.protobuf.Duration
+import com.google.pubsub.v1.{SubscriptionName, TopicName}
 
 import org.byrde.logging.Logger
 
@@ -19,6 +21,7 @@ import scala.util.chaining._
 trait Subscriber {
   def subscribe[T](
     credentials: Credentials,
+    project: String,
     subscription: Subscription,
     topic: Topic
   )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
@@ -36,8 +39,8 @@ trait Subscriber {
             .createSubscription {
               com.google.pubsub.v1.Subscription
                 .newBuilder()
-                .setName(subscription)
-                .setTopic(topic)
+                .setName(SubscriptionName.of(project, subscription).toString)
+                .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
                 .setAckDeadlineSeconds(10)
                 .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
                 .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
@@ -49,12 +52,15 @@ trait Subscriber {
                 }
                 .build()
             }
+        }.recover {
+          case _: AlreadyExistsException =>
+            ()
         }
       subscriber <-
         Try {
           logger.logInfo(s"Creating subscriber: $subscription")
           com.google.cloud.pubsub.v1.Subscriber
-            .newBuilder(subscription, receiver(fn))
+            .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(fn))
             .setCredentialsProvider {
               new CredentialsProvider {
                 override def getCredentials: Credentials = credentials
