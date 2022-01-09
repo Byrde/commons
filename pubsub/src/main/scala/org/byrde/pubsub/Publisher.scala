@@ -10,6 +10,8 @@ import com.google.pubsub.v1.{PubsubMessage, TopicName}
 import org.byrde.logging.Logger
 import org.byrde.support.JavaFutureSupport
 
+import java.util.concurrent.TimeUnit
+
 import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -17,6 +19,7 @@ import io.circe.syntax._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.chaining._
 
 trait Publisher extends JavaFutureSupport with AutoCloseable {
   private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
@@ -80,7 +83,7 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
       }
   
   override def close(): Unit =
-    _publishers.values.foreach(_.shutdown())
+    _publishers.values.foreach(_.tap(_.shutdown()).awaitTermination(10, TimeUnit.SECONDS))
 }
 
 object Publisher extends Publisher
