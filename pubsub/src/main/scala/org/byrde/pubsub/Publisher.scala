@@ -1,8 +1,8 @@
 package org.byrde.pubsub
 
-import com.google.api.gax.core.CredentialsProvider
+import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
 import com.google.auth.Credentials
-import com.google.cloud.pubsub.v1.TopicAdminClient
+import com.google.cloud.pubsub.v1.{TopicAdminClient, TopicAdminSettings}
 import com.google.protobuf.ByteString
 import com.google.pubsub.v1.PubsubMessage
 
@@ -36,7 +36,12 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
             Try {
               logger.logInfo(s"Creating topic: ${env.topic}")
               TopicAdminClient
-                .create()
+                .create {
+                  TopicAdminSettings
+                    .newBuilder()
+                    .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                    .build()
+                }
                 .createTopic(env.topic)
             }
           publisher <-

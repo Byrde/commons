@@ -1,8 +1,8 @@
 package org.byrde.pubsub
 
-import com.google.api.gax.core.CredentialsProvider
+import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
 import com.google.auth.Credentials
-import com.google.cloud.pubsub.v1.{MessageReceiver, SubscriptionAdminClient}
+import com.google.cloud.pubsub.v1.{MessageReceiver, SubscriptionAdminClient, SubscriptionAdminSettings}
 import com.google.protobuf.Duration
 
 import org.byrde.logging.Logger
@@ -27,7 +27,12 @@ trait Subscriber {
         Try {
           logger.logInfo(s"Creating subscription: $subscription")
           SubscriptionAdminClient
-            .create()
+            .create {
+              SubscriptionAdminSettings
+                .newBuilder()
+                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                .build()
+            }
             .createSubscription {
               com.google.pubsub.v1.Subscription
                 .newBuilder()
