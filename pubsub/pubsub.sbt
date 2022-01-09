@@ -1,4 +1,4 @@
 name := """pubsub"""
 
 libraryDependencies ++=
-  Dependencies.AkkaDependencies ++ Dependencies.AlpakkaPubSub ++ Dependencies.CirceDependencies
+  Dependencies.GooglePubSubDependencies ++ Dependencies.CirceDependencies

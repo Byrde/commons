@@ -64,9 +64,6 @@ val CommonsSettings =
       )
   )
 
-val gcs  =
-  project.settings(CommonsSettings)
-
 val `jwt` =
   project.settings(CommonsSettings)
 
@@ -79,15 +76,22 @@ val uri =
 val logging =
   project.settings(CommonsSettings)
 
-val pubsub  =
-  project.dependsOn(logging).settings(CommonsSettings)
-
 val `scala-logging` =
-  project.dependsOn(logging).settings(CommonsSettings)
+  project
+    .dependsOn(logging)
+    .settings(CommonsSettings)
 
 val support =
   project
     .dependsOn(uri)
+    .settings(CommonsSettings)
+
+val pubsub  =
+  project
+    .dependsOn(
+      logging,
+      support
+    )
     .settings(CommonsSettings)
 
 val smtp =
@@ -108,7 +112,7 @@ val `jedis-client` =
 val `http` =
   project
     .dependsOn(
-      `scala-logging`,
+      logging,
       support
     )
     .settings(CommonsSettings)
@@ -118,7 +122,6 @@ val root =
     .settings(RootSettings)
     .aggregate(
       `http`,
-      gcs,
       pubsub,
       smtp,
       `jwt`,

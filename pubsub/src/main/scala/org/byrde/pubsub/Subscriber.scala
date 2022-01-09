@@ -1,77 +1,66 @@
 package org.byrde.pubsub
 
-import org.byrde.logging.Logger
+import com.google.api.gax.core.CredentialsProvider
+import com.google.auth.Credentials
+import com.google.cloud.pubsub.v1.MessageReceiver
 
-import java.util.Base64
+import org.byrde.logging.Logger
 
 import io.circe.Decoder
 import io.circe.generic.auto._
-import io.circe.parser._
+import io.circe.parser.parse
 
-import akka.actor.ActorSystem
-import akka.stream.RestartSettings
-import akka.stream.alpakka.googlecloud.pubsub._
-import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
-import akka.stream.scaladsl.RestartSource
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util._
+import scala.util.chaining._
 
-import scala.annotation.nowarn
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-
-class Subscriber(
-  config: conf.PubSubConfig,
-)(implicit logger: Logger, system: ActorSystem) {
-  @nowarn
-  private val _config: PubSubConfig =
-    PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
-  
-  def process[T](
-    subscription: Subscription,
-    fn: Envelope[T] => Future[Unit]
-  )(
-    message: ReceivedMessage
-  )(implicit decoder: Decoder[T], ec: ExecutionContext): Future[MessageId] =
-    message
-      .message
-      .data
-      .map(convertMessage(_))
-      .map {
-        case Right(innerMessage) =>
-          logger.logInfo(s"Processing message for subscription: $subscription, $innerMessage")
-          fn(innerMessage).map(_ => message.ackId)
-
-        case Left(err) =>
-          Future.failed(err)
-      }
-      .getOrElse(Future.failed(PubSubError.NoMessage))
-  
-  def start[T](
-    subscription: Subscription
-  )(
-    fn: Envelope[T] => Future[Unit]
-  )(implicit decoder: Decoder[T], ec: ExecutionContext): Unit =
-    RestartSource
-      .withBackoff(
-        RestartSettings(1.second, 10.seconds, 0.1)
-      )(() => GooglePubSub.subscribe(subscription, _config))
-      .mapAsync(config.batch) { message =>
-        process(subscription, fn)(message).recoverWith {
-          case err =>
-            logger.logError(s"Error processing message for subscription: $subscription, $message", err)
-            Future.failed(err)
+trait Subscriber {
+  def subscribe[T](
+    credentials: Credentials,
+    subscription: String,
+  )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
+    receiver(fn)
+      .pipe(com.google.cloud.pubsub.v1.Subscriber.newBuilder(subscription, _))
+      .setCredentialsProvider {
+        new CredentialsProvider {
+          override def getCredentials: Credentials = credentials
         }
       }
-      .groupedWithin(config.batch, 1.second)
-      .map(AcknowledgeRequest.apply)
-      .to(GooglePubSub.acknowledge(subscription, _config))
-      .run()
-
-  private def decode(message: String) =
-    parse(new String(Base64.getDecoder.decode(message)))
-
-  private def convertMessage[T](message: String)(implicit decoder: Decoder[T]): Either[PubSubError, Envelope[T]] =
-    decode(message)
+      .build()
+      .pipe { sub =>
+        logger.logInfo(s"Starting subscriber $subscription!")
+        Future(sub.awaitRunning())
+          .recoverWith {
+            case ex =>
+              logger.logError("Error starting subscriber!", ex)
+              Future(sub.awaitTerminated()).flatMap(_ => Future.failed(ex))
+          }
+      }
+  
+  private def receiver[T](
+    fn: Envelope[T] => Future[_],
+  )(implicit logger: Logger, decoder: Decoder[T]): MessageReceiver = {
+    case (message, consumer) =>
+    parse(message.getData.toStringUtf8)
+      .flatMap(_.as[Envelope[T]])
       .left
-      .map(PubSubError.ParsingError(message))
-      .flatMap(_.as[Envelope[T]].left.map(PubSubError.DecodingError(message)))
+      .map(PubSubError.DecodingError.apply(s"Error decoding message: ${message}")(_))
+      .pipe {
+        case Right(value) =>
+          fn(value)
+
+        case Left(exception) =>
+          Future.failed(exception)
+      }
+      .map(_ => consumer.ack())
+      .recover {
+        case ex =>
+          logger.logError("Error processing PubSubMessage!", ex)
+          consumer.nack()
+          ()
+      }
+  }
 }
+
+object Subscriber extends Subscriber

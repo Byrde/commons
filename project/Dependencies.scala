@@ -1,65 +1,30 @@
 import sbt.librarymanagement.{DependencyBuilders, ModuleID}
 
 object Dependencies extends DependencyBuilders {
-  //TODO: Remove Akka
-  val AkkaHttpVersion: String =
-    "10.2.7"
-  
-  //TODO: Remove Akka
-  val AkkaVersion: String =
-    "2.6.17"
-  
-  //TODO: Jooq library
-  val SlickVersion: String =
-    "3.3.3"
-  
-  //TODO: Jooq library
-  val SlickMigrationsVersion: String =
-    "0.8.2"
-
-  val CirceVersion: String =
-    "0.14.1"
-  
-  val TapirVersion: String =
-    "0.19.1"
-  
-  val SttpVersion: String =
-    "3.3.18"
-  
-  //TODO: Use vanilla Java libraries (pubsub, gcs, etc..)
-  val AlpakkaVersion: String =
-    "3.0.4"
-
+  //TODO: No more akka
   val AkkaDependencies =
     Seq(
-      "com.typesafe.akka"  %% "akka-actor"          % AkkaVersion,
-      "com.typesafe.akka"  %% "akka-slf4j"          % AkkaVersion,
-      "com.typesafe.akka"  %% "akka-stream"         % AkkaVersion,
-      "com.typesafe.akka"  %% "akka-testkit"        % AkkaVersion,
-      "com.typesafe.akka"  %% "akka-stream-testkit" % AkkaVersion
+      "com.typesafe.akka"  %% "akka-actor"          % "2.6.18",
+      "com.typesafe.akka"  %% "akka-slf4j"          % "2.6.18",
+      "com.typesafe.akka"  %% "akka-stream"         % "2.6.18",
+      "com.typesafe.akka"  %% "akka-testkit"        % "2.6.18",
+      "com.typesafe.akka"  %% "akka-stream-testkit" % "2.6.18"
     )
-
-  val AlpakkaGCS =
-    //TODO: Use vanilla Java libraries (pubsub, gcs, etc..)
-    Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-storage" % AlpakkaVersion)
   
-  val AlpakkaPubSub =
-    //TODO: Use vanilla Java libraries (pubsub, gcs, etc..)
-    Seq("com.lightbend.akka" %% "akka-stream-alpakka-google-cloud-pub-sub" % AlpakkaVersion)
-  
+  //TODO: Make generic (or vert.x?)
   val TapirDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.akka"             %% "akka-http-testkit"          % AkkaHttpVersion % "test" exclude("com.typesafe.akka", "akka-streams_2.13"),
-      //TODO: Move to vert.x
-      "com.softwaremill.sttp.tapir"   %% "tapir-akka-http-server"     % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
-      "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui"           % TapirVersion exclude("com.typesafe.akka", "akka-stream_2.13"),
-      "com.softwaremill.sttp.tapir"   %% "tapir-openapi-docs"         % TapirVersion,
-      "com.softwaremill.sttp.tapir"   %% "tapir-openapi-circe-yaml"   % TapirVersion,
-      "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % TapirVersion,
-      "com.softwaremill.sttp.tapir"   %% "tapir-sttp-client"          % TapirVersion,
-      //TODO: Move to vert.x
-      "com.softwaremill.sttp.client3" %% "core"                       % SttpVersion,
-      "com.softwaremill.sttp.client3" %% "akka-http-backend"          % SttpVersion
+      "com.typesafe.akka"             %% "akka-http-testkit"          % "10.2.7" % "test" exclude("com.typesafe.akka", "akka-streams_2.13"),
+
+      "com.softwaremill.sttp.tapir"   %% "tapir-akka-http-server"     % "0.19.3" exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui"           % "0.19.3" exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir"   %% "tapir-openapi-docs"         % "0.19.3",
+      "com.softwaremill.sttp.tapir"   %% "tapir-openapi-circe-yaml"   % "0.19.3",
+      "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % "0.19.3",
+      "com.softwaremill.sttp.tapir"   %% "tapir-sttp-client"          % "0.19.3",
+      
+      "com.softwaremill.sttp.client3" %% "core"                       % "3.3.18",
+      "com.softwaremill.sttp.client3" %% "akka-http-backend"          % "3.3.18"
     ) ++ AkkaDependencies
   
   val SmtpDependencies: Seq[ModuleID] =
@@ -73,13 +38,13 @@ object Dependencies extends DependencyBuilders {
     Seq("com.github.jwt-scala" %% "jwt-circe" % "9.0.3")
 
   val RedisDependencies: Seq[ModuleID] =
-    Seq("redis.clients" % "jedis" % "3.7.0")
+    Seq("redis.clients" % "jedis" % "4.0.0")
 
   val SlickDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.slick"                 %% "slick-hikaricp"      % SlickVersion,
-      "com.typesafe.slick"                 %% "slick"               % SlickVersion,
-      "io.github.nafg.slick-migration-api" %% "slick-migration-api" % SlickMigrationsVersion
+      "com.typesafe.slick"                 %% "slick-hikaricp"      % "3.3.3",
+      "com.typesafe.slick"                 %% "slick"               % "3.3.3",
+      "io.github.nafg.slick-migration-api" %% "slick-migration-api" % "0.8.2"
     )
 
   val TypesafeConfigDependencies: Seq[ModuleID] =
@@ -87,9 +52,9 @@ object Dependencies extends DependencyBuilders {
 
   val CirceDependencies: Seq[ModuleID] =
     Seq(
-      "io.circe" %% "circe-core"    % CirceVersion,
-      "io.circe" %% "circe-generic" % CirceVersion,
-      "io.circe" %% "circe-parser"  % CirceVersion
+      "io.circe" %% "circe-core"    % "0.14.1",
+      "io.circe" %% "circe-generic" % "0.14.1",
+      "io.circe" %% "circe-parser"  % "0.14.1"
     )
 
   val ScalaTest: Seq[ModuleID] =
@@ -105,6 +70,11 @@ object Dependencies extends DependencyBuilders {
   val LoggingDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.scala-logging" %% "scala-logging"           % "3.9.4",
-      "net.logstash.logback"       % "logstash-logback-encoder" % "7.0"
+      "net.logstash.logback"       % "logstash-logback-encoder" % "7.0.1"
+    )
+  
+  val GooglePubSubDependencies: Seq[ModuleID] =
+    Seq(
+      "com.google.cloud" % "google-cloud-pubsub"  % "1.115.0"
     )
 }

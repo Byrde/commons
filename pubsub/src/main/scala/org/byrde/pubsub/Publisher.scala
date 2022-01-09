@@ -1,47 +1,74 @@
 package org.byrde.pubsub
 
+import com.google.api.gax.core.CredentialsProvider
+import com.google.auth.Credentials
+import com.google.cloud.pubsub.v1.TopicAdminClient
+import com.google.protobuf.ByteString
+import com.google.pubsub.v1.PubsubMessage
+
 import org.byrde.logging.Logger
+import org.byrde.support.JavaFutureSupport
 
-import java.util.Base64
-
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.alpakka.googlecloud.pubsub.{PubSubConfig, PublishMessage, PublishRequest}
-import akka.stream.alpakka.googlecloud.pubsub.scaladsl.GooglePubSub
-import akka.stream.scaladsl.{Flow, Sink, Source}
-
-import io.circe.{Encoder, Printer}
+import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-import scala.annotation.nowarn
-import scala.concurrent.{ExecutionContext, Future}
+import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.chaining._
+import scala.util.{Failure, Success, Try}
 
-class Publisher(config: conf.PubSubConfig)(implicit logger: Logger, system: ActorSystem) {
-  @nowarn
-  private lazy val _config =
-    PubSubConfig(config.projectId, config.clientEmail, config.privateKey)
+trait Publisher extends JavaFutureSupport with AutoCloseable {
+  private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
+    mutable.Map()
   
-  private lazy val _printer: Printer =
-    Printer.noSpaces.copy(dropNullValues = true)
-  
-  def publish[T](env: Envelope[T])(implicit encoder: Encoder[T], ec: ExecutionContext): Future[Unit] = {
-    logger.logInfo(s"Publishing message: $env")
-    Source
-      .single(PublishRequest(Seq(convertMessage(env))))
-      .via(flow(env.topic))
-      .runWith(Sink.seq)
-      .map(_ => ())
-      .recoverWith {
-      case err =>
-        logger.logError(s"Error publishing message: $env", err)
-        Future.failed(err)
+  def publish[T](
+    credentials: Credentials,
+    env: Envelope[T]
+  )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
+    _publishers
+      .get(env.topic)
+      .map(Success.apply)
+      .getOrElse {
+        for {
+          _ <-
+            Try {
+              logger.logInfo(s"Creating topic: ${env.topic}")
+              TopicAdminClient
+                .create()
+                .createTopic(env.topic)
+            }
+          publisher <-
+            Try {
+              logger.logInfo(s"Creating publisher: ${env.topic}")
+              com.google.cloud.pubsub.v1.Publisher
+                .newBuilder(env.topic)
+                .setCredentialsProvider {
+                  new CredentialsProvider {
+                    override def getCredentials: Credentials = credentials
+                  }
+                }
+                .build
+            }
+          _ <-
+            Try(_publishers.update(env.topic, publisher))
+        } yield publisher
       }
-  }
-  
-  private def convertMessage[T](env: Envelope[T])(implicit encoder: Encoder[T]): PublishMessage =
-    PublishMessage(Base64.getEncoder.encodeToString(env.asJson.printWith(_printer).getBytes))
+      .pipe {
+        case Success(publisher) =>
+          logger.logInfo(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
+          publisher
+            .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
+            .asScala
+            .map(_ => ())
 
-  private def flow(topic: Topic): Flow[PublishRequest, Seq[String], NotUsed] =
-    GooglePubSub.publish(topic, _config)
+        case Failure(exception) =>
+          Future.failed(exception)
+      }
+  
+  override def close(): Unit =
+    _publishers.values.foreach(_.shutdown())
 }
+
+object Publisher extends Publisher
