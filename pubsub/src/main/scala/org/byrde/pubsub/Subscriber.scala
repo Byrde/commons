@@ -3,7 +3,7 @@ package org.byrde.pubsub
 import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
 import com.google.api.gax.rpc.AlreadyExistsException
 import com.google.auth.Credentials
-import com.google.cloud.pubsub.v1.{MessageReceiver, SubscriptionAdminClient, SubscriptionAdminSettings}
+import com.google.cloud.pubsub.v1._
 import com.google.protobuf.Duration
 import com.google.pubsub.v1.{SubscriptionName, TopicName}
 
@@ -13,16 +13,12 @@ import io.circe.Decoder
 import io.circe.generic.auto._
 import io.circe.parser.parse
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util._
 import scala.util.chaining._
 
-trait Subscriber extends AutoCloseable {
-  private val _subscribers: mutable.Map[String, com.google.cloud.pubsub.v1.Subscriber] =
-    mutable.Map()
-  
+trait Subscriber {
   def createSubscription(
     credentials: Credentials,
     project: String,
@@ -87,7 +83,6 @@ trait Subscriber extends AutoCloseable {
               logger.logError("Error starting subscriber!", ex)
               Future(subscriber.stopAsync().awaitTerminated()).flatMap(_ => Future.failed(ex))
           }
-      _ <- Future(_subscribers.update(subscription, subscriber))
     } yield ()
   
   private def receiver[T](
@@ -113,9 +108,6 @@ trait Subscriber extends AutoCloseable {
           ()
       }
   }
-  
-  override def close(): Unit =
-    _subscribers.values.foreach(_.stopAsync().awaitTerminated())
 }
 
 object Subscriber extends Subscriber
