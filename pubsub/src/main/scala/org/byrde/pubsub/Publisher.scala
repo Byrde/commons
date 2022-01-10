@@ -30,24 +30,38 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
     project: String,
     topic: String
   )(implicit logger: Logger): Future[Unit] =
-    Future {
-      logger.logInfo(s"Creating topic: $topic")
-      TopicAdminClient
-        .create {
-          TopicAdminSettings
-            .newBuilder()
-            .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-            .build()
+    TopicAdminClient
+      .create {
+        TopicAdminSettings
+          .newBuilder()
+          .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+          .build()
+      }
+      .pipe { client =>
+        Future {
+          logger.logInfo(s"Creating topic: $topic")
+          client
+            .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
+            .tap(_.shutdown())
+            .awaitTermination(10, TimeUnit.SECONDS)
         }
-        .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
-        .tap(_.shutdown())
-        .awaitTermination(10, TimeUnit.SECONDS)
-    }
-    .map(_ => ())
-    .recover {
-      case _: AlreadyExistsException =>
-        ()
-    }
+        .map(_ => ())
+        .recoverWith {
+          case _: AlreadyExistsException =>
+            Future {
+              client
+                .tap(_.shutdown())
+                .awaitTermination(10, TimeUnit.SECONDS)
+            }
+
+          case ex =>
+            Future {
+              client
+                .tap(_.shutdown())
+                .awaitTermination(10, TimeUnit.SECONDS)
+            }.flatMap(_ => Future.failed(ex))
+        }
+      }
   
   def publish[T](
     credentials: Credentials,

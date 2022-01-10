@@ -31,38 +31,54 @@ trait Subscriber extends AutoCloseable {
     subscription: Subscription,
     topic: Topic
   ): Future[Unit] =
-    Future {
-      SubscriptionAdminClient
-        .create {
-          SubscriptionAdminSettings
-            .newBuilder()
-            .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-            .build()
-        }
-        .tap(_.createSubscription {
-          com.google.pubsub.v1.Subscription
-            .newBuilder()
-            .setName(SubscriptionName.of(project, subscription).toString)
-            .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
-            .setAckDeadlineSeconds(10)
-            .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
-            .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
-            .setRetryPolicy {
-              com.google.pubsub.v1.RetryPolicy
+    SubscriptionAdminClient
+      .create {
+        SubscriptionAdminSettings
+          .newBuilder()
+          .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+          .build()
+      }
+      .pipe { client =>
+        Future {
+          client
+            .tap(_.createSubscription {
+              com.google.pubsub.v1.Subscription
                 .newBuilder()
-                .setMinimumBackoff(Duration.newBuilder().setSeconds(1).build())
-                .setMaximumBackoff(Duration.newBuilder().setSeconds(180).build())
+                .setName(SubscriptionName.of(project, subscription).toString)
+                .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
+                .setAckDeadlineSeconds(10)
+                .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
+                .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
+                .setRetryPolicy {
+                  com.google.pubsub.v1.RetryPolicy
+                    .newBuilder()
+                    .setMinimumBackoff(Duration.newBuilder().setSeconds(1).build())
+                    .setMaximumBackoff(Duration.newBuilder().setSeconds(180).build())
+                }
+                .build()
+            })
+            .tap(_.shutdown())
+            .awaitTermination(10, TimeUnit.SECONDS)
+        }
+        .map(_ => ())
+        .recoverWith {
+          case _: AlreadyExistsException =>
+            Future {
+              client
+                .tap(_.shutdown())
+                .awaitTermination(10, TimeUnit.SECONDS)
             }
-            .build()
-        })
-        .tap(_.shutdown())
-        .awaitTermination(10, TimeUnit.SECONDS)
-    }
-    .map(_ => ())
-    .recover {
-      case _: AlreadyExistsException =>
-        ()
-    }
+  
+          case ex =>
+            Future {
+              client
+                .tap(_.shutdown())
+                .awaitTermination(10, TimeUnit.SECONDS)
+            }.flatMap(_ => Future.failed(ex))
+        }
+      }
+    
+    
   
   def subscribe[T](
     credentials: Credentials,
