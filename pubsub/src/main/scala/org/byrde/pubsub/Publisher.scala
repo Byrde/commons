@@ -16,11 +16,15 @@ import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.chaining._
 
-trait Publisher extends JavaFutureSupport {
+trait Publisher extends JavaFutureSupport with AutoCloseable {
+  private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
+    mutable.Map()
+  
   def createTopic(
     credentials: Credentials,
     project: String,
@@ -35,12 +39,14 @@ trait Publisher extends JavaFutureSupport {
             .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
             .build()
         }
-        .createTopic(TopicName.ofProjectTopicName(project, topic).toString)
+        .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
+        .tap(_.shutdown())
+        .awaitTermination(10, TimeUnit.SECONDS)
     }
     .map(_ => ())
     .recover {
       case _: AlreadyExistsException =>
-        Future.unit
+        ()
     }
   
   def publish[T](
@@ -48,29 +54,38 @@ trait Publisher extends JavaFutureSupport {
     project: String,
     env: Envelope[T]
   )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
-    for {
-      _ <- createTopic(credentials, project, env.topic)
-      publisher <-
-        Future {
-          logger.logInfo(s"Creating publisher: ${env.topic}")
-          com.google.cloud.pubsub.v1.Publisher
-            .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
-            .setCredentialsProvider {
-              new CredentialsProvider {
-                override def getCredentials: Credentials = credentials
-              }
+    _publishers
+      .get(env.topic)
+      .map(Future.successful)
+      .getOrElse {
+        for {
+          _ <- createTopic(credentials, project, env.topic)
+          publisher <-
+            Future {
+              logger.logInfo(s"Creating publisher: ${env.topic}")
+              com.google.cloud.pubsub.v1.Publisher
+                .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
+                .setCredentialsProvider {
+                  new CredentialsProvider {
+                    override def getCredentials: Credentials = credentials
+                  }
+                }
+                .build
             }
-            .build
-        }
-      _ <- {
+          _ <-
+            Future(_publishers.update(env.topic, publisher))
+        } yield publisher
+      }
+      .map { publisher =>
         logger.logInfo(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
         publisher
           .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
           .asScala
+          .map(_ => ())
       }
-      _ <-
-        Future(publisher.tap(_.shutdown()).awaitTermination(10, TimeUnit.SECONDS))
-    } yield ()
+  
+  override def close(): Unit =
+    _publishers.values.foreach(_.tap(_.shutdown()).awaitTermination(10, TimeUnit.SECONDS))
 }
 
 object Publisher extends Publisher
