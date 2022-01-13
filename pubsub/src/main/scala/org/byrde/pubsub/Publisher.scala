@@ -22,6 +22,8 @@ import scala.concurrent.Future
 import scala.util.chaining._
 
 trait Publisher extends JavaFutureSupport with AutoCloseable {
+  private val _ackDeadline = 10 //seconds
+  
   private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
     mutable.Map()
   
@@ -43,7 +45,7 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
           client
             .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
             .tap(_.shutdown())
-            .awaitTermination(10, TimeUnit.SECONDS)
+            .awaitTermination(_ackDeadline, TimeUnit.SECONDS)
         }
         .map(_ => ())
         .recoverWith {
@@ -51,14 +53,14 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
             Future {
               client
                 .tap(_.shutdown())
-                .awaitTermination(10, TimeUnit.SECONDS)
+                .awaitTermination(_ackDeadline, TimeUnit.SECONDS)
             }
 
           case ex =>
             Future {
               client
                 .tap(_.shutdown())
-                .awaitTermination(10, TimeUnit.SECONDS)
+                .awaitTermination(_ackDeadline, TimeUnit.SECONDS)
             }.flatMap(_ => Future.failed(ex))
         }
       }
@@ -99,7 +101,7 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
       }
   
   override def close(): Unit =
-    _publishers.values.foreach(_.tap(_.shutdown()).awaitTermination(10, TimeUnit.SECONDS))
+    _publishers.values.foreach(_.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS))
 }
 
 object Publisher extends Publisher

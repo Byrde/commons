@@ -7,7 +7,8 @@ import java.util.Properties
 
 import com.typesafe.config.Config
 
-import scala.util.{ChainingSyntax, Try}
+import scala.util.Try
+import scala.util.chaining._
 
 case class SmtpConfig(
   host: String,
@@ -15,7 +16,7 @@ case class SmtpConfig(
   password: String,
   from: Email,
   `type`: SmtpConnectionType
-) extends ChainingSyntax {
+){
   def port: Int =
     `type` match {
       case SmtpConnectionType.TLS =>

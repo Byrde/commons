@@ -1,8 +1,8 @@
 package org.byrde.http.server
 
 import org.byrde.http.server.conf.ServerConfig
-import org.byrde.http.server.support.{CorsSupport, ExceptionHandlingSupport, MaterializedEndpointSupport, RejectionHandlingSupport, RequestIdSupport}
 import org.byrde.http.server.support.RequestIdSupport.IdHeader
+import org.byrde.http.server.support._
 import org.byrde.logging.Logger
 
 import io.circe.generic.auto._
@@ -24,15 +24,14 @@ import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.swagger.SwaggerUI
 
 import scala.concurrent.Future
-import scala.util.ChainingSyntax
+import scala.util.chaining._
 
 trait Server
   extends MaterializedEndpointSupport
     with CorsSupport
     with RequestIdSupport
     with ExceptionHandlingSupport
-    with RejectionHandlingSupport
-    with ChainingSyntax {
+    with RejectionHandlingSupport {
   private lazy val ackOutput: EndpointIO.Body[String, Ack] =
     jsonBody[Ack]
       .description(s"Default response!")

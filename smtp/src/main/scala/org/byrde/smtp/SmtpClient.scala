@@ -8,9 +8,9 @@ import javax.mail.{Message, Session, Transport}
 
 import org.jsoup.Jsoup
 
-import scala.util.ChainingSyntax
+import scala.util.chaining._
 
-class SmtpClient(config: SmtpConfig) extends ChainingSyntax {
+class SmtpClient(config: SmtpConfig) {
   def send(request: SmtpRequest): Unit =
     Transport.send(buildEmail(request), config.user, config.password)
 

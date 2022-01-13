@@ -4,9 +4,9 @@ import java.util.Base64
 import javax.crypto.SecretKey
 import javax.crypto.spec.SecretKeySpec
 
-import scala.util.ChainingSyntax
+import scala.util.chaining._
 
-object KeyGenerator extends ChainingSyntax {
+object KeyGenerator {
   private val CryptSpec =
     "AES"
 

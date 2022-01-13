@@ -22,14 +22,20 @@ import scala.util._
 import scala.util.chaining._
 
 trait Subscriber extends AutoCloseable {
+  private val _ackDeadline = 10 //seconds
+  
+  private val _oneWeek = 604800 //seconds
+  
+  private val _awaitTermination = 10 //seconds
+  
   private val _subscribers: mutable.Map[String, com.google.cloud.pubsub.v1.Subscriber] =
     mutable.Map()
   
   def createSubscription(
     credentials: Credentials,
     project: String,
-    subscription: Subscription,
-    topic: Topic
+    subscription: String,
+    topic: String
   ): Future[Unit] =
     SubscriptionAdminClient
       .create {
@@ -46,8 +52,8 @@ trait Subscriber extends AutoCloseable {
                 .newBuilder()
                 .setName(SubscriptionName.of(project, subscription).toString)
                 .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
-                .setAckDeadlineSeconds(10)
-                .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
+                .setAckDeadlineSeconds(_ackDeadline)
+                .setMessageRetentionDuration(Duration.newBuilder().setSeconds(_oneWeek).build())
                 .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
                 .setRetryPolicy {
                   com.google.pubsub.v1.RetryPolicy
@@ -58,7 +64,7 @@ trait Subscriber extends AutoCloseable {
                 .build()
             })
             .tap(_.shutdown())
-            .awaitTermination(10, TimeUnit.SECONDS)
+            .awaitTermination(_awaitTermination, TimeUnit.SECONDS)
         }
         .map(_ => ())
         .recoverWith {
@@ -66,25 +72,23 @@ trait Subscriber extends AutoCloseable {
             Future {
               client
                 .tap(_.shutdown())
-                .awaitTermination(10, TimeUnit.SECONDS)
+                .awaitTermination(_awaitTermination, TimeUnit.SECONDS)
             }
   
           case ex =>
             Future {
               client
                 .tap(_.shutdown())
-                .awaitTermination(10, TimeUnit.SECONDS)
+                .awaitTermination(_awaitTermination, TimeUnit.SECONDS)
             }.flatMap(_ => Future.failed(ex))
         }
       }
-    
-    
   
   def subscribe[T](
     credentials: Credentials,
     project: String,
-    subscription: Subscription,
-    topic: Topic
+    subscription: String,
+    topic: String
   )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
     for {
       _ <- createSubscription(credentials, project, subscription, topic)
