@@ -11,11 +11,11 @@ case class Url(host: Host, path: Path) {
   def /(newPath: Path): Url =
     copy(path = path / newPath)
 
-  def ?+(query: (String, String)): Url =
-    &+(query)
-
   def &+(query: (String, String)): Url =
-    copy(path = path & query)
+    copy(path = path &+ query)
+  
+  def &+(query: Option[(String, String)]): Url =
+    copy(path = path &+ query)
 
   def withQueries(_queries: Queries): Url =
     copy(path = path withQueries _queries)
