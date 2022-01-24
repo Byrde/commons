@@ -17,8 +17,8 @@ case class Url(host: Host, path: Path) {
   def &+(query: Option[(String, String)]): Url =
     copy(path = path &+ query)
 
-  def withQueries(_queries: Queries): Url =
-    copy(path = path withQueries _queries)
+  def &+(_queries: Queries): Url =
+    copy(path = path &+ _queries)
 
   override def toString: String =
     (host.toString + path.toString).trim

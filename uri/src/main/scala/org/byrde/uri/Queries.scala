@@ -11,7 +11,7 @@ case class Queries(queries: Set[(String, String)]) extends AnyVal {
   def &+(query: Option[(String, String)]): Queries =
     query.fold(this)(query => copy(queries = queries + query))
   
-  def withQueries(_queries: Queries): Queries =
+  def &+(_queries: Queries): Queries =
     this.copy(queries ++ _queries.queries)
 
   override def toString: String = {
