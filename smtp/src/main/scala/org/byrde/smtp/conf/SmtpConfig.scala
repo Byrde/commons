@@ -34,16 +34,14 @@ case class SmtpConfig(
       .tap(_.put("mail.smtp.host", host))
       .tap(_.put("mail.smtp.port", port.toString))
       .tap(_.put("mail.smtp.auth", "true"))
-      .pipe { props =>
-        if (`type` == SmtpConnectionType.TLS)
-          props
-            .tap(_.put("mail.smtp.starttls.enable", "true"))
-        else if (`type` == SmtpConnectionType.SSL)
-          props
-            .tap(_.put("mail.smtp.ssl.enable", "true"))
-            .tap(_.put("mail.smtp.socketFactory.port", port.toString))
-            .tap(_.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"))
-        else
+      .pipe {
+        case props if `type` == SmtpConnectionType.TLS =>
+          props.tap(_.put("mail.smtp.starttls.enable", "true"))
+
+        case props if `type` == SmtpConnectionType.SSL =>
+          props.tap(_.put("mail.smtp.starttls.enable", "true"))
+
+        case props =>
           props
       }
 }
