@@ -3,6 +3,8 @@ package org.byrde.smtp.conf
 import org.byrde.smtp.SmtpConnectionType
 import org.byrde.support.types.Email
 
+import javax.mail.{PasswordAuthentication, Session}
+
 import java.util.Properties
 
 import com.typesafe.config.Config
@@ -29,20 +31,32 @@ case class SmtpConfig(
         25
     }
   
-  def properties: Properties =
+  def session: Session =
     new Properties()
       .tap(_.put("mail.smtp.host", host))
       .tap(_.put("mail.smtp.port", port.toString))
       .tap(_.put("mail.smtp.auth", "true"))
-      .pipe {
-        case props if `type` == SmtpConnectionType.TLS =>
-          props.tap(_.put("mail.smtp.starttls.enable", "true"))
-
-        case props if `type` == SmtpConnectionType.SSL =>
-          props.tap(_.put("mail.smtp.starttls.enable", "true"))
-
-        case props =>
+      .pipe { props =>
+        if (`type` == SmtpConnectionType.TLS)
           props
+            .tap(_.put("mail.smtp.starttls.enable", "true"))
+        else if (`type` == SmtpConnectionType.SSL)
+          props
+            .tap(_.put("mail.smtp.ssl.enable", "true"))
+            .tap(_.put("mail.smtp.socketFactory.port", port.toString))
+            .tap(_.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"))
+        else
+          props
+      }
+      .pipe { props =>
+        Session.getDefaultInstance(
+          props,
+          new javax.mail.Authenticator() {
+            override protected def getPasswordAuthentication: PasswordAuthentication = {
+              new PasswordAuthentication(user, password);
+            }
+          }
+        )
       }
 }
 

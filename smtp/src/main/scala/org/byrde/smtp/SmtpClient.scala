@@ -1,10 +1,10 @@
 package org.byrde.smtp
 
 import org.byrde.smtp.conf.SmtpConfig
+import org.byrde.support.types.Email
 
-import java.util.Date
-import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
-import javax.mail.{Message, Session, Transport}
+import javax.mail.internet._
+import javax.mail.{Message, Transport}
 
 import org.jsoup.Jsoup
 
@@ -17,14 +17,12 @@ class SmtpClient(config: SmtpConfig) {
   private def buildEmail(request: SmtpRequest): MimeMessage =
     buildEmail(request.recipient, request.subject)(buildBody(request))
 
-  private def buildEmail(recipient: String, subject: String)(mimeMultipart: MimeMultipart): MimeMessage =
-    new MimeMessage(Session.getInstance(config.properties))
+  private def buildEmail(recipient: Email, subject: String)(mimeMultipart: MimeMultipart): MimeMessage =
+    new MimeMessage(config.session)
       .tap(_.setContent(mimeMultipart))
       .tap(_.setFrom(new InternetAddress(config.from.toString)))
-      .tap(_.setReplyTo(Array(new InternetAddress(config.from.toString))))
-      .tap(_.setRecipients(Message.RecipientType.TO, recipient))
+      .tap(_.addRecipient(Message.RecipientType.TO, new InternetAddress(recipient.toString)))
       .tap(_.setSubject(subject))
-      .tap(_.setSentDate(new Date()))
 
   private def buildBody(request: SmtpRequest): MimeMultipart =
     new MimeMultipart("alternative")
