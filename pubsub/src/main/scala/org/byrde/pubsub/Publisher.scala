@@ -1,17 +1,14 @@
 package org.byrde.pubsub
 
-import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
-import com.google.api.gax.rpc.AlreadyExistsException
+import com.google.api.gax.core.CredentialsProvider
 import com.google.auth.Credentials
-import com.google.cloud.pubsub.v1.{TopicAdminClient, TopicAdminSettings}
 import com.google.protobuf.ByteString
 import com.google.pubsub.v1.{PubsubMessage, TopicName}
-
+import com.google.api.gax.rpc.AlreadyExistsException
 import org.byrde.logging.Logger
 import org.byrde.support.JavaFutureSupport
 
 import java.util.concurrent.TimeUnit
-
 import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -21,7 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.chaining._
 
-trait Publisher extends JavaFutureSupport with AutoCloseable {
+trait Publisher extends JavaFutureSupport with AdminClientTrait with AutoCloseable {
   private val _ackDeadline = 10 //seconds
   
   private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
@@ -32,13 +29,7 @@ trait Publisher extends JavaFutureSupport with AutoCloseable {
     project: String,
     topic: String
   )(implicit logger: Logger): Future[Unit] =
-    TopicAdminClient
-      .create {
-        TopicAdminSettings
-          .newBuilder()
-          .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-          .build()
-      }
+    _createTopicAdminClient(credentials)
       .pipe { client =>
         Future {
           logger.logInfo(s"Creating topic: $topic")

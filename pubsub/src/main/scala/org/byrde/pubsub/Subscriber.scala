@@ -21,7 +21,7 @@ import scala.concurrent.Future
 import scala.util._
 import scala.util.chaining._
 
-trait Subscriber extends AutoCloseable {
+trait Subscriber extends AdminClientTrait with AutoCloseable {
   private val _ackDeadline = 10 //seconds
   
   private val _oneWeek = 604800 //seconds
@@ -37,13 +37,7 @@ trait Subscriber extends AutoCloseable {
     subscription: String,
     topic: String
   ): Future[Unit] =
-    SubscriptionAdminClient
-      .create {
-        SubscriptionAdminSettings
-          .newBuilder()
-          .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-          .build()
-      }
+    _createSubscriptionAdminClient(credentials)
       .pipe { client =>
         Future {
           client
