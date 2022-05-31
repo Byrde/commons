@@ -9,18 +9,15 @@ import io.grpc.{ManagedChannel, ManagedChannelBuilder}
 import org.byrde.logging.Logger
 
 trait AdminClientTrait {
-  
-  private object PubSubChannelProvider {
-    private val pubsubEmulatorHost = "PUBSUB_EMULATOR_HOST"
-    type HostPort = String
-    def apply(): Option[(TransportChannelProvider, HostPort)] = {
-      val emulatorHostPort = System.getenv().getOrDefault(pubsubEmulatorHost, "")
-      if (emulatorHostPort.isEmpty) {
-        None
-      } else {
-        val channel: ManagedChannel = ManagedChannelBuilder.forTarget(emulatorHostPort).usePlaintext().build()
-        Some(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)), emulatorHostPort)
-      }
+  private type HostPort = String
+  private val pubsubEmulatorHost = "PUBSUB_EMULATOR_HOST"
+  private val emulatorHostPort: HostPort = System.getenv().getOrDefault(pubsubEmulatorHost, "")
+  private val transportChannel: Option[(TransportChannelProvider, HostPort)] = {
+    if (emulatorHostPort.isEmpty) {
+      None
+    } else {
+      val channel: ManagedChannel = ManagedChannelBuilder.forTarget(emulatorHostPort).usePlaintext().build()
+      Some(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)), emulatorHostPort)
     }
   }
   
@@ -28,7 +25,7 @@ trait AdminClientTrait {
     val topicSettings = TopicAdminSettings
       .newBuilder()
       .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-    PubSubChannelProvider() match {
+    transportChannel match {
       case None => TopicAdminClient.create(topicSettings.build())
       case Some((transport, hostPort)) =>
         logger.logInfo("Found emulator channel provider with hostPort: " + hostPort)
@@ -44,7 +41,7 @@ trait AdminClientTrait {
     val subscriptionSettings = SubscriptionAdminSettings
       .newBuilder()
       .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-    PubSubChannelProvider() match {
+    transportChannel match {
       case None => SubscriptionAdminClient.create(subscriptionSettings.build())
       case Some((transport, _)) => SubscriptionAdminClient.create(
         subscriptionSettings
