@@ -12,14 +12,13 @@ trait AdminClientTrait {
   private type HostPort = String
   private val pubsubEmulatorHost = "PUBSUB_EMULATOR_HOST"
   private val emulatorHostPort: HostPort = System.getenv().getOrDefault(pubsubEmulatorHost, "")
-  private val transportChannel: Option[(TransportChannelProvider, HostPort)] = {
+  private val transportChannel: Option[(TransportChannelProvider, HostPort)] =
     if (emulatorHostPort.isEmpty) {
       None
     } else {
       val channel: ManagedChannel = ManagedChannelBuilder.forTarget(emulatorHostPort).usePlaintext().build()
       Some(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)), emulatorHostPort)
     }
-  }
   
   protected def _createTopicAdminClient(credentials: Credentials)(implicit logger: Logger): TopicAdminClient = {
     val topicSettings = TopicAdminSettings
