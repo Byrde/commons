@@ -10,7 +10,7 @@ import org.byrde.logging.Logger
 trait AdminClientTrait {
   private def transportChannel(maybeHost: Option[String]): Option[TransportChannelProvider] =
     maybeHost.map(pubsubHost => {
-      val channel: ManagedChannel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
+      val channel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
       FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
     })
   

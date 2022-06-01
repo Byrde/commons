@@ -89,7 +89,7 @@ trait Publisher extends JavaFutureSupport with AdminClientTrait with AutoCloseab
                         }
                       }
                 }
-                publisherBuilder.build
+                publisherBuilder.build()
             }
           _ <-
             Future(_publishers.update(env.topic, publisher))
