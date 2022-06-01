@@ -36,7 +36,7 @@ trait Subscriber extends AdminClientTrait with AutoCloseable {
     subscription: String,
     topic: String,
     maybeHost: Option[String] = None
-  ): Future[Unit] =
+  )(implicit logger: Logger): Future[Unit] =
     _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), maybeHost)
       .pipe { client =>
         Future {

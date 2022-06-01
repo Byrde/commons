@@ -7,11 +7,22 @@ import com.google.cloud.pubsub.v1.{SubscriptionAdminClient, SubscriptionAdminSet
 import io.grpc.{ManagedChannel, ManagedChannelBuilder}
 import org.byrde.logging.Logger
 
+import java.util.concurrent.TimeUnit
+import scala.util.Try
+
 trait AdminClientTrait {
-  private def transportChannel(maybeHost: Option[String]): Option[TransportChannelProvider] =
-    maybeHost.map(pubsubHost => {
-      val channel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
-      FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
+  private def transportChannel(maybeHost: Option[String])(implicit logger: Logger): Option[TransportChannelProvider] =
+    maybeHost.flatMap(pubsubHost => {
+      val channel: ManagedChannel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
+      val tryTransport = Try {
+        val isSuccess = channel.awaitTermination(5, TimeUnit.SECONDS)
+        logger.logInfo("Creating channel isSuccess: " + isSuccess)
+        FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
+      }
+      tryTransport.failed.foreach { throwable =>
+        logger.logError(throwable.getMessage)
+      }
+      tryTransport.toOption
     })
   
   protected def _createTopicAdminClient(credentialsProvider: CredentialsProvider, maybeHost: Option[String])(implicit logger: Logger): TopicAdminClient = {
@@ -31,7 +42,7 @@ trait AdminClientTrait {
     }
   }
   
-  protected def _createSubscriptionAdminClient(credentialsProvider: CredentialsProvider, maybeHost: Option[String]): SubscriptionAdminClient = {
+  protected def _createSubscriptionAdminClient(credentialsProvider: CredentialsProvider, maybeHost: Option[String])(implicit logger: Logger): SubscriptionAdminClient = {
     val subscriptionSettings = SubscriptionAdminSettings.newBuilder()
     transportChannel(maybeHost) match {
       case None =>
