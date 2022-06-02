@@ -70,11 +70,11 @@ object Dependencies extends DependencyBuilders {
   val LoggingDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.scala-logging" %% "scala-logging"           % "3.9.4",
-      "net.logstash.logback"       % "logstash-logback-encoder" % "7.0.1"
+      "net.logstash.logback"       % "logstash-logback-encoder" % "7.1.1"
     )
   
   val GooglePubSubDependencies: Seq[ModuleID] =
     Seq(
-      "com.google.cloud" % "google-cloud-pubsub"  % "1.115.0"
+      "com.google.cloud" % "google-cloud-pubsub"  % "1.117.0"
     )
 }
