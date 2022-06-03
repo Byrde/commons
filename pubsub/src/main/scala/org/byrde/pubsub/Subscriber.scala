@@ -1,27 +1,26 @@
 package org.byrde.pubsub
 
-import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider}
-import com.google.api.gax.rpc.AlreadyExistsException
+import com.google.api.gax.core.{CredentialsProvider, FixedCredentialsProvider, NoCredentialsProvider}
+import com.google.api.gax.grpc.GrpcTransportChannel
+import com.google.api.gax.rpc.{AlreadyExistsException, FixedTransportChannelProvider}
 import com.google.auth.Credentials
-import com.google.cloud.pubsub.v1.{MessageReceiver, SubscriptionAdminClient, SubscriptionAdminSettings}
+import com.google.cloud.pubsub.v1.MessageReceiver
 import com.google.protobuf.Duration
 import com.google.pubsub.v1.{SubscriptionName, TopicName}
-
-import org.byrde.logging.Logger
-
-import java.util.concurrent.TimeUnit
-
 import io.circe.Decoder
 import io.circe.generic.auto._
 import io.circe.parser.parse
+import io.grpc.ManagedChannelBuilder
+import org.byrde.logging.Logger
 
+import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util._
 import scala.util.chaining._
 
-trait Subscriber extends AutoCloseable {
+trait Subscriber extends AdminClientTrait with AutoCloseable {
   private val _ackDeadline = 10 //seconds
   
   private val _oneWeek = 604800 //seconds
@@ -35,15 +34,10 @@ trait Subscriber extends AutoCloseable {
     credentials: Credentials,
     project: String,
     subscription: String,
-    topic: String
-  ): Future[Unit] =
-    SubscriptionAdminClient
-      .create {
-        SubscriptionAdminSettings
-          .newBuilder()
-          .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-          .build()
-      }
+    topic: String,
+    maybeHost: Option[String] = None
+  )(implicit logger: Logger): Future[Unit] =
+    _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), maybeHost)
       .pipe { client =>
         Future {
           client
@@ -88,21 +82,31 @@ trait Subscriber extends AutoCloseable {
     credentials: Credentials,
     project: String,
     subscription: String,
-    topic: String
+    topic: String,
+    maybeHost: Option[String] = None
   )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
     for {
-      _ <- createSubscription(credentials, project, subscription, topic)
+      _ <- createSubscription(credentials, project, subscription, topic, maybeHost)
       subscriber <-
         Future {
           logger.logInfo(s"Creating subscriber: $subscription")
-          com.google.cloud.pubsub.v1.Subscriber
+          val subscriberBuilder = com.google.cloud.pubsub.v1.Subscriber
             .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(fn))
-            .setCredentialsProvider {
-              new CredentialsProvider {
-                override def getCredentials: Credentials = credentials
+          maybeHost match {
+            case None =>
+              subscriberBuilder.setCredentialsProvider {
+                new CredentialsProvider {
+                  override def getCredentials: Credentials = credentials
+                }
               }
-            }
-            .build()
+            case Some(host) =>
+              val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
+              subscriberBuilder
+                .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+                .setCredentialsProvider(NoCredentialsProvider.create())
+              
+          }
+          subscriberBuilder.build()
         }
       _ <-
         Future(subscriber.startAsync().awaitRunning())

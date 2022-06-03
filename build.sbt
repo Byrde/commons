@@ -7,7 +7,7 @@ val RootSettings =
 
 val CommonsSettings =
   Seq(
-    version := Option(System.getProperty("version")).getOrElse("SNAPSHOT"),
+    version := Option(System.getProperty("version")).getOrElse("0.1-SNAPSHOT"),
     organization := "org.byrde",
     scalaVersion := "2.13.6",
     scalaModuleInfo ~=
