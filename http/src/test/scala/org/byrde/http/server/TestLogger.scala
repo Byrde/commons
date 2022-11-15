@@ -22,4 +22,6 @@ class TestLogger extends Logger {
   override def logError(msg: String, extras: Log): Unit = ()
   
   override def logError(msg: String, cause: Throwable): Unit = ()
+
+  override def logError(msg: String, extras: Log, cause: Throwable): Unit = ()
 }

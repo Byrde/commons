@@ -20,4 +20,6 @@ trait Logger {
   def logError(msg: String, extras: Log): Unit
 
   def logError(msg: String, cause: Throwable): Unit
+
+  def logError(msg: String, extras: Log, cause: Throwable): Unit
 }

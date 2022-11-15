@@ -74,8 +74,8 @@ class JwtClient()(implicit config: JwtConfig) {
       }
   
   private def validateJwtClaim(
-    subject: Option[String] = Option.empty,
-    audience: Option[Set[String]] = Option.empty
+    @unchecked subject: Option[String] = Option.empty,
+    @unchecked audience: Option[Set[String]] = Option.empty
   )(jwtClaim: JwtClaim): Either[Throwable, JwtClaim] = {
     val isValid =
       jwtClaim.issuer.fold(false)(_ == config.issuer) &&

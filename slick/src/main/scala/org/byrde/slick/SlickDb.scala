@@ -8,9 +8,8 @@ trait SlickDb[R <: SlickRole] {
   self: SlickProfile[R] =>
     private val underlyingDb =
       config.jdbc.db
-
-    @unchecked
-    def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit ev: R SlickHasPrivilege E): Future[Result] =
+  
+    def run[Result, E <: Effect](query: DBIOAction[Result, NoStream, E])(implicit @unchecked ev: R SlickHasPrivilege E): Future[Result] =
       underlyingDb.run(query)
 
     def shutdown: Future[Unit] =

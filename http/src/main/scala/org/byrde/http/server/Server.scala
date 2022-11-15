@@ -19,11 +19,11 @@ import sttp.tapir._
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.openapi.circe.yaml._
+import sttp.apispec.openapi.circe.yaml._
 import sttp.tapir.server.akkahttp.AkkaHttpServerInterpreter
 import sttp.tapir.swagger.SwaggerUI
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.chaining._
 
 trait Server
@@ -44,9 +44,9 @@ trait Server
       .in("ping")
       .name("Ping")
       .description("Standard API endpoint to say hello to the server.")
-      .toMaterializedEndpoint()(Future.successful(Right(Ack("Success"))))
+      .toMaterializedEndpoint()(Future.successful(Right(Ack("Success"))))(scala.concurrent.ExecutionContext.global)
   
-  private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit config: ServerConfig, logger: Logger): Route =
+  private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit ec: ExecutionContext, config: ServerConfig, logger: Logger): Route =
     endpoints
       .view
       .pipe(_ :+ ping)
@@ -56,10 +56,10 @@ trait Server
       }
       .pipe {
         case (routes, endpoints) =>
-          handleRoute(routes ~ handleEndpoints(endpoints)(config))(config, logger)
+          handleRoute(routes ~ handleEndpoints(endpoints)(ec, config))(config, logger)
       }
   
-  private def handleEndpoints(endpoints: Seq[AnyEndpoint])(implicit config: ServerConfig): Route =
+  private def handleEndpoints(endpoints: Seq[AnyEndpoint])(implicit ec: ExecutionContext, config: ServerConfig): Route =
     AkkaHttpServerInterpreter().toRoute {
       SwaggerUI[Future](OpenAPIDocsInterpreter().toOpenAPI(endpoints, config.name, config.version).toYaml)
     }
@@ -95,10 +95,10 @@ trait Server
   def start(
     config: ServerConfig,
     endpoints: AnyMaterializedEndpoints = Seq.empty
-  )(implicit logger: Logger, system: ActorSystem): Unit = {
+  )(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
-      .bind(handleMaterializedEndpoints(endpoints)(config, logger))
+      .bind(handleMaterializedEndpoints(endpoints)(ec, config, logger))
       .tap(binding => system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global)))
     
     logger.logInfo(s"${config.name} started on ${config.interface}:${config.port}")

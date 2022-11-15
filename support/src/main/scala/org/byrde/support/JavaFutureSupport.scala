@@ -2,9 +2,8 @@ package org.byrde.support
 
 import java.util.concurrent.CompletableFuture
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.jdk.javaapi.FutureConverters
-import scala.util.Try
 
 trait JavaFutureSupport {
   implicit class JavaFuture2ScalaFuture[T](future: java.util.concurrent.Future[T]) {

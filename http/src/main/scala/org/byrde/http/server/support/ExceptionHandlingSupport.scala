@@ -17,12 +17,7 @@ import scala.util.chaining._
 trait ExceptionHandlingSupport extends CirceSupport {
   def exceptionHandler(logger: Logger): ExceptionHandler =
     ExceptionHandler { case ex => ctx =>
-      generateId().pipe { id =>
-        logger.logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", ex)
-        logger.logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName} ($id)", HttpRequestLog(ctx.request))
-        ctx.complete((StatusCodes.InternalServerError, Ack(Option(ex.getMessage).getOrElse("error")).asJson))
-      }
+      logger.logError(s"ExceptionSupport.exceptionHandler: ${ex.getClass.getSimpleName}", HttpRequestLog(ctx.request), ex)
+      ctx.complete((StatusCodes.InternalServerError, Ack(Option(ex.getMessage).getOrElse("error")).asJson))
     }
-  
-  private def generateId() = UUID.randomUUID.toString.take(4)
 }

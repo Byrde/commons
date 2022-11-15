@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.chaining._
 
-trait Publisher extends JavaFutureSupport with AdminClientTrait with AutoCloseable {
+trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
   private val _ackDeadline = 10 //seconds
   
   private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] =
@@ -34,7 +34,7 @@ trait Publisher extends JavaFutureSupport with AdminClientTrait with AutoCloseab
     _createTopicAdminClient(FixedCredentialsProvider.create(credentials), maybeHost)
       .pipe { client =>
         Future {
-          logger.logInfo(s"Creating topic: $topic")
+          logger.logDebug(s"Creating topic: $topic")
           client
             .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
             .tap(_.shutdown())
@@ -72,31 +72,32 @@ trait Publisher extends JavaFutureSupport with AdminClientTrait with AutoCloseab
           _ <- createTopic(credentials, project, env.topic)
           publisher <-
             Future {
-              logger.logInfo(s"Creating publisher: ${env.topic}")
+              logger.logDebug(s"Creating publisher: ${env.topic}")
               val publisherBuilder = com.google.cloud.pubsub.v1.Publisher
                 .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
-                maybeHost match {
-                  case Some(host) =>
-                    val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
-                    publisherBuilder
-                      .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
-                      .setCredentialsProvider(NoCredentialsProvider.create())
-                  case None =>
-                    publisherBuilder
-                      .setCredentialsProvider {
-                        new CredentialsProvider {
-                          override def getCredentials: Credentials = credentials
-                        }
+              maybeHost match {
+                case Some(host) =>
+                  val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
+                  publisherBuilder
+                    .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+                    .setCredentialsProvider(NoCredentialsProvider.create())
+
+                case None =>
+                  publisherBuilder
+                    .setCredentialsProvider {
+                      new CredentialsProvider {
+                        override def getCredentials: Credentials = credentials
                       }
-                }
-                publisherBuilder.build()
+                    }
+              }
+              publisherBuilder.build()
             }
           _ <-
             Future(_publishers.update(env.topic, publisher))
         } yield publisher
       }
       .map { publisher =>
-        logger.logInfo(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
+        logger.logDebug(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
         publisher
           .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
           .asScala

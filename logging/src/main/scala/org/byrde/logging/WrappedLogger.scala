@@ -31,5 +31,8 @@ case class WrappedLogger(private val logger: Logger) {
   
     override def logError(msg: String, cause: Throwable): Unit =
       logger.logError(msg, cause)
+
+    override def logError(msg: String, extras: Log, cause: Throwable): Unit =
+      logger.logError(msg, extras, cause)
   }
 }

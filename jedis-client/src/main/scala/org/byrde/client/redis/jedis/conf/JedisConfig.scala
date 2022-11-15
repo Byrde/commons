@@ -85,7 +85,7 @@ object JedisConfig {
     Try(config.getInt("pool.maxIdle")).foreach(poolConfig.setMaxIdle)
     Try(config.getInt("pool.minIdle")).foreach(poolConfig.setMinIdle)
     Try(config.getInt("pool.maxTotal")).foreach(poolConfig.setMaxTotal)
-    Try(config.getLong("pool.maxWaitMillis")).foreach(poolConfig.setMaxWaitMillis)
+    Try(config.getDuration("pool.maxWaitMillis")).foreach(poolConfig.setMaxWait)
     Try(config.getBoolean("pool.testOnBorrow")).foreach(poolConfig.setTestOnBorrow)
     Try(config.getBoolean("pool.testOnReturn")).foreach(poolConfig.setTestOnReturn)
     Try(config.getBoolean("pool.testWhileIdle")).foreach(poolConfig.setTestWhileIdle)

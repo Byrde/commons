@@ -53,7 +53,7 @@ case class SmtpConfig(
           props,
           new javax.mail.Authenticator() {
             override protected def getPasswordAuthentication: PasswordAuthentication = {
-              new PasswordAuthentication(user, password);
+              new PasswordAuthentication(user, password)
             }
           }
         )
@@ -109,7 +109,7 @@ object SmtpConfig {
         .getString(_password)
 
     val from =
-      Email.fromStringUnsafe(config.getString(_from))
+      Email.fromString(config.getString(_from)).fold(_ => throw new Exception("Invalid email!"), identity)
     
     val typeOpt =
       Try(config.getString(_type)).toOption

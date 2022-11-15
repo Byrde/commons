@@ -1,6 +1,8 @@
 package org.byrde.logging
 
 import net.logstash.logback.marker.Markers._
+
+import java.util.UUID
 import scala.jdk.CollectionConverters._
 
 class ScalaLogger(name: String) extends Logger {
@@ -35,4 +37,10 @@ class ScalaLogger(name: String) extends Logger {
 
   override def logError(msg: String, cause: Throwable): Unit =
     logger.error(msg, cause)
+
+  override def logError(msg: String, extras: Log, cause: Throwable): Unit = {
+    val id = UUID.randomUUID.toString.take(4)
+    logger.error(s"[$id] $msg", extras)
+    logger.error(s"[$id] $msg", cause)
+  }
 }

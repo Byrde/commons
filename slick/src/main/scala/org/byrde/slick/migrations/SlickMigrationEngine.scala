@@ -28,7 +28,7 @@ class SlickMigrationEngine(
     def status = column[String]("status")
     def dateApplied = column[Long]("date_applied")
 
-    def * = (
+    @unchecked def * = (
       migrationName,
       applicationId,
       status,
