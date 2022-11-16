@@ -146,7 +146,10 @@ trait Subscriber extends AdminClient with AutoCloseable {
                   case Right(value) =>
                     val rebuiltEnvelope = Envelope(envelope.topic, value, envelope.id)
                     fn(rebuiltEnvelope)
-                      .map(_ => consumer.ack())
+                      .map { _ =>
+                        logger.logDebug("Message processed successfully!", logExtractor(rebuiltEnvelope))
+                        consumer.ack()
+                      }
                       .recover {
                         case ex =>
                           logger.logError(
