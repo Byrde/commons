@@ -3,7 +3,7 @@ package org.byrde.support
 import scala.annotation.tailrec
 
 trait CollectionsSupport {
-  implicit class IterableOnceExtensions[A](val col: IterableOnce[A]) {
+  implicit class IterableOnceOps[A](val col: IterableOnce[A]) {
     /**
       Fold while element satisfies the predicate. Stops on first unsatisfied predicate.
       @param predicate check on next element to see whether we should continue to iterate

@@ -1,7 +1,6 @@
 package org.byrde.http.server
 
 import org.byrde.http.server.conf.ServerConfig
-import org.byrde.http.server.support.RequestIdSupport.IdHeader
 import org.byrde.http.server.support._
 import org.byrde.logging.Logger
 
@@ -28,10 +27,7 @@ import scala.util.chaining._
 
 trait Server
   extends MaterializedEndpointSupport
-    with CorsSupport
-    with RequestIdSupport
-    with ExceptionHandlingSupport
-    with RejectionHandlingSupport {
+    with CorsSupport {
   private lazy val ackOutput: EndpointIO.Body[String, Ack] =
     jsonBody[Ack]
       .description(s"Default response!")
@@ -46,7 +42,7 @@ trait Server
       .description("Standard API endpoint to say hello to the server.")
       .toMaterializedEndpoint()(Future.successful(Right(Ack("Success"))))(scala.concurrent.ExecutionContext.global)
   
-  private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit ec: ExecutionContext, config: ServerConfig, logger: Logger): Route =
+  private def handleMaterializedEndpoints(endpoints: AnyMaterializedEndpoints)(implicit ec: ExecutionContext, config: ServerConfig): Route =
     endpoints
       .view
       .pipe(_ :+ ping)
@@ -56,7 +52,7 @@ trait Server
       }
       .pipe {
         case (routes, endpoints) =>
-          handleRoute(routes ~ handleEndpoints(endpoints)(ec, config))(config, logger)
+          handleRoute(routes ~ handleEndpoints(endpoints)(ec, config))(config)
       }
   
   private def handleEndpoints(endpoints: Seq[AnyEndpoint])(implicit ec: ExecutionContext, config: ServerConfig): Route =
@@ -64,22 +60,8 @@ trait Server
       SwaggerUI[Future](OpenAPIDocsInterpreter().toOpenAPI(endpoints, config.name, config.version).toYaml)
     }
   
-  private def handleRoute(routes: Route)(implicit config: ServerConfig, logger: Logger): Route =
-    (corsDirective(config.corsConfig) & requestId) { id =>
-      (addRequestId(id) & addResponseId(id) & securityHeaders) {
-        (handleExceptions(exceptionHandler(logger)) & handleRejections(rejectionHandler))(routes)
-      }
-    }
-  
-  private def addRequestId(id: IdHeader): Directive0 =
-    mapRequest { request =>
-      request.withHeaders(id +: request.headers)
-    }
-  
-  private def addResponseId(id: IdHeader): Directive0 =
-    mapResponseHeaders { headers =>
-      id +: headers
-    }
+  private def handleRoute(routes: Route)(implicit config: ServerConfig): Route =
+    (corsDirective(config.corsConfig) & securityHeaders)(routes)
   
   private def securityHeaders: Directive0 =
     mapResponseHeaders { response =>
@@ -98,7 +80,7 @@ trait Server
   )(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem): Unit = {
     Http()
       .newServerAt(config.interface, config.port)
-      .bind(handleMaterializedEndpoints(endpoints)(ec, config, logger))
+      .bind(handleMaterializedEndpoints(endpoints)(ec, config))
       .tap(binding => system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global)))
     
     logger.logInfo(s"${config.name} started on ${config.interface}:${config.port}")
