@@ -2,22 +2,23 @@ import sbt.librarymanagement.{DependencyBuilders, ModuleID}
 
 object Dependencies extends DependencyBuilders {
   //TODO: No more akka
+  //DO NOT TOUCH - These are the absolute last non-business licence versions of akka
   val AkkaDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.akka"  %% "akka-actor"          % "2.6.20",
       "com.typesafe.akka"  %% "akka-slf4j"          % "2.6.20",
       "com.typesafe.akka"  %% "akka-stream"         % "2.6.20",
       "com.typesafe.akka"  %% "akka-testkit"        % "2.6.20",
-      "com.typesafe.akka"  %% "akka-stream-testkit" % "2.6.20"
+      "com.typesafe.akka"  %% "akka-stream-testkit" % "2.6.20",
+      "com.typesafe.akka"  %% "akka-http"           % "10.2.10" exclude("com.typesafe.akka", "akka-streams_2.13"),
+      "com.typesafe.akka"  %% "akka-http-testkit"   % "10.2.10" % "test" exclude("com.typesafe.akka", "akka-streams_2.13")
     )
   
   //TODO: Make generic (or vert.x?)
   val TapirDependencies: Seq[ModuleID] =
     Seq(
-      "com.typesafe.akka"             %% "akka-http-testkit"          % "10.4.0" % "test" exclude("com.typesafe.akka", "akka-streams_2.13"),
-
-      "com.softwaremill.sttp.tapir"   %% "tapir-akka-http-server"     % "1.2.0" exclude("com.typesafe.akka", "akka-stream_2.13"),
-      "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui"           % "1.2.0" exclude("com.typesafe.akka", "akka-stream_2.13"),
+      "com.softwaremill.sttp.tapir"   %% "tapir-akka-http-server"     % "1.2.0",
+      "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui"           % "1.2.0",
       "com.softwaremill.sttp.tapir"   %% "tapir-openapi-docs"         % "1.2.0",
       "com.softwaremill.sttp.apispec" %% "openapi-circe-yaml"         % "0.3.1",
       "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % "1.2.0",
