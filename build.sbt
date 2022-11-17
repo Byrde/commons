@@ -83,6 +83,11 @@ val `scala-logging` =
     .dependsOn(logging)
     .settings(CommonsSettings)
 
+val `fluent-logging` =
+  project
+    .dependsOn(logging)
+    .settings(CommonsSettings)
+
 val support =
   project
     .dependsOn(uri)
@@ -129,6 +134,7 @@ val root =
       `jwt`,
       logging,
       `scala-logging`,
+      `fluent-logging`,
       `redis-client`,
       `jedis-client`,
       slick,

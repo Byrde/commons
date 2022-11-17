@@ -20,9 +20,6 @@ case class WrappedLogger(private val logger: Logger) {
     override def logWarning(msg: String, extras: Log*): Unit =
       logger.logWarning(msg, extras: _*)
   
-    override def logWarning(msg: String, cause: Throwable): Unit =
-      logger.logWarning(msg, cause)
-  
     override def logError(msg: String): Unit =
       logger.logError(msg)
   

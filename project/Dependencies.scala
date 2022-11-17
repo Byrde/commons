@@ -66,13 +66,16 @@ object Dependencies extends DependencyBuilders {
     )
 
   val CommonsDependencies: Seq[ModuleID] =
-    Seq("commons-codec" % "commons-codec" % "20041127.091804")
+    Seq("org.apache.commons" % "commons-lang3" % "3.12.0")
   
-  val LoggingDependencies: Seq[ModuleID] =
+  val ScalaLoggingDependencies: Seq[ModuleID] =
     Seq(
       "com.typesafe.scala-logging" %% "scala-logging"           % "3.9.5",
       "net.logstash.logback"       % "logstash-logback-encoder" % "7.2"
     )
+
+  val FluentLoggingDependencies: Seq[ModuleID] =
+    Seq("org.fluentd" % "fluent-logger" % "0.3.4")
   
   val GooglePubSubDependencies: Seq[ModuleID] =
     Seq(

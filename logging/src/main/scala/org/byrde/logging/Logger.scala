@@ -12,8 +12,6 @@ trait Logger {
   def logWarning(msg: String): Unit
   
   def logWarning(msg: String, extras: Log*): Unit
-  
-  def logWarning(msg: String, cause: Throwable): Unit
 
   def logError(msg: String): Unit
   
