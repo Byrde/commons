@@ -154,14 +154,14 @@ trait Subscriber extends AdminClient with AutoCloseable {
                         case ex =>
                           logger.logError(
                             s"Error in the receiver function!",
-                            logExtractor(rebuiltEnvelope) ++
-                              Log(
-                                "topic" -> topic,
-                                "subscription" -> subscription,
-                                "message" -> message.getData.toStringUtf8,
-                                "id" -> envelope.id.toString
-                              ),
-                            ex
+                            ex,
+                            logExtractor(rebuiltEnvelope),
+                            Log(
+                              "topic" -> topic,
+                              "subscription" -> subscription,
+                              "message" -> message.getData.toStringUtf8,
+                              "id" -> envelope.id.toString
+                            )
                           )
                           consumer.nack()
                       }
@@ -169,13 +169,13 @@ trait Subscriber extends AdminClient with AutoCloseable {
                   case Left(ex) =>
                     logger.logError(
                       s"Error processing envelope message!",
+                      ex,
                       Log(
                         "topic" -> topic,
                         "subscription" -> subscription,
                         "message" -> message.getData.toStringUtf8,
                         "id" -> envelope.id.toString
                       ),
-                      ex
                     )
                     Future(consumer.nack())
                 }
@@ -183,12 +183,12 @@ trait Subscriber extends AdminClient with AutoCloseable {
             case Left(ex) =>
               logger.logError(
                 s"Error processing PubSubMessage!",
+                ex,
                 Log(
                   "topic" -> topic,
                   "subscription" -> subscription,
                   "message" -> message.getData.toStringUtf8
                 ),
-                ex
               )
               Future.failed(ex)
           }
