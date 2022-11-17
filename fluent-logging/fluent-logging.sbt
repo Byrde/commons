@@ -1,4 +1,4 @@
-name := """scala-logging"""
+name := """fluent-logging"""
 
 libraryDependencies ++=
   Dependencies.FluentLoggingDependencies
