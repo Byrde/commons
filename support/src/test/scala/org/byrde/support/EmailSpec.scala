@@ -1,7 +1,7 @@
 package org.byrde.support
 
 import org.byrde.support.types.Email
-import org.byrde.support.types.Email.EmailInvalid
+import org.byrde.support.types.Email._
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -38,18 +38,18 @@ class EmailSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "fail on duplicate @" in {
-    Email.fromString("martin@@simple.reviews") shouldBe Left(EmailInvalid)
+    Email.fromString("martin@@simple.reviews") shouldBe Left(InvalidEmail("martin@@simple.reviews"))
   }
 
   it should "fail on missing @" in {
-    Email.fromString("martinsimple.reviews") shouldBe Left(EmailInvalid)
+    Email.fromString("martinsimple.reviews") shouldBe Left(InvalidEmail("martinsimple.reviews"))
   }
 
   it should "fail on missing domain suffix" in {
-    Email.fromString("martin@simplereviews") shouldBe Left(EmailInvalid)
+    Email.fromString("martin@simplereviews") shouldBe Left(InvalidEmail("martin@simplereviews"))
   }
 
   it should "fail on missing all required tokens" in {
-    Email.fromString("martinsimplereviews") shouldBe Left(EmailInvalid)
+    Email.fromString("martinsimplereviews") shouldBe Left(InvalidEmail("martinsimplereviews"))
   }
 }

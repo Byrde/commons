@@ -5,11 +5,11 @@ import org.byrde.support.types.Phone.{Area, Country, Exchange, Ext}
 object Phone {
   sealed trait PhoneValidationError
 
-  object PhoneEmpty extends PhoneValidationError
+  case class PhoneEmpty(value: String) extends PhoneValidationError
 
-  object CountryNotFound extends PhoneValidationError
+  case class CountryNotFound(value: String) extends PhoneValidationError
 
-  object PhoneInvalid extends PhoneValidationError
+  case class PhoneInvalid(value: String) extends PhoneValidationError
 
   private type Country = String
 
@@ -31,7 +31,7 @@ object Phone {
   def fromString(phone: String): Either[PhoneValidationError, Phone] =
     normalizePhone(phone) match {
       case phone if phone.isEmpty =>
-        Left(PhoneEmpty)
+        Left(PhoneEmpty(phone))
 
       case phone if NorthAmericanNumber(phone) =>
         toNorthAmericanPhone(phone)
@@ -39,8 +39,8 @@ object Phone {
       case phone if AustralianNumber(phone) =>
         toAustralianPhone(phone)
 
-      case _ =>
-        Left(PhoneInvalid)
+      case phone =>
+        Left(PhoneInvalid(phone))
     }
 
   def fromStringWithCountry(phone: String, countryCode: String): Either[PhoneValidationError, Phone] =
@@ -80,8 +80,8 @@ object Phone {
       case normalizedPhone if normalizedPhone.length == 10 =>
         Right(toPhone(s"1$normalizedPhone"))
 
-      case _ =>
-        Left(PhoneInvalid)
+      case phone =>
+        Left(PhoneInvalid(phone))
     }
   }
 
@@ -113,8 +113,8 @@ object Phone {
       case normalizedPhone if normalizedPhone.length == 10 =>
         Right(toPhone(s"61${normalizedPhone.drop(1)}"))
 
-      case _ =>
-        Left(PhoneInvalid)
+      case phone =>
+        Left(PhoneInvalid(phone))
     }
   }
 

@@ -1,7 +1,7 @@
 package org.byrde.support
 
 import org.byrde.support.types.Phone
-import org.byrde.support.types.Phone.PhoneInvalid
+import org.byrde.support.types.Phone._
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -56,15 +56,15 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "fail when country code isn't present" in {
-    Phone.fromString("6138044534") shouldBe Left(PhoneInvalid)
+    Phone.fromString("6138044534") shouldBe Left(PhoneInvalid("6138044534"))
   }
 
   it should "fail wrong number of digits - North American" in {
-    Phone.fromString("161380445344") shouldBe Left(PhoneInvalid)
+    Phone.fromString("161380445344") shouldBe Left(PhoneInvalid("161380445344"))
   }
 
   it should "fail wrong number of digits - Australian" in {
-    Phone.fromString("614512669072") shouldBe Left(PhoneInvalid)
+    Phone.fromString("614512669072") shouldBe Left(PhoneInvalid("614512669072"))
   }
 
   "Phone.fromStringWithCountry" should "work with North American phone - CA" in {
@@ -75,7 +75,7 @@ class PhoneSpec extends AnyFlatSpec with Matchers {
     phone.extension shouldBe "4534"
   }
 
-  "Phone.fromStringWithCountry" should "work with North American phone - US" in {
+  it should "work with North American phone - US" in {
     val phone = Phone.fromStringWithCountry("16138044534", "US").toOption.get
     phone.country shouldBe "1"
     phone.area shouldBe "613"
