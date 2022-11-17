@@ -39,7 +39,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
     project: String,
     subscription: String,
     topic: String,
-    maybeHost: Option[String] = None
+    maybeHost: Option[String]
   ): Future[Unit] =
     _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), maybeHost)
       .pipe { client =>
@@ -94,9 +94,9 @@ trait Subscriber extends AdminClient with AutoCloseable {
       _ <- createSubscription(credentials, project, subscription, topic, maybeHost)
       subscriber <-
         Future {
-          logger.logDebug(s"Creating subscriber: $subscription")
+          logger.logInfo(s"Creating subscriber: $subscription")
           val subscriberBuilder = com.google.cloud.pubsub.v1.Subscriber
-            .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(topic, subscription, fn, logExtractor))
+            .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn, logExtractor))
           maybeHost match {
             case None =>
               subscriberBuilder.setCredentialsProvider {
@@ -147,7 +147,16 @@ trait Subscriber extends AdminClient with AutoCloseable {
                     val rebuiltEnvelope = Envelope(envelope.topic, value, envelope.id)
                     fn(rebuiltEnvelope)
                       .map { _ =>
-                        logger.logDebug("Message processed successfully!", logExtractor(rebuiltEnvelope))
+                        logger.logDebug(
+                          "Message processed successfully!",
+                          logExtractor(rebuiltEnvelope),
+                          Log(
+                            "topic" -> topic,
+                            "subscription" -> subscription,
+                            "payload" -> message.getData.toStringUtf8,
+                            "id" -> envelope.id.toString
+                          )
+                        )
                         consumer.ack()
                       }
                       .recover {
@@ -159,7 +168,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                             Log(
                               "topic" -> topic,
                               "subscription" -> subscription,
-                              "message" -> message.getData.toStringUtf8,
+                              "payload" -> message.getData.toStringUtf8,
                               "id" -> envelope.id.toString
                             )
                           )
@@ -173,7 +182,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                       Log(
                         "topic" -> topic,
                         "subscription" -> subscription,
-                        "message" -> message.getData.toStringUtf8,
+                        "payload" -> message.getData.toStringUtf8,
                         "id" -> envelope.id.toString
                       ),
                     )
@@ -187,7 +196,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                 Log(
                   "topic" -> topic,
                   "subscription" -> subscription,
-                  "message" -> message.getData.toStringUtf8
+                  "payload" -> message.getData.toStringUtf8
                 ),
               )
               Future.failed(ex)

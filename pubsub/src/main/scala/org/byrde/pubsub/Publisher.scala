@@ -6,14 +6,17 @@ import com.google.api.gax.rpc.{AlreadyExistsException, FixedTransportChannelProv
 import com.google.auth.Credentials
 import com.google.protobuf.ByteString
 import com.google.pubsub.v1.{PubsubMessage, TopicName}
+
 import io.circe.Encoder
 import io.circe.generic.auto._
 import io.circe.syntax._
+
 import io.grpc.ManagedChannelBuilder
-import org.byrde.logging.Logger
+import org.byrde.logging.{Log, Logger}
 import org.byrde.support.JavaFutureSupport
 
 import java.util.concurrent.TimeUnit
+
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -29,12 +32,12 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
     credentials: Credentials,
     project: String,
     topic: String,
-    maybeHost: Option[String] = None
+    maybeHost: Option[String]
   )(implicit logger: Logger): Future[Unit] =
     _createTopicAdminClient(FixedCredentialsProvider.create(credentials), maybeHost)
       .pipe { client =>
         Future {
-          logger.logDebug(s"Creating topic: $topic")
+          logger.logInfo(s"Creating topic: $topic")
           client
             .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
             .tap(_.shutdown())
@@ -62,17 +65,18 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
     credentials: Credentials,
     project: String,
     env: Envelope[T],
-    maybeHost: Option[String]
+    logExtractor: Envelope[T] => Log = (_: Envelope[T]) => Log.empty,
+    maybeHost: Option[String] = None,
   )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
     _publishers
       .get(env.topic)
       .map(Future.successful)
       .getOrElse {
         for {
-          _ <- createTopic(credentials, project, env.topic)
+          _ <- createTopic(credentials, project, env.topic, maybeHost)
           publisher <-
             Future {
-              logger.logDebug(s"Creating publisher: ${env.topic}")
+              logger.logInfo(s"Creating publisher: ${env.topic}")
               val publisherBuilder = com.google.cloud.pubsub.v1.Publisher
                 .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
               maybeHost match {
@@ -97,11 +101,20 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
         } yield publisher
       }
       .map { publisher =>
-        logger.logDebug(s"Attempting to publish message to PubSub topic ${env.topic}: ${env.msg}")
         publisher
           .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
           .asScala
-          .map(_ => ())
+          .map { _ =>
+            logger.logDebug(
+              s"Message published successfully!",
+              logExtractor(env),
+              Log(
+                "topic" -> env.topic,
+                "payload" -> env.msg.asJson.noSpaces
+              )
+            )
+            ()
+          }
       }
   
   override def close(): Unit =
