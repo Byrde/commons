@@ -29,5 +29,5 @@ jobs:
         user=${GITHUB_ACTOR}
         password=${GITHUB_TOKEN}	
         EOF
-    - name: Publish
+    - name: Build & Publish
       run: sbt -Dversion="${MAJOR_VERSION}.${MINOR_VERSION}.${GITHUB_NUMBER}" publish

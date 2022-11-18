@@ -65,7 +65,6 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
     credentials: Credentials,
     project: String,
     env: Envelope[T],
-    logExtractor: Envelope[T] => Log = (_: Envelope[T]) => Log.empty,
     maybeHost: Option[String] = None,
   )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
     _publishers
@@ -107,9 +106,10 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
           .map { _ =>
             logger.logDebug(
               s"Message published successfully!",
-              logExtractor(env),
               Log(
+                "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
                 "topic" -> env.topic,
+                "id" -> env.id,
                 "payload" -> env.msg.asJson.noSpaces
               )
             )

@@ -87,7 +87,6 @@ trait Subscriber extends AdminClient with AutoCloseable {
     project: String,
     subscription: String,
     topic: String,
-    logExtractor: Envelope[T] => Log = (_: Envelope[T]) => Log.empty,
     maybeHost: Option[String] = None
   )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
     for {
@@ -96,7 +95,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
         Future {
           logger.logInfo(s"Creating subscriber: $subscription")
           val subscriberBuilder = com.google.cloud.pubsub.v1.Subscriber
-            .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn, logExtractor))
+            .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
           maybeHost match {
             case None =>
               subscriberBuilder.setCredentialsProvider {
@@ -127,7 +126,6 @@ trait Subscriber extends AdminClient with AutoCloseable {
     subscription: String,
     topic: String,
     fn: Envelope[T] => Future[_],
-    logExtractor: Envelope[T] => Log
   )(implicit logger: Logger, decoder: Decoder[T]): MessageReceiver = {
     case (message, consumer) =>
       message.getData.toStringUtf8.pipe { data =>
@@ -136,25 +134,25 @@ trait Subscriber extends AdminClient with AutoCloseable {
           .left
           .map(PubSubError.DecodingError.apply(s"Error decoding envelope: ${message.getData.toStringUtf8}")(_))
           .pipe {
-            case Right(envelope) =>
-              envelope
+            case Right(env) =>
+              env
                 .msg
                 .as[T]
                 .left
                 .map(PubSubError.DecodingError(s"Error decoding message: ${message.getData.toStringUtf8}")(_))
                 .pipe {
                   case Right(value) =>
-                    val rebuiltEnvelope = Envelope(envelope.topic, value, envelope.id)
+                    val rebuiltEnvelope = Envelope(env.topic, value, env.id)
                     fn(rebuiltEnvelope)
                       .map { _ =>
                         logger.logDebug(
                           "Message processed successfully!",
-                          logExtractor(rebuiltEnvelope),
                           Log(
+                            "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
                             "topic" -> topic,
                             "subscription" -> subscription,
-                            "payload" -> message.getData.toStringUtf8,
-                            "id" -> envelope.id.toString
+                            "id" -> env.id,
+                            "payload" -> message.getData.toStringUtf8
                           )
                         )
                         consumer.ack()
@@ -164,12 +162,12 @@ trait Subscriber extends AdminClient with AutoCloseable {
                           logger.logError(
                             s"Error in the receiver function!",
                             ex,
-                            logExtractor(rebuiltEnvelope),
                             Log(
+                              "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
                               "topic" -> topic,
                               "subscription" -> subscription,
+                              "id" -> env.id,
                               "payload" -> message.getData.toStringUtf8,
-                              "id" -> envelope.id.toString
                             )
                           )
                           consumer.nack()
@@ -180,10 +178,11 @@ trait Subscriber extends AdminClient with AutoCloseable {
                       s"Error processing envelope message!",
                       ex,
                       Log(
+                        "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
                         "topic" -> topic,
                         "subscription" -> subscription,
+                        "id" -> env.id,
                         "payload" -> message.getData.toStringUtf8,
-                        "id" -> envelope.id.toString
                       ),
                     )
                     Future(consumer.nack())
