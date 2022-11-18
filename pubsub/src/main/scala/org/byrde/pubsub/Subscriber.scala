@@ -145,7 +145,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                     val rebuiltEnvelope = Envelope(env.topic, value, env.id)
                     fn(rebuiltEnvelope)
                       .map { _ =>
-                        logger.logDebug(
+                        logger.logInfo(
                           "Message processed successfully!",
                           Log(
                             "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
