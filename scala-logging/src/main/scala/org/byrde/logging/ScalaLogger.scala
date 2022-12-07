@@ -2,11 +2,19 @@ package org.byrde.logging
 
 import net.logstash.logback.argument.StructuredArguments._
 
-import java.util.UUID
+import java.io.{PrintWriter, StringWriter}
 
 import scala.jdk.CollectionConverters._
 
 class ScalaLogger(name: String) extends Logger {
+  private case class StackTraceLog(value: Throwable) extends Log {
+    override def asMap: Map[String, String] = {
+      val sw = new StringWriter
+      value.printStackTrace(new PrintWriter(sw))
+      Map("stack_trace" -> sw.toString)
+    }
+  }
+
   private val logger = com.typesafe.scalalogging.Logger(name)
 
   override def logDebug(msg: String): Unit =
@@ -30,11 +38,8 @@ class ScalaLogger(name: String) extends Logger {
   override def logWarning(msg: String, cause: Throwable): Unit =
     logger.warn(msg, cause)
 
-  override def logWarning(msg: String, cause: Throwable, extras: Log*): Unit = {
-    val id = UUID.randomUUID.toString.take(4)
-    logger.warn(s"[$id] $msg", entries(extras.foldLeft(Log.empty)(_ ++ _).asMap.asJava))
-    logger.warn(s"[$id] $msg", cause)
-  }
+  override def logWarning(msg: String, cause: Throwable, extras: Log*): Unit =
+    logger.warn(s"$msg", entries((extras :+ StackTraceLog(cause)).foldLeft(Log.empty)(_ ++ _).asMap.asJava))
 
   override def logError(msg: String): Unit =
     logger.error(msg)
@@ -46,8 +51,6 @@ class ScalaLogger(name: String) extends Logger {
     logger.error(msg, cause)
 
   override def logError(msg: String, cause: Throwable, extras: Log*): Unit = {
-    val id = UUID.randomUUID.toString.take(4)
-    logger.error(s"[$id] $msg", entries(extras.foldLeft(Log.empty)(_ ++ _).asMap.asJava))
-    logger.error(s"[$id] $msg", cause)
+    logger.error(s"$msg", entries((extras :+ StackTraceLog(cause)).foldLeft(Log.empty)(_ ++ _).asMap.asJava))
   }
 }
