@@ -148,7 +148,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                         logger.logDebug(
                           "Message processed successfully!",
                           Log(
-                            "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                            "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                             "topic" -> topic,
                             "subscription" -> subscription,
                             "id" -> env.id,
@@ -163,7 +163,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                             s"Error in the receiver function!",
                             ex,
                             Log(
-                              "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                              "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                               "topic" -> topic,
                               "subscription" -> subscription,
                               "id" -> env.id,
@@ -178,7 +178,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                       s"Error processing envelope message!",
                       ex,
                       Log(
-                        "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                        "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                         "topic" -> topic,
                         "subscription" -> subscription,
                         "id" -> env.id,

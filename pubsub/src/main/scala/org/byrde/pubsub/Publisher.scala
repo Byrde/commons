@@ -108,7 +108,7 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
             logger.logDebug(
               s"Message published successfully!",
               Log(
-                "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                 "topic" -> env.topic,
                 "id" -> env.id,
                 "payload" -> env.msg.asJson.noSpaces
