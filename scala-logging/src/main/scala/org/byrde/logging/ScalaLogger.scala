@@ -27,6 +27,15 @@ class ScalaLogger(name: String) extends Logger {
   override def logWarning(msg: String, extras: Log*): Unit =
     logger.warn(msg, entries(extras.foldLeft(Log.empty)(_ ++ _).asMap.asJava))
 
+  override def logWarning(msg: String, cause: Throwable): Unit =
+    logger.warn(msg, cause)
+
+  override def logWarning(msg: String, cause: Throwable, extras: Log*): Unit = {
+    val id = UUID.randomUUID.toString.take(4)
+    logger.warn(s"[$id] $msg", entries(extras.foldLeft(Log.empty)(_ ++ _).asMap.asJava))
+    logger.warn(s"[$id] $msg", cause)
+  }
+
   override def logError(msg: String): Unit =
     logger.error(msg)
 

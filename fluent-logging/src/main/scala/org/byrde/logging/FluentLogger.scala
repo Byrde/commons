@@ -37,6 +37,12 @@ class FluentLogger(name: String) extends Logger {
   override def logWarning(msg: String, extras: Log*): Unit =
     logger.log("warning", (MessageLog(msg) ++ extras.foldLeft(Log.empty)(_ ++ _)).asMap.asInstanceOf[Map[String, AnyRef]].asJava)
 
+  override def logWarning(msg: String, cause: Throwable): Unit =
+    logger.log("warning", (MessageLog(msg) ++ ThrowableLog(cause)).asMap.asInstanceOf[Map[String, AnyRef]].asJava)
+
+  override def logWarning(msg: String, cause: Throwable, extras: Log*): Unit =
+    logger.log("warning", (MessageLog(msg) ++ ThrowableLog(cause) ++ extras.foldLeft(Log.empty)(_ ++ _)).asMap.asInstanceOf[Map[String, AnyRef]].asJava)
+
   override def logError(msg: String): Unit =
     logger.log("error", MessageLog(msg).asMap.asInstanceOf[Map[String, AnyRef]].asJava)
   

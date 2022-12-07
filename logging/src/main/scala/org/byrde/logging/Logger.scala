@@ -13,6 +13,10 @@ trait Logger {
   
   def logWarning(msg: String, extras: Log*): Unit
 
+  def logWarning(msg: String, cause: Throwable): Unit
+
+  def logWarning(msg: String, cause: Throwable, extras: Log*): Unit
+
   def logError(msg: String): Unit
   
   def logError(msg: String, extras: Log*): Unit

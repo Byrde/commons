@@ -12,6 +12,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 
 import io.grpc.ManagedChannelBuilder
+
 import org.byrde.logging.{Log, Logger}
 import org.byrde.support.JavaFutureSupport
 
@@ -104,7 +105,7 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
           .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
           .asScala
           .map { _ =>
-            logger.logInfo(
+            logger.logDebug(
               s"Message published successfully!",
               Log(
                 "correlation-id" -> env.correlationId.getOrElse("No Correlation Id!"),

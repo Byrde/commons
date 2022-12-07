@@ -2,7 +2,6 @@ package org.byrde.http.server
 
 import org.byrde.http.server.conf.ServerConfig
 import org.byrde.http.server.support._
-import org.byrde.logging.Logger
 
 import io.circe.generic.auto._
 
@@ -77,12 +76,9 @@ trait Server
   def start(
     config: ServerConfig,
     endpoints: AnyMaterializedEndpoints = Seq.empty
-  )(implicit ec: ExecutionContext, logger: Logger, system: ActorSystem): Unit = {
+  )(implicit system: ActorSystem, ec: ExecutionContext): Unit =
     Http()
       .newServerAt(config.interface, config.port)
       .bind(handleMaterializedEndpoints(endpoints)(ec, config))
       .tap(binding => system.registerOnTermination(binding.flatMap(_.unbind())(scala.concurrent.ExecutionContext.global)))
-    
-    logger.logInfo(s"${config.name} started on ${config.interface}:${config.port}")
-  }
 }
