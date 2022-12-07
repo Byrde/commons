@@ -185,7 +185,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                         "payload" -> message.getData.toStringUtf8,
                       ),
                     )
-                    Future(consumer.nack())
+                    consumer.nack()
                 }
 
             case Left(ex) =>
@@ -198,7 +198,7 @@ trait Subscriber extends AdminClient with AutoCloseable {
                   "payload" -> message.getData.toStringUtf8
                 ),
               )
-              Future.failed(ex)
+              consumer.nack()
           }
       }
   }
