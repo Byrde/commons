@@ -18,11 +18,11 @@ class TimeRangeSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "work" in {
-    val List(a, b, c, d) = List(10L, 20L, 30L, 40L).map(Instant.ofEpochMilli)
-    TimeRange(a, b).hasOverlap(TimeRange(c, d)) shouldBe false // totally disjoint
-    TimeRange(a, c).hasOverlap(TimeRange(b, d)) shouldBe true //  overlapping
-    TimeRange(a, d).hasOverlap(TimeRange(b, c)) shouldBe true //  subset
-    TimeRange(a, b).hasOverlap(TimeRange(b, c)) shouldBe false // endpoint shared
+    val list = List(10L, 20L, 30L, 40L).map(Instant.ofEpochMilli)
+    TimeRange(list(0), list(1)).hasOverlap(TimeRange(list(2), list(3))) shouldBe false // totally disjoint
+    TimeRange(list(0), list(2)).hasOverlap(TimeRange(list(1), list(3))) shouldBe true //  overlapping
+    TimeRange(list(0), list(3)).hasOverlap(TimeRange(list(1), list(2))) shouldBe true //  subset
+    TimeRange(list(0), list(1)).hasOverlap(TimeRange(list(1), list(2))) shouldBe false // endpoint shared
   }
 
   it should "slice and snap to the closest half an hour when given a range" in {

@@ -12,15 +12,17 @@ case class Queries(queries: Set[(String, String)]) extends AnyVal {
   def &+ (_queries: Queries): Queries = this.copy(queries ++ _queries.queries)
 
   override def toString: String =
-    queries.foldLeft("") {
-      case (acc, param) =>
-        acc + {
-          if (acc.isEmpty)
-            s"?${param._1}=${param._2}"
-          else
-            s"&${param._1}=${param._2}"
-        }
-    }.trim
+    queries
+      .foldLeft("") {
+        case (acc, param) =>
+          acc + {
+            if (acc.isEmpty)
+              s"?${param._1}=${param._2}"
+            else
+              s"&${param._1}=${param._2}"
+          }
+      }
+      .trim
 }
 
 object Queries {
