@@ -1,6 +1,6 @@
 package org.byrde.support
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 trait TrySupport {
   implicit class Any2Success[T](value: T) {

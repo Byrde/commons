@@ -2,7 +2,6 @@ package org.byrde.client.redis
 
 import scala.concurrent.Future
 
-
 trait RedisExecutor[R] {
   def executor: RedisExecutor.Service[R]
 }

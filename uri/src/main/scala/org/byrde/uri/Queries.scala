@@ -1,20 +1,17 @@
 package org.byrde.uri
 
-import java.net.URL
-
 import org.byrde.uri.Path.context
 
-case class Queries(queries: Set[(String, String)]) extends AnyVal {
-  def &+(query: (String, String)): Queries =
-    copy(queries = queries + query)
-  
-  def &+(query: Option[(String, String)]): Queries =
-    query.fold(this)(query => copy(queries = queries + query))
-  
-  def &+(_queries: Queries): Queries =
-    this.copy(queries ++ _queries.queries)
+import java.net.URL
 
-  override def toString: String = {
+case class Queries(queries: Set[(String, String)]) extends AnyVal {
+  def &+ (query: (String, String)): Queries = copy(queries = queries + query)
+
+  def &+ (query: Option[(String, String)]): Queries = query.fold(this)(query => copy(queries = queries + query))
+
+  def &+ (_queries: Queries): Queries = this.copy(queries ++ _queries.queries)
+
+  override def toString: String =
     queries.foldLeft("") {
       case (acc, param) =>
         acc + {
@@ -23,19 +20,15 @@ case class Queries(queries: Set[(String, String)]) extends AnyVal {
           else
             s"&${param._1}=${param._2}"
         }
-    }
-  }.trim
+    }.trim
 }
 
 object Queries {
-  val empty: Queries =
-    Queries(Set.empty[(String, String)])
-  
-  def apply(query: (String, String)): Queries =
-    Queries(Set(query))
+  val empty: Queries = Queries(Set.empty[(String, String)])
 
-  def fromString(value: String): Queries =
-    fromURL(new URL(context, value))
+  def apply(query: (String, String)): Queries = Queries(Set(query))
+
+  def fromString(value: String): Queries = fromURL(new URL(context, value))
 
   def fromURL: URL => Queries = {
     case url if Option(url.getQuery).nonEmpty =>
@@ -44,8 +37,7 @@ object Queries {
           .getQuery
           .split("&")
           .map { arr =>
-            val keyValue =
-              arr.split("=")
+            val keyValue = arr.split("=")
 
             keyValue(0) -> keyValue(1)
           }

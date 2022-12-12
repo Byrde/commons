@@ -3,20 +3,22 @@ package org.byrde.jwt.support
 import org.byrde.jwt.conf.JwtConfig
 import org.byrde.jwt.support.validation.JwtValidationError
 
+import io.circe.parser._
+import io.circe.syntax._
+import io.circe.{ Decoder, DecodingFailure, Encoder, ParsingFailure }
+
 import java.time.Instant
 
-import io.circe.syntax._
-import io.circe.parser._
-import io.circe.{Decoder, DecodingFailure, Encoder, ParsingFailure}
+import scala.annotation.nowarn
 
 import pdi.jwt.exceptions._
-import pdi.jwt.{JwtCirce, JwtClaim}
+import pdi.jwt.{ JwtCirce, JwtClaim }
 
 class JwtClient()(implicit config: JwtConfig) {
   def issueJwt[T](
     content: T,
     subject: Option[String] = Option.empty,
-    audience: Option[Set[String]] = Option.empty
+    audience: Option[Set[String]] = Option.empty,
   )(implicit encoder: Encoder[T]): String =
     JwtCirce.encode(
       JwtClaim(
@@ -24,22 +26,22 @@ class JwtClient()(implicit config: JwtConfig) {
         subject = subject,
         audience = audience,
         issuer = Some(config.issuer),
-        expiration = Some(Instant.now.getEpochSecond + config.expirationSeconds)
+        expiration = Some(Instant.now.getEpochSecond + config.expirationSeconds),
       ),
       config.signature,
-      config.encryptionAlgorithm
+      config.encryptionAlgorithm,
     )
 
   def validateJwt[T](
     token: String,
     subject: Option[String] = Option.empty,
-    audience: Option[Set[String]] = Option.empty
+    audience: Option[Set[String]] = Option.empty,
   )(implicit decoder: Decoder[T]): Either[JwtValidationError, T] =
     JwtCirce
       .decode(
         token,
         config.signature,
-        Seq(config.encryptionAlgorithm)
+        Seq(config.encryptionAlgorithm),
       )
       .toEither
       .flatMap(validateJwtClaim(subject, audience))
@@ -72,16 +74,16 @@ class JwtClient()(implicit config: JwtConfig) {
         case exception =>
           throw exception
       }
-  
+
   private def validateJwtClaim(
-    @unchecked subject: Option[String] = Option.empty,
-    @unchecked audience: Option[Set[String]] = Option.empty
+    @nowarn subject: Option[String] = Option.empty,
+    @nowarn audience: Option[Set[String]] = Option.empty,
   )(jwtClaim: JwtClaim): Either[Throwable, JwtClaim] = {
     val isValid =
       jwtClaim.issuer.fold(false)(_ == config.issuer) &&
         subject.fold(true)(sub => jwtClaim.subject.fold(false)(_ == sub)) &&
         audience.fold(true)(aud => jwtClaim.audience.fold(false)(_ == aud))
-    
+
     if (isValid)
       Right(jwtClaim)
     else

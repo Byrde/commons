@@ -10,13 +10,11 @@ case class JwtConfig(
   expirationSeconds: Long,
   encryptionAlgorithm: JwtHmacAlgorithm,
   private val secret: String,
-  saltOpt: Option[String] = None
+  saltOpt: Option[String] = None,
 ) {
-  def withSalt(salt: String): JwtConfig =
-    copy(saltOpt = Some(salt))
-  
-  lazy val signature: String =
-    saltOpt.fold(secret)(_ + "_" + secret)
+  def withSalt(salt: String): JwtConfig = copy(saltOpt = Some(salt))
+
+  lazy val signature: String = saltOpt.fold(secret)(_ + "_" + secret)
 }
 
 object JwtConfig {
@@ -26,7 +24,7 @@ object JwtConfig {
       "expiration",
       "encryption",
       "secret",
-      config
+      config,
     )
 
   def apply(
@@ -34,19 +32,15 @@ object JwtConfig {
     _expiration: String,
     _encryption: String,
     _secret: String,
-    config: Config
+    config: Config,
   ): JwtConfig = {
-    val issuer =
-      config.getString(_issuer)
-    
-    val expiration =
-      config.getLong(_expiration)
-    
-    val encryption =
-      config.getString(_encryption)
-  
-    val secret =
-      config.getString(_secret)
+    val issuer = config.getString(_issuer)
+
+    val expiration = config.getLong(_expiration)
+
+    val encryption = config.getString(_encryption)
+
+    val secret = config.getString(_secret)
 
     build(issuer, expiration, encryption, secret)
   }
@@ -71,12 +65,12 @@ object JwtConfig {
         case _ =>
           JwtAlgorithm.HS256
       }
-    
+
     JwtConfig(
       issuer,
       expiration,
       encryption,
-      secret
+      secret,
     )
   }
 }

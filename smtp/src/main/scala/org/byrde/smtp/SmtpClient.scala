@@ -4,15 +4,14 @@ import org.byrde.smtp.conf.SmtpConfig
 import org.byrde.support.types.Email
 
 import javax.mail.internet._
-import javax.mail.{Message, Transport}
-
-import org.jsoup.Jsoup
+import javax.mail.{ Message, Transport }
 
 import scala.util.chaining._
 
+import org.jsoup.Jsoup
+
 class SmtpClient(config: SmtpConfig) {
-  def send(request: SmtpRequest): Unit =
-    Transport.send(buildEmail(request), config.user, config.password)
+  def send(request: SmtpRequest): Unit = Transport.send(buildEmail(request), config.user, config.password)
 
   private def buildEmail(request: SmtpRequest): MimeMessage =
     buildEmail(request.recipient, request.subject)(buildBody(request))
@@ -30,6 +29,6 @@ class SmtpClient(config: SmtpConfig) {
         new MimeBodyPart().tap(_.setText(Jsoup.parse(request.htmlContent).body.text, "utf-8"))
       })
       .tap(_.addBodyPart {
-        new MimeBodyPart().tap(_.setText(request.htmlContent,"utf-8", "html"))
+        new MimeBodyPart().tap(_.setText(request.htmlContent, "utf-8", "html"))
       })
 }

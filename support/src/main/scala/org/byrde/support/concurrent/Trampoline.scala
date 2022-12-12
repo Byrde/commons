@@ -5,13 +5,11 @@ import java.util
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContextExecutor
 
-/**
-  * Executes in the current thread. Uses a thread local trampoline to make sure the stack
-  * doesn't overflow. Since this ExecutionContext executes on the current thread, it should
-  * only be used to run small bits of fast-running code.
+/** Executes in the current thread. Uses a thread local trampoline to make sure the stack doesn't overflow. Since this
+  * ExecutionContext executes on the current thread, it should only be used to run small bits of fast-running code.
   *
-  * Blocking should be strictly avoided as it could hog the current thread.
-  * Also, since we're running on a single thread, blocking code risks deadlock.
+  * Blocking should be strictly avoided as it could hog the current thread. Also, since we're running on a single
+  * thread, blocking code risks deadlock.
   */
 object Trampoline extends ExecutionContextExecutor {
 
@@ -44,7 +42,7 @@ object Trampoline extends ExecutionContextExecutor {
   /** Marks an empty queue (see docs for `local`). */
   private object Empty
 
-  def execute(runnable: Runnable): Unit = {
+  def execute(runnable: Runnable): Unit =
     local.get match {
       case null =>
         // Trampoline is inactive in this thread so start it up!
@@ -54,11 +52,10 @@ object Trampoline extends ExecutionContextExecutor {
           local.set(Empty)
           runnable.run()
           executeScheduled()
-        } finally {
+        } finally
           // We've run all the Runnables, so show that the
           // trampoline has been shut down.
           local.set(null)
-        }
 
       case Empty =>
         // Add this Runnable to our empty queue
@@ -80,13 +77,11 @@ object Trampoline extends ExecutionContextExecutor {
       case illegal =>
         throw new IllegalStateException(s"Unsupported trampoline ThreadLocal value: $illegal")
     }
-  }
 
-  /**
-    * Run all tasks that have been scheduled in the ThreadLocal.
+  /** Run all tasks that have been scheduled in the ThreadLocal.
     */
   @tailrec
-  private def executeScheduled(): Unit = {
+  private def executeScheduled(): Unit =
     local.get match {
       case Empty =>
         // Nothing to run
@@ -114,7 +109,6 @@ object Trampoline extends ExecutionContextExecutor {
       case illegal =>
         throw new IllegalStateException(s"Unsupported trampoline ThreadLocal value: $illegal")
     }
-  }
 
   def reportFailure(t: Throwable): Unit = t.printStackTrace()
 }

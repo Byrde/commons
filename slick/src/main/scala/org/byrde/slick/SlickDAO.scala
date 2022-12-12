@@ -4,13 +4,11 @@ import scala.concurrent.Future
 
 trait SlickDAO[R <: SlickRole] {
   self: SlickProfile[R] with SlickDb[R] =>
-    import profile.api._
+  import profile.api._
 
-    protected implicit val AsEvidence: SlickProfile[R] =
-      self
+  implicit protected val AsEvidence: SlickProfile[R] = self
 
-    implicit class Query2Runnable[Result, E <: Effect](query: DBIOAction[Result, NoStream, E]) {
-      def run(implicit ev: R SlickHasPrivilege E): Future[Result] =
-        self.run(query)
-    }
+  implicit class Query2Runnable[Result, E <: Effect](query: DBIOAction[Result, NoStream, E]) {
+    def run(implicit ev: R SlickHasPrivilege E): Future[Result] = self.run(query)
+  }
 }

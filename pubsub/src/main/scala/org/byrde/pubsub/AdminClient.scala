@@ -1,11 +1,16 @@
 package org.byrde.pubsub
 
-import com.google.api.gax.core.{CredentialsProvider, NoCredentialsProvider}
+import com.google.api.gax.core.{ CredentialsProvider, NoCredentialsProvider }
 import com.google.api.gax.grpc.GrpcTransportChannel
-import com.google.api.gax.rpc.{FixedTransportChannelProvider, TransportChannelProvider}
-import com.google.cloud.pubsub.v1.{SubscriptionAdminClient, SubscriptionAdminSettings, TopicAdminClient, TopicAdminSettings}
+import com.google.api.gax.rpc.{ FixedTransportChannelProvider, TransportChannelProvider }
+import com.google.cloud.pubsub.v1.{
+  SubscriptionAdminClient,
+  SubscriptionAdminSettings,
+  TopicAdminClient,
+  TopicAdminSettings,
+}
 
-import io.grpc.{ManagedChannel, ManagedChannelBuilder}
+import io.grpc.{ ManagedChannel, ManagedChannelBuilder }
 
 trait AdminClient {
   private var channel: ManagedChannel = _
@@ -18,15 +23,16 @@ trait AdminClient {
         FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
       }
     }
-  
-  protected def _createTopicAdminClient(credentialsProvider: CredentialsProvider, maybeHost: Option[String]): TopicAdminClient = {
+
+  protected def _createTopicAdminClient(
+    credentialsProvider: CredentialsProvider,
+    maybeHost: Option[String],
+  ): TopicAdminClient = {
     val topicSettingsBuilder = TopicAdminSettings.newBuilder()
     transportChannel(maybeHost) match {
       case None =>
         TopicAdminClient.create(
-          topicSettingsBuilder
-            .setCredentialsProvider(credentialsProvider)
-            .build()
+          topicSettingsBuilder.setCredentialsProvider(credentialsProvider).build(),
         )
 
       case Some(transport) =>
@@ -34,19 +40,20 @@ trait AdminClient {
           topicSettingsBuilder
             .setTransportChannelProvider(transport)
             .setCredentialsProvider(NoCredentialsProvider.create())
-            .build()
+            .build(),
         )
     }
   }
-  
-  protected def _createSubscriptionAdminClient(credentialsProvider: CredentialsProvider, maybeHost: Option[String]): SubscriptionAdminClient = {
+
+  protected def _createSubscriptionAdminClient(
+    credentialsProvider: CredentialsProvider,
+    maybeHost: Option[String],
+  ): SubscriptionAdminClient = {
     val subscriptionSettings = SubscriptionAdminSettings.newBuilder()
     transportChannel(maybeHost) match {
       case None =>
         SubscriptionAdminClient.create(
-          subscriptionSettings
-            .setCredentialsProvider(credentialsProvider)
-            .build()
+          subscriptionSettings.setCredentialsProvider(credentialsProvider).build(),
         )
 
       case Some(transport) =>
@@ -54,7 +61,7 @@ trait AdminClient {
           subscriptionSettings
             .setTransportChannelProvider(transport)
             .setCredentialsProvider(NoCredentialsProvider.create())
-            .build()
+            .build(),
         )
     }
   }

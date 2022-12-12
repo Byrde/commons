@@ -1,20 +1,22 @@
 package org.byrde.slick.migrations
 
-import java.util.UUID
-import org.byrde.slick.{SlickDb, SlickHasPrivilege, SlickProfile}
 import org.byrde.slick.SlickRole.Master
 import org.byrde.slick.conf.SlickMigrationEngineConfig
+import org.byrde.slick.{ SlickDb, SlickHasPrivilege, SlickProfile }
+
+import java.util.UUID
+
+import scala.annotation.nowarn
+import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future }
 
 import slick.jdbc.meta.MTable
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-
 class SlickMigrationEngine(
-  migrations: Seq[SlickNamedMigration]
+  migrations: Seq[SlickNamedMigration],
 )(
   implicit val ec: ExecutionContext,
-  migrationEngineConfig: SlickMigrationEngineConfig = new SlickMigrationEngineConfig(1.second, 1.second)
+  migrationEngineConfig: SlickMigrationEngineConfig = new SlickMigrationEngineConfig(1.second, 1.second),
 ) {
   self: SlickDb[Master] with SlickProfile[Master] =>
 
@@ -28,21 +30,21 @@ class SlickMigrationEngine(
     def status = column[String]("status")
     def dateApplied = column[Long]("date_applied")
 
-    @unchecked def * = (
-      migrationName,
-      applicationId,
-      status,
-      dateApplied
-    ) <> ((MigrationRow.apply _).tupled, MigrationRow.unapply)
+    @nowarn def * =
+      (
+        migrationName,
+        applicationId,
+        status,
+        dateApplied,
+      ) <> ((MigrationRow.apply _).tupled, MigrationRow.unapply)
   }
 
   private val MigrationTable = TableQuery[MigrationTable]
 
   def migrate(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[Unit] =
     migrations
-      .foldLeft(createTable(0, 10)) {
-        (prev, next) =>
-          prev.flatMap(_ => runMigration(next))
+      .foldLeft(createTable(0, 10)) { (prev, next) =>
+        prev.flatMap(_ => runMigration(next))
       }
       .andThen {
         case _ =>
@@ -56,7 +58,7 @@ class SlickMigrationEngine(
 
   private def createTable(
     retry: Int,
-    limit: Int
+    limit: Int,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[Unit] =
     run {
       MTable
@@ -70,8 +72,7 @@ class SlickMigrationEngine(
               MigrationTable.schema.create
           }
         }
-    }
-    .recoverWith {
+    }.recoverWith {
       case _ if retry < limit =>
         delay[Unit](migrationEngineConfig.createMigrationTableRetryDelay.toMillis, createTable(retry + 1, limit))
 
@@ -79,53 +80,54 @@ class SlickMigrationEngine(
         throw ex
     }
 
-  private def delay[T](millis: Long, next: => Future[T]): Future[T] =
-    Future(Thread.sleep(millis)).flatMap(_ => next)
+  private def delay[T](millis: Long, next: =>Future[T]): Future[T] = Future(Thread.sleep(millis)).flatMap(_ => next)
 
   private def runMigration(
-    migration: SlickNamedMigration
+    migration: SlickNamedMigration,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[Unit] =
     runMigration(UUID.randomUUID(), migration)
 
   private def runMigration(
     id: UUID,
-    migration: SlickNamedMigration
+    migration: SlickNamedMigration,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[Unit] =
     for {
       _ <- claimMigration(migration, id).recover { case _ => () }
       check <- checkClaimedOrCompleted(id, migration)
-      _ <- check match {
-        case Claimed =>
-          run(migration.migration())
+      _ <-
+        check match {
+          case Claimed =>
+            run(migration.migration())
 
-        case AlreadyCompleted =>
-          Future.unit
-      }
-      _ <- check match {
-        case Claimed =>
-          markAsCompleted(migration, id)
+          case AlreadyCompleted =>
+            Future.unit
+        }
+      _ <-
+        check match {
+          case Claimed =>
+            markAsCompleted(migration, id)
 
-        case AlreadyCompleted =>
-          Future.unit
-      }
+          case AlreadyCompleted =>
+            Future.unit
+        }
     } yield ()
 
   private def claimMigration(
     migration: SlickNamedMigration,
-    id: UUID
+    id: UUID,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[Unit] =
     run(MigrationTable += MigrationRow(migration.name, id, "Requested", System.currentTimeMillis())).map(_ => ())
 
   private def checkClaimedOrCompleted(
     id: UUID,
-    migration: SlickNamedMigration
+    migration: SlickNamedMigration,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[ClaimStatus] =
     checkClaimedOrCompleted(id, migration.name, migration)
 
   private def checkClaimedOrCompleted(
     id: UUID,
     name: String,
-    migration: SlickNamedMigration
+    migration: SlickNamedMigration,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[ClaimStatus] =
     run(MigrationTable.filter(_.migrationName === name).result.headOption).flatMap {
       case Some(MigrationRow(innerName, `id`, "Requested", _)) if innerName == name =>
@@ -137,7 +139,7 @@ class SlickMigrationEngine(
       case Some(MigrationRow(innerName, _, "Requested", _)) if innerName == name =>
         delay(
           migrationEngineConfig.checkClusteredMigrationCompleteDelay.toMillis,
-          checkClaimedOrCompleted(id, migration)
+          checkClaimedOrCompleted(id, migration),
         )
 
       case x =>
@@ -146,7 +148,7 @@ class SlickMigrationEngine(
 
   private def markAsCompleted(
     migration: SlickNamedMigration,
-    id: UUID
+    id: UUID,
   )(implicit ev: Master SlickHasPrivilege profile.api.Effect.All): Future[Unit] =
     run {
       MigrationTable
@@ -157,5 +159,5 @@ class SlickMigrationEngine(
   sealed trait ClaimStatus
   case object Claimed extends ClaimStatus
   case object AlreadyCompleted extends ClaimStatus
-  
+
 }

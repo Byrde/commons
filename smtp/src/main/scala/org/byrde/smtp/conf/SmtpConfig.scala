@@ -3,11 +3,11 @@ package org.byrde.smtp.conf
 import org.byrde.smtp.SmtpConnectionType
 import org.byrde.support.types.Email
 
-import javax.mail.{PasswordAuthentication, Session}
+import com.typesafe.config.Config
 
 import java.util.Properties
 
-import com.typesafe.config.Config
+import javax.mail.{ PasswordAuthentication, Session }
 
 import scala.util.Try
 import scala.util.chaining._
@@ -17,20 +17,20 @@ case class SmtpConfig(
   user: String,
   password: String,
   from: Email,
-  `type`: SmtpConnectionType
-){
+  `type`: SmtpConnectionType,
+) {
   def port: Int =
     `type` match {
       case SmtpConnectionType.TLS =>
         587
-        
+
       case SmtpConnectionType.SSL =>
         465
 
       case SmtpConnectionType.Unsecured =>
         25
     }
-  
+
   def session: Session =
     new Properties()
       .tap(_.put("mail.smtp.host", host))
@@ -38,8 +38,7 @@ case class SmtpConfig(
       .tap(_.put("mail.smtp.auth", "true"))
       .pipe { props =>
         if (`type` == SmtpConnectionType.TLS)
-          props
-            .tap(_.put("mail.smtp.starttls.enable", "true"))
+          props.tap(_.put("mail.smtp.starttls.enable", "true"))
         else if (`type` == SmtpConnectionType.SSL)
           props
             .tap(_.put("mail.smtp.ssl.enable", "true"))
@@ -52,41 +51,29 @@ case class SmtpConfig(
         Session.getDefaultInstance(
           props,
           new javax.mail.Authenticator() {
-            override protected def getPasswordAuthentication: PasswordAuthentication = {
+            override protected def getPasswordAuthentication: PasswordAuthentication =
               new PasswordAuthentication(user, password)
-            }
-          }
+          },
         )
       }
 }
 
 object SmtpConfig {
-  /**
-   * e.g configuration (1):
-   * {
-   *   "host": "smtp.com",
-   *   "user": "api",
-   *   "password": "password",
-   *   "from": "donotreply@smtp.com",
-   *   "type": "ssl"
-   * }
-   *
-   * e.g configuration (2):
-   * {
-   *   "host": "smtp.com",
-   *   "user": "api",
-   *   "password": "password",
-   *   "from": "donotreply@smtp.com",
-   *   "port": "465"
-   * }
-   *
-   * *In the case of conflicting type and port values, type will be prioritized.
-   *
-   * @param config - Typesafe config adhering to above examples.
-   * @return - SmtpConfig
-   */
-  def apply(config: Config): SmtpConfig =
-    apply("host", "user", "password", "from", "type", "port")(config)
+
+  /** e.g configuration (1): { "host": "smtp.com", "user": "api", "password": "password", "from": "donotreply@smtp.com",
+    * "type": "ssl" }
+    *
+    * e.g configuration (2): { "host": "smtp.com", "user": "api", "password": "password", "from": "donotreply@smtp.com",
+    * "port": "465" }
+    *
+    * *In the case of conflicting type and port values, type will be prioritized.
+    *
+    * @param config
+    *   \- Typesafe config adhering to above examples.
+    * @return
+    *   \- SmtpConfig
+    */
+  def apply(config: Config): SmtpConfig = apply("host", "user", "password", "from", "type", "port")(config)
 
   def apply(
     _host: String,
@@ -96,27 +83,18 @@ object SmtpConfig {
     _type: String,
     _port: String,
   )(config: Config): SmtpConfig = {
-    val host =
-      config
-        .getString(_host)
+    val host = config.getString(_host)
 
-    val user =
-      config
-        .getString(_user)
+    val user = config.getString(_user)
 
-    val password =
-      config
-        .getString(_password)
+    val password = config.getString(_password)
 
-    val from =
-      Email.fromString(config.getString(_from)).fold(_ => throw new Exception("Invalid email!"), identity)
-    
-    val typeOpt =
-      Try(config.getString(_type)).toOption
-    
-    val portOpt =
-      Try(config.getString(_port)).toOption
-    
+    val from = Email.fromString(config.getString(_from)).fold(_ => throw new Exception("Invalid email!"), identity)
+
+    val typeOpt = Try(config.getString(_type)).toOption
+
+    val portOpt = Try(config.getString(_port)).toOption
+
     val `type`: SmtpConnectionType =
       (typeOpt, portOpt) match {
         case (Some(innerType), _) if innerType.equalsIgnoreCase("ssl") =>

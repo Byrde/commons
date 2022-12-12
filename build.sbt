@@ -36,7 +36,7 @@ val CommonsSettings =
         "-encoding", "UTF-8",
         "-Wconf:cat=lint-byname-implicit:silent",
         "-Ymacro-annotations",
-//        "-Xfatal-warnings",
+        "-Xfatal-warnings",
       ),
     packageOptions +=
       Package.ManifestAttributes(

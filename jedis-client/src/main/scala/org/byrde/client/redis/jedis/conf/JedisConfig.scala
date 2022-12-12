@@ -2,13 +2,13 @@ package org.byrde.client.redis.jedis.conf
 
 import org.byrde.client.redis.conf.RedisConfig
 
-import java.net.URI
-
 import com.typesafe.config.Config
 
-import redis.clients.jedis.JedisPoolConfig
+import java.net.URI
 
 import scala.util.Try
+
+import redis.clients.jedis.JedisPoolConfig
 
 case class JedisConfig(
   host: String,
@@ -16,71 +16,50 @@ case class JedisConfig(
   password: String,
   timeout: Int,
   database: Int,
-  poolConfig: JedisPoolConfig
+  poolConfig: JedisPoolConfig,
 ) extends RedisConfig
 
 object JedisConfig {
-  /**
-   * e.g configuration:
-   * {
-   *   uri: "redis://u:password@localhost:6379"
-   *   host: "localhost"
-   *   port: 6379
-   *   password: "password"
-   *   timeout: 2000
-   *   database: 0
-   * }
-   * 
-   * @param config - Typesafe config adhering to above example.
-   * @return
-   */
+
+  /** e.g configuration: { uri: "redis://u:password@localhost:6379" host: "localhost" port: 6379 password: "password"
+    * timeout: 2000 database: 0 }
+    *
+    * @param config
+    *   \- Typesafe config adhering to above example.
+    * @return
+    */
   def apply(config: Config): JedisConfig = {
-    val redisUri =
-      Try(config.getString("uri")).map(new URI(_))
+    val redisUri = Try(config.getString("uri")).map(new URI(_))
 
-    val _host =
-      Try(config.getString("host"))
-        .orElse(redisUri.map(_.getHost))
-        .getOrElse("localhost")
+    val _host = Try(config.getString("host")).orElse(redisUri.map(_.getHost)).getOrElse("localhost")
 
-    val _port =
-      Try(config.getInt("port"))
-        .orElse(redisUri.map(_.getPort).filter(_ != -1))
-        .getOrElse(6379)
+    val _port = Try(config.getInt("port")).orElse(redisUri.map(_.getPort).filter(_ != -1)).getOrElse(6379)
 
     val _password =
       Try(config.getString("password"))
         .orElse {
-          redisUri
-            .map(_.getUserInfo)
-            .filter(_ != null)
-            .filter(_ contains ":")
-            .map(_.split(":", 2)(1))
+          redisUri.map(_.getUserInfo).filter(_ != null).filter(_ contains ":").map(_.split(":", 2)(1))
         }
         .getOrElse(null)
 
-    val _timeout =
-      Try(config.getInt("timeout")).getOrElse(2000)
+    val _timeout = Try(config.getInt("timeout")).getOrElse(2000)
 
-    val _database =
-      Try(config.getInt("database")).getOrElse(0)
+    val _database = Try(config.getInt("database")).getOrElse(0)
 
-    val _poolConfig =
-      createPoolConfig(config)
+    val _poolConfig = createPoolConfig(config)
 
-    new JedisConfig (
+    new JedisConfig(
       _host,
       _port,
       _password,
       _timeout,
       _database,
-      _poolConfig
+      _poolConfig,
     )
   }
 
   private def createPoolConfig(config: Config): JedisPoolConfig = {
-    val poolConfig: JedisPoolConfig =
-      new JedisPoolConfig()
+    val poolConfig: JedisPoolConfig = new JedisPoolConfig()
 
     Try(config.getInt("pool.maxIdle")).foreach(poolConfig.setMaxIdle)
     Try(config.getInt("pool.minIdle")).foreach(poolConfig.setMinIdle)

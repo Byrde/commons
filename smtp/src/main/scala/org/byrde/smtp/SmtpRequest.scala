@@ -5,5 +5,5 @@ import org.byrde.support.types.Email
 case class SmtpRequest(
   recipient: Email,
   subject: String,
-  htmlContent: String
+  htmlContent: String,
 )

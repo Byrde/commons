@@ -3,34 +3,25 @@ package org.byrde.uri
 import java.net.URL
 
 case class Path(path: Seq[String], queries: Queries = Queries.empty) {
-  def /(newPath: String): Path =
-    copy(path = path :+ newPath)
+  def / (newPath: String): Path = copy(path = path :+ newPath)
 
-  def /(newPath: Path): Path =
-    copy(path = path ++ newPath.path, queries = queries &+ newPath.queries)
+  def / (newPath: Path): Path = copy(path = path ++ newPath.path, queries = queries &+ newPath.queries)
 
-  def &+(query: (String, String)): Path =
-    copy(queries = queries &+ query)
-  
-  def &+(query: Option[(String, String)]): Path =
-    copy(queries = queries &+ query)
+  def &+ (query: (String, String)): Path = copy(queries = queries &+ query)
 
-  def &+(_queries: Queries): Path =
-    copy(queries = queries &+ _queries)
+  def &+ (query: Option[(String, String)]): Path = copy(queries = queries &+ query)
 
-  override def toString: String =
-    (if (path.nonEmpty) path.mkString("/", "/", "") else "/").trim + queries.toString
+  def &+ (_queries: Queries): Path = copy(queries = queries &+ _queries)
+
+  override def toString: String = (if (path.nonEmpty) path.mkString("/", "/", "") else "/").trim + queries.toString
 }
 
 object Path {
-  val context: URL =
-    new URL("http", "example.com", "")
+  val context: URL = new URL("http", "example.com", "")
 
-  def empty(queries: Queries = Queries.empty): Path =
-    Path(Nil, queries)
+  def empty(queries: Queries = Queries.empty): Path = Path(Nil, queries)
 
-  def apply(value: String): Path =
-    Path(value :: Nil)
+  def apply(value: String): Path = Path(value :: Nil)
 
   def fromString(value: String): Path =
     if (value.isEmpty)
@@ -40,10 +31,7 @@ object Path {
 
   def fromURL: URL => Path = {
     case url if Option(url.getPath).nonEmpty && url.getPath.head == '/' =>
-      val originalPath =
-        url
-          .getPath
-          .split("/")
+      val originalPath = url.getPath.split("/")
 
       val originalPath2 =
         if (originalPath.size <= 1)
@@ -51,21 +39,14 @@ object Path {
         else
           originalPath.drop(1)
 
-      val startOpt =
-        originalPath2
-          .headOption
-          .map(Path.apply)
+      val startOpt = originalPath2.headOption.map(Path.apply)
 
       val path =
-        startOpt
-          .map { start =>
-            originalPath2
-              .drop(1)
-              .foldLeft(start)(_ / _)
-          }
+        startOpt.map { start =>
+          originalPath2.drop(1).foldLeft(start)(_ / _)
+        }
 
-      val queries =
-        Queries.fromURL(url)
+      val queries = Queries.fromURL(url)
 
       path.fold(empty(queries))(_.copy(queries = queries))
 

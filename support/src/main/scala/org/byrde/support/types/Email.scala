@@ -1,7 +1,7 @@
 package org.byrde.support.types
 
 import org.byrde.support.types
-import org.byrde.support.types.Email.{Domain, DomainSuffix, Recipient}
+import org.byrde.support.types.Email.{ Domain, DomainSuffix, Recipient }
 
 object Email {
   sealed trait EmailValidationError
@@ -27,6 +27,5 @@ object Email {
 }
 
 case class Email(recipient: Recipient, domain: Domain, domainSuffix: DomainSuffix) {
-  override def toString: String =
-    s"${recipient.toLowerCase}@${domain.toLowerCase}.${domainSuffix.toLowerCase}"
+  override def toString: String = s"${recipient.toLowerCase}@${domain.toLowerCase}.${domainSuffix.toLowerCase}"
 }

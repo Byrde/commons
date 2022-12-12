@@ -1,21 +1,20 @@
 package org.byrde.client.redis
 
-import java.io._
 import org.byrde.support.EitherSupport
-
-import java.util.Base64
 
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder, Printer}
+import io.circe.{ Decoder, Encoder, Printer }
+
+import java.io._
+import java.util.Base64
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Try, Using}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Try, Using }
 
 abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) extends RedisExecutor[R] with EitherSupport {
-  private val _printer: Printer =
-    Printer.noSpaces.copy(dropNullValues = true)
+  private val _printer: Printer = Printer.noSpaces.copy(dropNullValues = true)
 
   private type Namespace = String
 
@@ -25,40 +24,38 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
 
   def get[T](
     key: Key,
-    withNamespace: Key => Namespace = key => s"global::$key"
+    withNamespace: Key => Namespace = key => s"global::$key",
   )(implicit decoder: Decoder[T]): Future[Either[RedisClientError, Option[RedisObject[T]]]] =
     for {
       ttl <- executor.execute(_.ttl(withNamespace(key)).map(_.map(_.longValue().seconds)))
       value <- executor.execute(_.get(withNamespace(key)))
       result =
-        value.zip(ttl).flatMap {
-          case (None, _) =>
-            Right(Option.empty[RedisObject[T]])
+        value
+          .zip(ttl)
+          .flatMap {
+            case (None, _) =>
+              Right(Option.empty[RedisObject[T]])
 
-          case (Some(data), ttl) =>
-            processGetValue(data)
-              .map(RedisObject[T](key, _, ttl))
-              .map(Some.apply)
-        }
+            case (Some(data), ttl) =>
+              processGetValue(data).map(RedisObject[T](key, _, ttl)).map(Some.apply)
+          }
     } yield result
 
   def set[T](
     key: Key,
     value: T,
     withNamespace: Key => Namespace = key => s"global::$key",
-    expiration: Duration = Duration.Inf
+    expiration: Duration = Duration.Inf,
   )(implicit encoder: Encoder[T]): Future[Either[RedisClientError, Unit]] = {
-    val redisK =
-      withNamespace(key)
+    val redisK = withNamespace(key)
 
-    val (prefix, baos) =
-      processSetValue(value)
-  
+    val (prefix, baos) = processSetValue(value)
+
     Using(baos)(data => Base64.getEncoder.encodeToString(data.toByteArray)).toEither match {
       case Right(value) =>
         val redisV = prefix + "-" + value
         executor.execute(_.set(redisK, redisV, expiration))
-    
+
       case Left(ex) =>
         Future.successful(Left(RedisClientError(ex)))
     }
@@ -66,9 +63,8 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
 
   def remove(
     key: Key,
-    withNamespace: Key => Namespace = key => s"global::$key"
-  ): Future[Either[RedisClientError, Long]] =
-    executor.execute(_.del(withNamespace(key)))
+    withNamespace: Key => Namespace = key => s"global::$key",
+  ): Future[Either[RedisClientError, Long]] = executor.execute(_.del(withNamespace(key)))
 
   private def withDataInputStream[T](bytes: Array[Byte])(f: DataInputStream => T): Try[T] =
     Using(new DataInputStream(new ByteArrayInputStream(bytes)))(f)
@@ -77,16 +73,11 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
     withDataInputStream(bytes)(f(_)).toEither.left.map(RedisClientError.apply)
 
   private def processGetValue[T](data: String)(implicit decoder: Decoder[T]): Either[RedisClientError, T] = {
-    val innerData: Seq[String] =
-      data.split("-").toIndexedSeq
+    val innerData: Seq[String] = data.split("-").toIndexedSeq
 
     (innerData.head, Base64.getDecoder.decode(innerData.last)) match {
       case ("oos", bytes) =>
-        withDataInputStream(bytes)(_.readUTF())
-          .toEither
-          .flatMap(parse)
-          .flatMap(_.as[T])
-          .left.map(RedisClientError.apply)
+        withDataInputStream(bytes)(_.readUTF()).toEither.flatMap(parse).flatMap(_.as[T]).left.map(RedisClientError.apply)
 
       case ("string", bytes) =>
         decodePrimitive(bytes)(_.readUTF().asInstanceOf[T])
@@ -101,7 +92,11 @@ abstract class RedisClient[R <: RedisService](implicit ec: ExecutionContext) ext
         decodePrimitive(bytes)(_.readBoolean().asInstanceOf[T])
 
       case _ =>
-        Left(RedisClientError(new Exception(s"Was not able to recognize the type of serialized value. The type was ${data.head}")))
+        Left(
+          RedisClientError(
+            new Exception(s"Was not able to recognize the type of serialized value. The type was ${data.head}"),
+          ),
+        )
     }
   }
 

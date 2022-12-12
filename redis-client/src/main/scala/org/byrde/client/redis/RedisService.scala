@@ -1,8 +1,7 @@
 package org.byrde.client.redis
 
-
-import scala.concurrent.duration.Duration
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 
 trait RedisService {
   def keys(pattern: String): Future[Either[RedisClientError, Set[String]]]
@@ -15,4 +14,3 @@ trait RedisService {
 
   def ttl(key: Key): Future[Either[RedisClientError, Long]]
 }
-

@@ -1,7 +1,7 @@
 package org.byrde.support
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
 
 trait FutureSupport {
   implicit class FutureTry2Future[T](value: Future[Try[T]])(implicit ec: ExecutionContext) {
@@ -16,8 +16,7 @@ trait FutureSupport {
   }
 
   implicit class Any2Future[T](value: T) {
-    @inline def f: Future[T] =
-      Future.successful(value)
+    @inline def f: Future[T] = Future.successful(value)
   }
 }
 

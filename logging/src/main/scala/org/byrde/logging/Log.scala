@@ -5,11 +5,9 @@ import org.byrde.logging.Log.LogImpl
 trait Log {
   def asMap: Map[String, String]
 
-  def ++ (other: Log): Log =
-    LogImpl(asMap ++ other.asMap)
+  def ++ (other: Log): Log = LogImpl(asMap ++ other.asMap)
 
-  def ++ (other: Map[String, String]): Log =
-    LogImpl(asMap ++ other)
+  def ++ (other: Map[String, String]): Log = LogImpl(asMap ++ other)
 }
 
 object Log {
@@ -17,9 +15,7 @@ object Log {
 
   lazy val empty: Log = LogImpl(Map.empty)
 
-  def apply(asMap: Map[String, String]): Log =
-    LogImpl(asMap)
+  def apply(asMap: Map[String, String]): Log = LogImpl(asMap)
 
-  def apply(asMap: (String, String)*): Log =
-    LogImpl(asMap.toMap)
+  def apply(asMap: (String, String)*): Log = LogImpl(asMap.toMap)
 }
