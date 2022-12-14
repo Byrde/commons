@@ -186,7 +186,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                         .map {
                           case Right(_) =>
                             logger.logDebug(
-                              "Message ack'd!",
+                              "Message acknowledged!",
                               Log(
                                 "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                                 "topic" -> topic,
@@ -199,7 +199,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
 
                           case Left(_) =>
                             logger.logDebug(
-                              "Message nack'd!",
+                              "Message not acknowledged!",
                               Log(
                                 "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                                 "topic" -> topic,
