@@ -16,23 +16,30 @@ import io.circe.syntax._
 import io.grpc.ManagedChannelBuilder
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.chaining._
 
-trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
+abstract class Publisher(logger: Logger)(implicit ec: ExecutionContext)
+  extends JavaFutureSupport
+    with AdminClient
+    with AutoCloseable {
+
+  private type Topic = String
+
   private val _ackDeadline = 10 // seconds
 
-  private val _publishers: mutable.Map[String, com.google.cloud.pubsub.v1.Publisher] = mutable.Map()
+  private val _publishers: AtomicReference[mutable.Map[Topic, com.google.cloud.pubsub.v1.Publisher]] =
+    new AtomicReference(mutable.Map())
 
   def createTopic(
     credentials: Credentials,
     project: String,
     topic: String,
     maybeHost: Option[String],
-  )(implicit logger: Logger): Future[Unit] =
+  ): Future[Unit] =
     _createTopicAdminClient(FixedCredentialsProvider.create(credentials), maybeHost).pipe { client =>
       Future {
         logger.logInfo(s"Creating topic: $topic")
@@ -59,43 +66,10 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
     project: String,
     env: Envelope[T],
     maybeHost: Option[String] = None,
-  )(implicit logger: Logger, encoder: Encoder[T]): Future[Unit] =
+  )(implicit encoder: Encoder[T]): Future[Unit] =
     _publishers
+      .get()
       .get(env.topic)
-      .map(Future.successful)
-      .getOrElse {
-        for {
-          _ <- createTopic(credentials, project, env.topic, maybeHost)
-          publisher <-
-            Future {
-              logger.logInfo(s"Creating publisher: ${env.topic}")
-              val publisherBuilder =
-                com
-                  .google
-                  .cloud
-                  .pubsub
-                  .v1
-                  .Publisher
-                  .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
-              maybeHost match {
-                case Some(host) =>
-                  val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
-                  publisherBuilder
-                    .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
-                    .setCredentialsProvider(NoCredentialsProvider.create())
-
-                case None =>
-                  publisherBuilder.setCredentialsProvider {
-                    new CredentialsProvider {
-                      override def getCredentials: Credentials = credentials
-                    }
-                  }
-              }
-              publisherBuilder.build()
-            }
-          _ <- Future(_publishers.update(env.topic, publisher))
-        } yield publisher
-      }
       .map { publisher =>
         publisher
           .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
@@ -112,10 +86,65 @@ trait Publisher extends JavaFutureSupport with AdminClient with AutoCloseable {
             )
             ()
           }
+          .recoverWith {
+            case ex =>
+              logger.logError(
+                s"Failed to publish message!",
+                ex,
+                Log(
+                  "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                  "topic" -> env.topic,
+                  "id" -> env.id,
+                  "payload" -> env.msg.asJson.noSpaces,
+                ),
+              )
+              logger.logInfo(s"Shutting down publisher: ${env.topic}")
+              Future(publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)).flatMap { _ =>
+                _publishers.getAndUpdate { _publishers =>
+                  _publishers.remove(env.topic)
+                  _publishers
+                }
+                Future.failed(ex)
+              }
+          }
+      }
+      .getOrElse {
+        _publishers.getAndUpdate { _publishers =>
+          logger.logInfo(s"Creating publisher: ${env.topic}")
+          val builder =
+            com
+              .google
+              .cloud
+              .pubsub
+              .v1
+              .Publisher
+              .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
+              .tap { builder =>
+                maybeHost match {
+                  case Some(host) =>
+                    val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
+                    builder
+                      .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+                      .setCredentialsProvider(NoCredentialsProvider.create())
+
+                  case None =>
+                    builder.setCredentialsProvider {
+                      new CredentialsProvider {
+                        override def getCredentials: Credentials = credentials
+                      }
+                    }
+                }
+              }
+
+          val publisher = builder.build()
+          _publishers.update(env.topic, publisher)
+          _publishers
+        }
+        publish(credentials, project, env, maybeHost)
       }
 
-  override def close(): Unit =
-    _publishers.values.foreach(_.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS))
+  override def close(): Unit = {
+    logger.logInfo("Shutting down all publishers...")
+    _publishers.get().values.foreach(_.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS))
+  }
 }
-
-object Publisher extends Publisher

@@ -18,6 +18,8 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+    - name: Check Formatting
+      run: sbt scalafmtCheckAll
     - name: Test
       run: sbt clean test
     - name: Create Credentials Directory

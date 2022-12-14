@@ -16,31 +16,32 @@ import io.circe.{ Decoder, Json }
 import io.grpc.ManagedChannelBuilder
 
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util._
 import scala.util.chaining._
 
-trait Subscriber extends AdminClient with AutoCloseable {
-  private val _ackDeadline = 10 // seconds
-
-  private val _oneWeek = 604800 // seconds
+abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends AdminClient with AutoCloseable {
+  private type Subscription = String
 
   private val _awaitTermination = 10 // seconds
 
-  private val _subscribers: mutable.Map[String, com.google.cloud.pubsub.v1.Subscriber] = mutable.Map()
+  private val _subscribers: AtomicReference[mutable.Map[Subscription, com.google.cloud.pubsub.v1.Subscriber]] =
+    new AtomicReference(mutable.Map())
 
   def createSubscription(
     credentials: Credentials,
     project: String,
     subscription: String,
     topic: String,
-    maybeHost: Option[String],
+    exactlyOnceDelivery: Boolean = false,
+    maybeHost: Option[String] = Option.empty,
   ): Future[Unit] =
     _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), maybeHost).pipe { client =>
       Future {
+        logger.logInfo(s"Creating subscription: $subscription")
         client
           .tap(_.createSubscription {
             com
@@ -51,9 +52,13 @@ trait Subscriber extends AdminClient with AutoCloseable {
               .newBuilder()
               .setName(SubscriptionName.of(project, subscription).toString)
               .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
-              .setAckDeadlineSeconds(_ackDeadline)
-              .setMessageRetentionDuration(Duration.newBuilder().setSeconds(_oneWeek).build())
+              // Ack deadline is a reasonable 10 seconds
+              .setAckDeadlineSeconds(10)
+              // Max retention for unacknowledged messages is 7 days
+              .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
+              //
               .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
+              .setEnableExactlyOnceDelivery(exactlyOnceDelivery)
               .setRetryPolicy {
                 com
                   .google
@@ -61,8 +66,10 @@ trait Subscriber extends AdminClient with AutoCloseable {
                   .v1
                   .RetryPolicy
                   .newBuilder()
+                  // Min backoff is 1 second
                   .setMinimumBackoff(Duration.newBuilder().setSeconds(1).build())
-                  .setMaximumBackoff(Duration.newBuilder().setSeconds(180).build())
+                  // Max backoff is 10 minutes
+                  .setMaximumBackoff(Duration.newBuilder().setSeconds(600).build())
               }
               .build()
           })
@@ -88,13 +95,33 @@ trait Subscriber extends AdminClient with AutoCloseable {
     subscription: String,
     topic: String,
     maybeHost: Option[String] = None,
-  )(fn: Envelope[T] => Future[_])(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
-    for {
-      _ <- createSubscription(credentials, project, subscription, topic, maybeHost)
-      subscriber <-
-        Future {
+  )(
+    fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
+  )(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
+    _subscribers
+      .get()
+      .get(subscription)
+      .map { subscriber =>
+        if (!subscriber.isRunning)
+          Future(subscriber.startAsync().awaitRunning()).recoverWith {
+            case ex =>
+              logger.logError("Error starting the subscriber!", ex)
+              logger.logInfo(s"Shutting down subscriber: $subscription")
+              Future(subscriber.stopAsync().awaitTerminated()).flatMap { _ =>
+                _subscribers.getAndUpdate { _subscribers =>
+                  _subscribers.remove(subscription)
+                  _subscribers
+                }
+                Future.failed(ex)
+              }
+          }
+        else
+          Future.successful(())
+      }
+      .getOrElse {
+        _subscribers.getAndUpdate { _subscribers =>
           logger.logInfo(s"Creating subscriber: $subscription")
-          val subscriberBuilder =
+          val builder =
             com
               .google
               .cloud
@@ -102,35 +129,34 @@ trait Subscriber extends AdminClient with AutoCloseable {
               .v1
               .Subscriber
               .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
-          maybeHost match {
-            case None =>
-              subscriberBuilder.setCredentialsProvider {
-                new CredentialsProvider {
-                  override def getCredentials: Credentials = credentials
+              .tap { builder =>
+                maybeHost match {
+                  case None =>
+                    builder.setCredentialsProvider {
+                      new CredentialsProvider {
+                        override def getCredentials: Credentials = credentials
+                      }
+                    }
+
+                  case Some(host) =>
+                    val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
+                    builder
+                      .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+                      .setCredentialsProvider(NoCredentialsProvider.create())
                 }
               }
 
-            case Some(host) =>
-              val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
-              subscriberBuilder
-                .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
-                .setCredentialsProvider(NoCredentialsProvider.create())
-          }
-          subscriberBuilder.build()
+          val subscriber = builder.build()
+          _subscribers.update(subscription, subscriber)
+          _subscribers
         }
-      _ <-
-        Future(subscriber.startAsync().awaitRunning()).recoverWith {
-          case ex =>
-            logger.logError("Error starting subscriber!", ex)
-            Future(subscriber.stopAsync().awaitTerminated()).flatMap(_ => Future.failed(ex))
-        }
-      _ <- Future(_subscribers.update(subscription, subscriber))
-    } yield ()
+        subscribe(credentials, project, subscription, topic, maybeHost)(fn)
+      }
 
   private def receiver[T](
     subscription: String,
     topic: String,
-    fn: Envelope[T] => Future[_],
+    fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit logger: Logger, decoder: Decoder[T]): MessageReceiver = {
     case (message, consumer) =>
       message
@@ -152,18 +178,32 @@ trait Subscriber extends AdminClient with AutoCloseable {
                     case Right(value) =>
                       val rebuiltEnvelope = Envelope(env.topic, value, env.id, env.correlationId)
                       fn(rebuiltEnvelope)
-                        .map { _ =>
-                          logger.logDebug(
-                            "Message processed successfully!",
-                            Log(
-                              "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
-                              "topic" -> topic,
-                              "subscription" -> subscription,
-                              "id" -> env.id,
-                              "payload" -> message.getData.toStringUtf8,
-                            ),
-                          )
-                          consumer.ack()
+                        .map {
+                          case Right(_) =>
+                            logger.logDebug(
+                              "Message ack'd!",
+                              Log(
+                                "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                                "topic" -> topic,
+                                "subscription" -> subscription,
+                                "id" -> env.id,
+                                "payload" -> message.getData.toStringUtf8,
+                              ),
+                            )
+                            consumer.ack()
+
+                          case Left(_) =>
+                            logger.logDebug(
+                              "Message nack'd!",
+                              Log(
+                                "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                                "topic" -> topic,
+                                "subscription" -> subscription,
+                                "id" -> env.id,
+                                "payload" -> message.getData.toStringUtf8,
+                              ),
+                            )
+                            consumer.nack()
                         }
                         .recover {
                           case ex =>
@@ -211,7 +251,8 @@ trait Subscriber extends AdminClient with AutoCloseable {
         }
   }
 
-  override def close(): Unit = _subscribers.values.foreach(_.stopAsync().awaitTerminated())
+  override def close(): Unit = {
+    logger.logInfo("Shutting down all subscribers...")
+    _subscribers.get().values.foreach(_.stopAsync().awaitTerminated())
+  }
 }
-
-object Subscriber extends Subscriber
