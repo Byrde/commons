@@ -97,7 +97,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
     maybeHost: Option[String] = None,
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
-  )(implicit logger: Logger, decoder: Decoder[T]): Future[Unit] =
+  )(implicit decoder: Decoder[T]): Future[Unit] =
     _subscribers
       .get()
       .get(subscription)
@@ -157,7 +157,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
     subscription: String,
     topic: String,
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
-  )(implicit logger: Logger, decoder: Decoder[T]): MessageReceiver = {
+  )(implicit decoder: Decoder[T]): MessageReceiver = {
     case (message, consumer) =>
       message
         .getData
