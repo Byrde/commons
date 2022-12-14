@@ -102,20 +102,25 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
       .get()
       .get(subscription)
       .map { subscriber =>
-        if (!subscriber.isRunning)
-          Future(subscriber.startAsync().awaitRunning()).recoverWith {
-            case ex =>
-              logger.logError("Error starting the subscriber!", ex)
-              logger.logInfo(s"Shutting down subscriber: $subscription")
-              Future(subscriber.stopAsync().awaitTerminated()).flatMap { _ =>
-                _subscribers.getAndUpdate { _subscribers =>
-                  _subscribers.remove(subscription)
-                  _subscribers
-                }
-                Future.failed(ex)
+        if (!subscriber.isRunning) {
+          for {
+            _ <- createSubscription(credentials, project, subscription, topic, maybeHost = maybeHost)
+            _ <-
+              Future(subscriber.startAsync().awaitRunning()).recoverWith {
+                case ex =>
+                  logger.logError("Error starting the subscriber!", ex)
+                  logger.logInfo(s"Shutting down subscriber: $subscription")
+                  Future(subscriber.stopAsync().awaitTerminated()).flatMap { _ =>
+                    _subscribers.getAndUpdate { _subscribers =>
+                      _subscribers.remove(subscription)
+                      _subscribers
+                    }
+                    Future.failed(ex)
+                  }
               }
-          }
-        else
+          } yield ()
+
+        } else
           Future.successful(())
       }
       .getOrElse {
