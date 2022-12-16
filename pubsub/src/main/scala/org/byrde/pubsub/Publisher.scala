@@ -72,49 +72,48 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .get()
       .get(env.topic)
       .map { publisher =>
-        for {
-          _ <- createTopic(credentials, project, env.topic, hostOpt)
-          _ <-
-            publisher
-              .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
-              .asScala
-              .map { _ =>
-                logger.logDebug(
-                  s"Message published successfully!",
-                  Log(
-                    "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
-                    "topic" -> env.topic,
-                    "id" -> env.id,
-                  ).!++("payload" -> env.msg.asJson.noSpaces),
-                )
-                ()
-              }
-              .recoverWith {
-                case ex =>
-                  logger.logError(
-                    s"Failed to publish message!",
-                    ex,
-                    Log(
-                      "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
-                      "topic" -> env.topic,
-                      "id" -> env.id,
-                    ).!++("payload" -> env.msg.asJson.noSpaces),
-                  )
-                  closePublisher(env.topic)
-                  Future.failed(ex)
-              }
-        } yield ()
+        publisher
+          .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
+          .asScala
+          .map { _ =>
+            logger.logDebug(
+              s"Message published successfully!",
+              Log(
+                "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                "topic" -> env.topic,
+                "id" -> env.id,
+              ).!++("payload" -> env.msg.asJson.noSpaces),
+            )
+            ()
+          }
+          .recoverWith {
+            case ex =>
+              logger.logError(
+                s"Failed to publish message!",
+                ex,
+                Log(
+                  "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                  "topic" -> env.topic,
+                  "id" -> env.id,
+                ).!++("payload" -> env.msg.asJson.noSpaces),
+              )
+              closePublisher(env.topic)
+              Future.failed(ex)
+          }
       }
       .getOrElse {
-        _publishers.getAndUpdate { _publishers =>
-          _publishers
-            .get(env.topic)
-            .fold {
-              logger.logInfo(s"Creating publisher: ${env.topic}")
-              _publishers.tap(_.update(env.topic, publisher(credentials, project, env.topic, hostOpt)))
-            }(_ => _publishers)
-        }
-        publish(credentials, project, env, hostOpt)
+        for {
+          _ <- createTopic(credentials, project, env.topic, hostOpt)
+          _ =
+            _publishers.getAndUpdate { _publishers =>
+              _publishers
+                .get(env.topic)
+                .fold {
+                  logger.logInfo(s"Creating publisher: ${env.topic}")
+                  _publishers.tap(_.update(env.topic, publisher(credentials, project, env.topic, hostOpt)))
+                }(_ => _publishers)
+            }
+        } yield publish(credentials, project, env, hostOpt)
       }
 
   override def close(): Unit =

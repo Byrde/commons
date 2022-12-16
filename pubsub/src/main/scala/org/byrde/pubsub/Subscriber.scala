@@ -109,38 +109,36 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .get()
       .get(subscription)
       .map { subscriber =>
-        if (!subscriber.isRunning) {
-          for {
-            _ <- createSubscription(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)
-            _ <-
-              Future(subscriber.startAsync().awaitRunning())
-                .map { _ =>
-                  logger.logDebug(s"Subscriber started successfully!")
-                  ()
-                }
-                .recoverWith {
-                  case ex =>
-                    logger.logError("Failed to start the subscriber!", ex)
-                    closeSubscriber(subscription)
-                    Future.failed(ex)
-                }
-          } yield ()
-
-        } else
+        if (!subscriber.isRunning)
+          Future(subscriber.startAsync().awaitRunning())
+            .map { _ =>
+              logger.logDebug(s"Subscriber started successfully!")
+              ()
+            }
+            .recoverWith {
+              case ex =>
+                logger.logError("Failed to start the subscriber!", ex)
+                closeSubscriber(subscription)
+                Future.failed(ex)
+            }
+        else
           Future.successful(())
       }
       .getOrElse {
-        _subscribers.getAndUpdate { innerSubscribers =>
-          innerSubscribers
-            .get(subscription)
-            .fold {
-              logger.logInfo(s"Creating subscriber: $subscription")
-              val _subscriber =
-                subscriber[T](credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
-              innerSubscribers.tap(_.update(subscription, _subscriber))
-            }(_ => innerSubscribers)
-        }
-        subscribe(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
+        for {
+          _ <- createSubscription(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)
+          _ =
+            _subscribers.getAndUpdate { innerSubscribers =>
+              innerSubscribers
+                .get(subscription)
+                .fold {
+                  logger.logInfo(s"Creating subscriber: $subscription")
+                  val _subscriber =
+                    subscriber[T](credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
+                  innerSubscribers.tap(_.update(subscription, _subscriber))
+                }(_ => innerSubscribers)
+            }
+        } yield subscribe(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
       }
 
   override def close(): Unit =
