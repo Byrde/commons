@@ -42,23 +42,24 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
   ): Future[Unit] =
     _createTopicAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
       Future {
-        logger.logInfo(s"Creating topic: $topic")
         client
           .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
           .tap(_.shutdown())
           .awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-      }.map(_ => ())
-        .recoverWith {
-          case _: AlreadyExistsException =>
-            Future {
-              client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-            }
+        logger.logInfo(s"Created topic: $topic")
+        ()
+      }.recoverWith {
+        case _: AlreadyExistsException =>
+          logger.logDebug(s"Topic already exists: $topic")
+          Future {
+            client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          }
 
-          case ex =>
-            Future {
-              client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-            }.flatMap(_ => Future.failed(ex))
-        }
+        case ex =>
+          Future {
+            client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          }.flatMap(_ => Future.failed(ex))
+      }
     }
 
   def publish[T](
@@ -71,80 +72,100 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .get()
       .get(env.topic)
       .map { publisher =>
-        publisher
-          .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
-          .asScala
-          .map { _ =>
-            logger.logDebug(
-              s"Message published successfully!",
-              Log(
-                "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
-                "topic" -> env.topic,
-                "id" -> env.id,
-                "payload" -> env.msg.asJson.noSpaces,
-              ),
-            )
-            ()
-          }
-          .recoverWith {
-            case ex =>
-              logger.logError(
-                s"Failed to publish message!",
-                ex,
-                Log(
-                  "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
-                  "topic" -> env.topic,
-                  "id" -> env.id,
-                  "payload" -> env.msg.asJson.noSpaces,
-                ),
-              )
-              logger.logInfo(s"Shutting down publisher: ${env.topic}")
-              Future(publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)).flatMap { _ =>
-                _publishers.getAndUpdate { _publishers =>
-                  _publishers.remove(env.topic)
-                  _publishers
-                }
-                Future.failed(ex)
+        for {
+          _ <- createTopic(credentials, project, env.topic, hostOpt)
+          _ <-
+            publisher
+              .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
+              .asScala
+              .map { _ =>
+                logger.logDebug(
+                  s"Message published successfully!",
+                  Log(
+                    "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                    "topic" -> env.topic,
+                    "id" -> env.id,
+                  ).!++("payload" -> env.msg.asJson.noSpaces),
+                )
+                ()
               }
-          }
+              .recoverWith {
+                case ex =>
+                  logger.logError(
+                    s"Failed to publish message!",
+                    ex,
+                    Log(
+                      "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                      "topic" -> env.topic,
+                      "id" -> env.id,
+                    ).!++("payload" -> env.msg.asJson.noSpaces),
+                  )
+                  closePublisher(env.topic)
+                  Future.failed(ex)
+              }
+        } yield ()
       }
       .getOrElse {
         _publishers.getAndUpdate { _publishers =>
-          logger.logInfo(s"Creating publisher: ${env.topic}")
-          val builder =
-            com
-              .google
-              .cloud
-              .pubsub
-              .v1
-              .Publisher
-              .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
-              .tap { builder =>
-                hostOpt match {
-                  case Some(host) =>
-                    val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
-                    builder
-                      .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
-                      .setCredentialsProvider(NoCredentialsProvider.create())
-
-                  case None =>
-                    builder.setCredentialsProvider {
-                      new CredentialsProvider {
-                        override def getCredentials: Credentials = credentials
-                      }
-                    }
-                }
-              }
-
-          val publisher = builder.build()
-          _publishers.update(env.topic, publisher)
           _publishers
+            .get(env.topic)
+            .fold {
+              logger.logInfo(s"Creating publisher: ${env.topic}")
+              _publishers.tap(_.update(env.topic, publisher(credentials, project, env.topic, hostOpt)))
+            }(_ => _publishers)
         }
         publish(credentials, project, env, hostOpt)
       }
 
-  override def close(): Unit = {
-    logger.logInfo("Shutting down all publishers...")
-    _publishers.get().values.foreach(_.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS))
-  }
+  override def close(): Unit =
+    _publishers.getAndUpdate { publishers =>
+      logger.logInfo("Shutting down all publishers...")
+      publishers.foreach {
+        case (_, publisher) =>
+          publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+      }
+      mutable.Map()
+    }
+
+  private def closePublisher(topic: Topic): Unit =
+    _publishers.getAndUpdate { publishers =>
+      publishers
+        .get(topic)
+        .fold(publishers) { publisher =>
+          logger.logInfo(s"Shutting down publisher: $topic")
+          publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          publishers.tap(_.remove(topic))
+        }
+    }
+
+  private def publisher(
+    credentials: Credentials,
+    project: String,
+    topic: String,
+    hostOpt: Option[String],
+  ): com.google.cloud.pubsub.v1.Publisher =
+    com
+      .google
+      .cloud
+      .pubsub
+      .v1
+      .Publisher
+      .newBuilder(TopicName.ofProjectTopicName(project, topic).toString)
+      .tap { builder =>
+        hostOpt match {
+          case Some(host) =>
+            val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
+            builder
+              .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+              .setCredentialsProvider(NoCredentialsProvider.create())
+
+          case None =>
+            builder.setCredentialsProvider {
+              new CredentialsProvider {
+                override def getCredentials: Credentials = credentials
+              }
+            }
+        }
+      }
+      .build()
 }

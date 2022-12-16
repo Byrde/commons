@@ -2,6 +2,7 @@ package org.byrde.pubsub
 
 import org.byrde.logging.{ Log, Logger }
 
+import com.google.api.core.ApiService
 import com.google.api.gax.core.{ CredentialsProvider, FixedCredentialsProvider, NoCredentialsProvider }
 import com.google.api.gax.grpc.GrpcTransportChannel
 import com.google.api.gax.rpc.{ AlreadyExistsException, FixedTransportChannelProvider }
@@ -18,12 +19,16 @@ import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+import scala.annotation.unused
 import scala.collection.mutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util._
 import scala.util.chaining._
 
-abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends AdminClient with AutoCloseable {
+abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
+  extends AdminClient
+    with AutoCloseable {
+
   private type Subscription = String
 
   private val _awaitTermination = 10 // seconds
@@ -41,7 +46,6 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
   ): Future[Unit] =
     _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
       Future {
-        logger.logInfo(s"Creating subscription: $subscription")
         client
           .tap(_.createSubscription {
             com
@@ -75,18 +79,20 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
           })
           .tap(_.shutdown())
           .awaitTermination(_awaitTermination, TimeUnit.SECONDS)
-      }.map(_ => ())
-        .recoverWith {
-          case _: AlreadyExistsException =>
-            Future {
-              client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
-            }
+        logger.logInfo(s"Created subscription: $subscription")
+        ()
+      }.recoverWith {
+        case _: AlreadyExistsException =>
+          logger.logDebug(s"Subscription already exists: $subscription")
+          Future {
+            client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
+          }
 
-          case ex =>
-            Future {
-              client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
-            }.flatMap(_ => Future.failed(ex))
-        }
+        case ex =>
+          Future {
+            client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
+          }.flatMap(_ => Future.failed(ex))
+      }
     }
 
   def subscribe[T](
@@ -94,7 +100,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
     project: String,
     subscription: String,
     topic: String,
-    hostOpt: Option[String] = None,
+    exactlyOnceDelivery: Boolean = false,
+    @unused hostOpt: Option[String] = Option.empty,
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit decoder: Decoder[T]): Future[Unit] =
@@ -104,58 +111,101 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
       .map { subscriber =>
         if (!subscriber.isRunning) {
           for {
-            _ <- createSubscription(credentials, project, subscription, topic, hostOpt = hostOpt)
+            _ <- createSubscription(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)
             _ <-
-              Future(subscriber.startAsync().awaitRunning()).recoverWith {
-                case ex =>
-                  logger.logError("Error starting the subscriber!", ex)
-                  logger.logInfo(s"Shutting down subscriber: $subscription")
-                  Future(subscriber.stopAsync().awaitTerminated()).flatMap { _ =>
-                    _subscribers.getAndUpdate { _subscribers =>
-                      _subscribers.remove(subscription)
-                      _subscribers
-                    }
+              Future(subscriber.startAsync().awaitRunning())
+                .map { _ =>
+                  logger.logDebug(s"Subscriber started successfully!")
+                  ()
+                }
+                .recoverWith {
+                  case ex =>
+                    logger.logError("Failed to start the subscriber!", ex)
+                    closeSubscriber(subscription)
                     Future.failed(ex)
-                  }
-              }
+                }
           } yield ()
 
         } else
           Future.successful(())
       }
       .getOrElse {
-        _subscribers.getAndUpdate { _subscribers =>
-          logger.logInfo(s"Creating subscriber: $subscription")
-          val builder =
-            com
-              .google
-              .cloud
-              .pubsub
-              .v1
-              .Subscriber
-              .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
-              .tap { builder =>
-                hostOpt match {
-                  case None =>
-                    builder.setCredentialsProvider {
-                      new CredentialsProvider {
-                        override def getCredentials: Credentials = credentials
-                      }
-                    }
-
-                  case Some(host) =>
-                    val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
-                    builder
-                      .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
-                      .setCredentialsProvider(NoCredentialsProvider.create())
-                }
-              }
-
-          val subscriber = builder.build()
-          _subscribers.update(subscription, subscriber)
-          _subscribers
+        _subscribers.getAndUpdate { innerSubscribers =>
+          innerSubscribers
+            .get(subscription)
+            .fold {
+              logger.logInfo(s"Creating subscriber: $subscription")
+              val _subscriber =
+                subscriber[T](credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
+              innerSubscribers.tap(_.update(subscription, _subscriber))
+            }(_ => innerSubscribers)
         }
-        subscribe(credentials, project, subscription, topic, hostOpt)(fn)
+        subscribe(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
+      }
+
+  override def close(): Unit =
+    _subscribers.getAndUpdate { subscribers =>
+      logger.logInfo("Shutting down all subscribers...")
+      subscribers.foreach {
+        case (_, subscriber) =>
+          subscriber.stopAsync().awaitTerminated()
+      }
+      mutable.Map()
+    }
+
+  private def closeSubscriber(subscription: String): Unit =
+    _subscribers.getAndUpdate { subscribers =>
+      subscribers
+        .get(subscription)
+        .fold(subscribers) { subscriber =>
+          logger.logInfo(s"Shutting down subscriber: $subscription")
+          subscriber.stopAsync().awaitTerminated()
+          subscribers.tap(_.remove(subscription))
+        }
+    }
+
+  private def subscriber[T](
+    credentials: Credentials,
+    project: String,
+    subscription: String,
+    topic: String,
+    exactlyOnceDelivery: Boolean,
+    hostOpt: Option[String],
+  )(
+    fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
+  )(implicit decoder: Decoder[T]): com.google.cloud.pubsub.v1.Subscriber =
+    com
+      .google
+      .cloud
+      .pubsub
+      .v1
+      .Subscriber
+      .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
+      .tap { builder =>
+        hostOpt match {
+          case None =>
+            builder.setCredentialsProvider {
+              new CredentialsProvider {
+                override def getCredentials: Credentials = credentials
+              }
+            }
+
+          case Some(host) =>
+            val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
+            builder
+              .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+              .setCredentialsProvider(NoCredentialsProvider.create())
+        }
+      }
+      .build()
+      .tap { subscriber =>
+        subscriber.addListener(
+          TerminalFailureApiServiceListener(
+            subscription,
+            () => subscribe(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn),
+          ),
+          ec,
+        )
       }
 
   private def receiver[T](
@@ -191,10 +241,10 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                                 "topic" -> topic,
                                 "subscription" -> subscription,
                                 "id" -> env.id,
-                                "payload" -> message.getData.toStringUtf8,
-                              ),
+                              ).!++("payload" -> message.getData.toStringUtf8),
                             )
                             consumer.ack()
+                            ()
 
                           case Left(_) =>
                             logger.logDebug(
@@ -204,10 +254,10 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                                 "topic" -> topic,
                                 "subscription" -> subscription,
                                 "id" -> env.id,
-                                "payload" -> message.getData.toStringUtf8,
-                              ),
+                              ).!++("payload" -> message.getData.toStringUtf8),
                             )
                             consumer.nack()
+                            ()
                         }
                         .recover {
                           case ex =>
@@ -219,10 +269,10 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                                 "topic" -> topic,
                                 "subscription" -> subscription,
                                 "id" -> env.id,
-                                "payload" -> message.getData.toStringUtf8,
-                              ),
+                              ).!++("payload" -> message.getData.toStringUtf8),
                             )
                             consumer.nack()
+                            ()
                         }
 
                     case Left(ex) =>
@@ -234,10 +284,10 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                           "topic" -> topic,
                           "subscription" -> subscription,
                           "id" -> env.id,
-                          "payload" -> message.getData.toStringUtf8,
-                        ),
+                        ).!++("payload" -> message.getData.toStringUtf8),
                       )
                       consumer.nack()
+                      ()
                   }
 
               case Left(ex) =>
@@ -247,16 +297,22 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                   Log(
                     "topic" -> topic,
                     "subscription" -> subscription,
-                    "payload" -> message.getData.toStringUtf8,
-                  ),
+                  ).!++("payload" -> message.getData.toStringUtf8),
                 )
                 consumer.nack()
+                ()
             }
         }
   }
 
-  override def close(): Unit = {
-    logger.logInfo("Shutting down all subscribers...")
-    _subscribers.get().values.foreach(_.stopAsync().awaitTerminated())
+  private case class TerminalFailureApiServiceListener(subscription: String, restartFn: () => Future[Unit])
+    extends ApiService.Listener {
+
+    override def failed(from: ApiService.State, ex: Throwable): Unit = {
+      logger.logError(s"Terminal failure in the subscriber! ($subscription)", ex)
+      closeSubscriber(subscription)
+      restartFn()
+      ()
+    }
   }
 }

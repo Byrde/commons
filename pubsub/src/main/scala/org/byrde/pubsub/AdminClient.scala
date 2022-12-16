@@ -15,21 +15,12 @@ import io.grpc.{ ManagedChannel, ManagedChannelBuilder }
 trait AdminClient {
   private var channel: ManagedChannel = _
 
-  private def transportChannel(maybeHost: Option[String]): Option[TransportChannelProvider] =
-    maybeHost.map { pubsubHost =>
-      if (channel != null) FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
-      else {
-        channel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
-        FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
-      }
-    }
-
   protected def _createTopicAdminClient(
     credentialsProvider: CredentialsProvider,
-    maybeHost: Option[String],
+    hostOpt: Option[String],
   ): TopicAdminClient = {
     val topicSettingsBuilder = TopicAdminSettings.newBuilder()
-    transportChannel(maybeHost) match {
+    transportChannel(hostOpt) match {
       case None =>
         TopicAdminClient.create(
           topicSettingsBuilder.setCredentialsProvider(credentialsProvider).build(),
@@ -47,10 +38,10 @@ trait AdminClient {
 
   protected def _createSubscriptionAdminClient(
     credentialsProvider: CredentialsProvider,
-    maybeHost: Option[String],
+    hostOpt: Option[String],
   ): SubscriptionAdminClient = {
     val subscriptionSettings = SubscriptionAdminSettings.newBuilder()
-    transportChannel(maybeHost) match {
+    transportChannel(hostOpt) match {
       case None =>
         SubscriptionAdminClient.create(
           subscriptionSettings.setCredentialsProvider(credentialsProvider).build(),
@@ -65,4 +56,13 @@ trait AdminClient {
         )
     }
   }
+
+  private def transportChannel(hostOpt: Option[String]): Option[TransportChannelProvider] =
+    hostOpt.map { pubsubHost =>
+      if (channel != null) FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
+      else {
+        channel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
+        FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
+      }
+    }
 }
