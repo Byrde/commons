@@ -1,7 +1,5 @@
 package org.byrde.support
 
-import org.byrde.support.types.TimeRange
-
 import java.time.Instant
 import java.time.Instant.{ parse => ts }
 

@@ -1,7 +1,5 @@
 package org.byrde.support
 
-import org.byrde.support.types.Coordinates
-
 import scala.math.Ordering.Double.TotalOrdering
 
 import org.scalacheck.Gen

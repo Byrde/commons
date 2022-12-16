@@ -1,4 +1,4 @@
-package org.byrde.support.types
+package org.byrde.support
 
 sealed trait SSN
 

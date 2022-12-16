@@ -1,6 +1,6 @@
 package org.byrde.smtp
 
-import org.byrde.support.types.Email
+import org.byrde.support.Email
 
 case class SmtpRequest(
   recipient: Email,

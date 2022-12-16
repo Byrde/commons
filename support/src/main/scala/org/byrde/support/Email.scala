@@ -1,7 +1,7 @@
-package org.byrde.support.types
+package org.byrde.support
 
-import org.byrde.support.types
-import org.byrde.support.types.Email.{ Domain, DomainSuffix, Recipient }
+import org.byrde.support
+import org.byrde.support.Email.{ Domain, DomainSuffix, Recipient }
 
 object Email {
   sealed trait EmailValidationError
@@ -19,7 +19,7 @@ object Email {
 
   val fromString: String => Either[EmailValidationError, Email] = {
     case EmailRegex(recipient, domain, domainSuffix) =>
-      Right(types.Email(recipient.toLowerCase, domain.toLowerCase, domainSuffix.toLowerCase))
+      Right(support.Email(recipient.toLowerCase, domain.toLowerCase, domainSuffix.toLowerCase))
 
     case email =>
       Left(InvalidEmail(email))

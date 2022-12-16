@@ -1,6 +1,6 @@
-package org.byrde.support.types
+package org.byrde.support
 
-import org.byrde.support.types.Phone.{ Area, Country, Exchange, Ext }
+import org.byrde.support.Phone.{ Area, Country, Exchange, Ext }
 
 object Phone {
   sealed trait PhoneValidationError
