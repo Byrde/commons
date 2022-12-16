@@ -1,6 +1,8 @@
 package org.byrde.support
 
-import Money._
+import org.byrde.support.types.Money
+import org.byrde.support.types.Money._
+
 import org.scalatest.flatspec.AnyFlatSpec
 
 class MoneySpec extends AnyFlatSpec {

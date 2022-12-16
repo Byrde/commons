@@ -1,6 +1,8 @@
 package org.byrde.support
 
-import SSN._
+import org.byrde.support.types.SSN
+import org.byrde.support.types.SSN._
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

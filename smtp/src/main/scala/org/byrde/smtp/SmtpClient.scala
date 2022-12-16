@@ -1,7 +1,7 @@
 package org.byrde.smtp
 
 import org.byrde.smtp.conf.SmtpConfig
-import org.byrde.support.Email
+import org.byrde.support.types.Email
 
 import javax.mail.internet._
 import javax.mail.{ Message, Transport }

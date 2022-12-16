@@ -1,6 +1,8 @@
 package org.byrde.support
 
-import Phone._
+import org.byrde.support.types.Phone
+import org.byrde.support.types.Phone._
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

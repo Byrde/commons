@@ -1,4 +1,4 @@
-package org.byrde.support
+package org.byrde.support.types
 
 import scala.math._
 

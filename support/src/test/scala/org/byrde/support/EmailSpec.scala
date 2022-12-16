@@ -1,6 +1,8 @@
 package org.byrde.support
 
-import Email._
+import org.byrde.support.types.Email
+import org.byrde.support.types.Email._
+
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 

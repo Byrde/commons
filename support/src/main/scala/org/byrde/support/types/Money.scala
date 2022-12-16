@@ -1,4 +1,4 @@
-package org.byrde.support
+package org.byrde.support.types
 
 case class Money private (private val underlyingValue: BigDecimal) extends AnyVal with Ordered[Money] {
   def units: Long = underlyingValue.longValue
