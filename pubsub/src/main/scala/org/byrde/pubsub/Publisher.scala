@@ -19,10 +19,10 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 import scala.collection.mutable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util.chaining._
 
-abstract class Publisher(logger: Logger)(implicit ec: ExecutionContext)
+abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
   extends JavaFutureSupport
     with AdminClient
     with AutoCloseable {
@@ -38,9 +38,9 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContext)
     credentials: Credentials,
     project: String,
     topic: String,
-    maybeHost: Option[String],
+    hostOpt: Option[String],
   ): Future[Unit] =
-    _createTopicAdminClient(FixedCredentialsProvider.create(credentials), maybeHost).pipe { client =>
+    _createTopicAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
       Future {
         logger.logInfo(s"Creating topic: $topic")
         client
@@ -65,7 +65,7 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContext)
     credentials: Credentials,
     project: String,
     env: Envelope[T],
-    maybeHost: Option[String] = None,
+    hostOpt: Option[String] = None,
   )(implicit encoder: Encoder[T]): Future[Unit] =
     _publishers
       .get()
@@ -120,7 +120,7 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContext)
               .Publisher
               .newBuilder(TopicName.ofProjectTopicName(project, env.topic).toString)
               .tap { builder =>
-                maybeHost match {
+                hostOpt match {
                   case Some(host) =>
                     val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
                     builder
@@ -140,7 +140,7 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContext)
           _publishers.update(env.topic, publisher)
           _publishers
         }
-        publish(credentials, project, env, maybeHost)
+        publish(credentials, project, env, hostOpt)
       }
 
   override def close(): Unit = {

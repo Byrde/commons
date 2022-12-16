@@ -37,9 +37,9 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
     subscription: String,
     topic: String,
     exactlyOnceDelivery: Boolean = false,
-    maybeHost: Option[String] = Option.empty,
+    hostOpt: Option[String] = Option.empty,
   ): Future[Unit] =
-    _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), maybeHost).pipe { client =>
+    _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
       Future {
         logger.logInfo(s"Creating subscription: $subscription")
         client
@@ -56,7 +56,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
               .setAckDeadlineSeconds(10)
               // Max retention for unacknowledged messages is 7 days
               .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
-              //
+              // Never expire
               .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
               .setEnableExactlyOnceDelivery(exactlyOnceDelivery)
               .setRetryPolicy {
@@ -94,7 +94,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
     project: String,
     subscription: String,
     topic: String,
-    maybeHost: Option[String] = None,
+    hostOpt: Option[String] = None,
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit decoder: Decoder[T]): Future[Unit] =
@@ -104,7 +104,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
       .map { subscriber =>
         if (!subscriber.isRunning) {
           for {
-            _ <- createSubscription(credentials, project, subscription, topic, maybeHost = maybeHost)
+            _ <- createSubscription(credentials, project, subscription, topic, hostOpt = hostOpt)
             _ <-
               Future(subscriber.startAsync().awaitRunning()).recoverWith {
                 case ex =>
@@ -135,7 +135,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
               .Subscriber
               .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
               .tap { builder =>
-                maybeHost match {
+                hostOpt match {
                   case None =>
                     builder.setCredentialsProvider {
                       new CredentialsProvider {
@@ -155,7 +155,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
           _subscribers.update(subscription, subscriber)
           _subscribers
         }
-        subscribe(credentials, project, subscription, topic, maybeHost)(fn)
+        subscribe(credentials, project, subscription, topic, hostOpt)(fn)
       }
 
   private def receiver[T](
@@ -181,8 +181,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContext) extends
                   .map(PubSubError.DecodingError(s"Error decoding message: ${message.getData.toStringUtf8}")(_))
                   .pipe {
                     case Right(value) =>
-                      val rebuiltEnvelope = Envelope(env.topic, value, env.id, env.correlationId)
-                      fn(rebuiltEnvelope)
+                      fn(Envelope(env.topic, value, env.id, env.correlationId))
                         .map {
                           case Right(_) =>
                             logger.logDebug(
