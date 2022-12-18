@@ -73,7 +73,15 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .get(env.topic)
       .map { publisher =>
         publisher
-          .publish(PubsubMessage.newBuilder.setData(ByteString.copyFromUtf8(env.asJson.toString)).build)
+          .publish {
+            PubsubMessage
+              .newBuilder
+              .setMessageId(env.id)
+              .setData(ByteString.copyFromUtf8(env.asJson.toString))
+              .pipe(builder => env.correlationId.fold(builder)(builder.putAttributes("correlationId", _)))
+              .pipe(builder => env.orderingKey.fold(builder)(builder.setOrderingKey))
+              .build
+          }
           .asScala
           .map { _ =>
             logger.logDebug(

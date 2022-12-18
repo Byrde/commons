@@ -41,7 +41,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     project: String,
     subscription: String,
     topic: String,
-    exactlyOnceDelivery: Boolean = false,
+    enableExactlyOnceDelivery: Boolean = false,
+    enableMessageOrdering: Boolean = false,
     hostOpt: Option[String] = Option.empty,
   ): Future[Unit] =
     _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
@@ -62,7 +63,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
               .setMessageRetentionDuration(Duration.newBuilder().setSeconds(604800).build())
               // Never expire
               .setExpirationPolicy(com.google.pubsub.v1.ExpirationPolicy.newBuilder().build())
-              .setEnableExactlyOnceDelivery(exactlyOnceDelivery)
+              .setEnableExactlyOnceDelivery(enableExactlyOnceDelivery)
+              .setEnableMessageOrdering(enableMessageOrdering)
               .setRetryPolicy {
                 com
                   .google
@@ -100,7 +102,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     project: String,
     subscription: String,
     topic: String,
-    exactlyOnceDelivery: Boolean = false,
+    enabledExactlyOnceDelivery: Boolean = false,
+    enableMessageOrdering: Boolean = false,
     @unused hostOpt: Option[String] = Option.empty,
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
@@ -126,7 +129,16 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
       }
       .getOrElse {
         for {
-          _ <- createSubscription(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)
+          _ <-
+            createSubscription(
+              credentials,
+              project,
+              subscription,
+              topic,
+              enabledExactlyOnceDelivery,
+              enableMessageOrdering,
+              hostOpt,
+            )
           _ =
             _subscribers.getAndUpdate { innerSubscribers =>
               innerSubscribers
@@ -134,11 +146,27 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
                 .fold {
                   logger.logInfo(s"Creating subscriber: $subscription")
                   val _subscriber =
-                    subscriber[T](credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
+                    subscriber[T](
+                      credentials,
+                      project,
+                      subscription,
+                      topic,
+                      enabledExactlyOnceDelivery,
+                      enableMessageOrdering,
+                      hostOpt,
+                    )(fn)
                   innerSubscribers.tap(_.update(subscription, _subscriber))
                 }(_ => innerSubscribers)
             }
-        } yield subscribe(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn)
+        } yield subscribe(
+          credentials,
+          project,
+          subscription,
+          topic,
+          enabledExactlyOnceDelivery,
+          enableMessageOrdering,
+          hostOpt,
+        )(fn)
       }
 
   override def close(): Unit =
@@ -167,7 +195,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     project: String,
     subscription: String,
     topic: String,
-    exactlyOnceDelivery: Boolean,
+    enabledExactlyOnceDelivery: Boolean,
+    enableMessageOrdering: Boolean,
     hostOpt: Option[String],
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
@@ -200,7 +229,16 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
         subscriber.addListener(
           TerminalFailureApiServiceListener(
             subscription,
-            () => subscribe(credentials, project, subscription, topic, exactlyOnceDelivery, hostOpt)(fn),
+            () =>
+              subscribe(
+                credentials,
+                project,
+                subscription,
+                topic,
+                enabledExactlyOnceDelivery,
+                enableMessageOrdering,
+                hostOpt,
+              )(fn),
           ),
           ec,
         )
