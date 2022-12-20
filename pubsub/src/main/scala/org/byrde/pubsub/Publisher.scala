@@ -88,7 +88,17 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
                 "id" -> env.id,
               ).!++("payload" -> env.msg.asJson.noSpaces),
             )
-            ()
+            _publishers
+              .get(env.topic)
+              .foreach {
+                case innerPublisher if innerPublisher == publisher =>
+                  ()
+
+                case innerPublisher =>
+                  logger.logWarning(s"Multiple instances of the same publisher type detected! (${env.topic})")
+                  innerPublisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+                  ()
+              }
           }
           .recoverWith {
             case ex =>

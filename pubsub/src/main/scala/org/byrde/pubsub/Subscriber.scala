@@ -123,7 +123,17 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
           Future(subscriber.startAsync().awaitRunning())
             .map { _ =>
               logger.logDebug(s"Subscriber started successfully!")
-              ()
+              _subscribers
+                .get(subscription)
+                .foreach {
+                  case innerSubscriber if innerSubscriber == subscriber =>
+                    ()
+
+                  case innerSubscriber =>
+                    logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
+                    innerSubscriber.stopAsync().awaitTerminated()
+                    ()
+                }
             }
             .recoverWith {
               case ex =>
