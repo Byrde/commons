@@ -118,7 +118,12 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
                 .get(env.topic)
                 .fold {
                   logger.logInfo(s"Creating publisher: ${env.topic}")
-                  _publishers.tap(_.update(env.topic, publisher(credentials, project, env.topic, hostOpt)))
+                  _publishers.tap { _publishers =>
+                    _publishers.update(
+                      env.topic,
+                      publisher(credentials, project, env.topic, env.orderingKey.isDefined, hostOpt),
+                    )
+                  }
                 }(_ => _publishers)
             }
         } yield publish(credentials, project, env, hostOpt)
@@ -149,6 +154,7 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
     credentials: Credentials,
     project: String,
     topic: String,
+    enableMessageOrdering: Boolean,
     hostOpt: Option[String],
   ): com.google.cloud.pubsub.v1.Publisher =
     com
@@ -158,6 +164,7 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .v1
       .Publisher
       .newBuilder(TopicName.ofProjectTopicName(project, topic).toString)
+      .setEnableMessageOrdering(enableMessageOrdering)
       .tap { builder =>
         hostOpt match {
           case Some(host) =>

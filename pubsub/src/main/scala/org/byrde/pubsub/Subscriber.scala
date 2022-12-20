@@ -102,7 +102,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     project: String,
     subscription: String,
     topic: String,
-    enabledExactlyOnceDelivery: Boolean = false,
+    enableExactlyOnceDelivery: Boolean = false,
     enableMessageOrdering: Boolean = false,
     @unused hostOpt: Option[String] = Option.empty,
   )(
@@ -135,7 +135,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
               project,
               subscription,
               topic,
-              enabledExactlyOnceDelivery,
+              enableExactlyOnceDelivery,
               enableMessageOrdering,
               hostOpt,
             )
@@ -151,7 +151,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
                       project,
                       subscription,
                       topic,
-                      enabledExactlyOnceDelivery,
+                      enableExactlyOnceDelivery,
                       enableMessageOrdering,
                       hostOpt,
                     )(fn)
@@ -163,7 +163,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
           project,
           subscription,
           topic,
-          enabledExactlyOnceDelivery,
+          enableExactlyOnceDelivery,
           enableMessageOrdering,
           hostOpt,
         )(fn)
@@ -195,7 +195,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     project: String,
     subscription: String,
     topic: String,
-    enabledExactlyOnceDelivery: Boolean,
+    enableExactlyOnceDelivery: Boolean,
     enableMessageOrdering: Boolean,
     hostOpt: Option[String],
   )(
@@ -235,7 +235,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
                 project,
                 subscription,
                 topic,
-                enabledExactlyOnceDelivery,
+                enableExactlyOnceDelivery,
                 enableMessageOrdering,
                 hostOpt,
               )(fn),
