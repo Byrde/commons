@@ -17,10 +17,9 @@ import io.circe.{ Decoder, Json }
 import io.grpc.ManagedChannelBuilder
 
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 import scala.annotation.unused
-import scala.collection.mutable
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util._
 import scala.util.chaining._
@@ -33,8 +32,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
 
   private val _awaitTermination = 10 // seconds
 
-  private val _subscribers: AtomicReference[mutable.Map[Subscription, com.google.cloud.pubsub.v1.Subscriber]] =
-    new AtomicReference(mutable.Map())
+  private val _subscribers: scala.collection.concurrent.Map[Subscription, com.google.cloud.pubsub.v1.Subscriber] =
+    TrieMap.empty
 
   def createSubscription(
     credentials: Credentials,
@@ -44,9 +43,9 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     enableExactlyOnceDelivery: Boolean = false,
     enableMessageOrdering: Boolean = false,
     hostOpt: Option[String] = Option.empty,
-  ): Future[Unit] =
+  ): Unit =
     _createSubscriptionAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
-      Future {
+      Try {
         client
           .tap(_.createSubscription {
             com
@@ -83,17 +82,15 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
           .awaitTermination(_awaitTermination, TimeUnit.SECONDS)
         logger.logInfo(s"Created subscription: $subscription")
         ()
-      }.recoverWith {
+      }.recover {
         case _: AlreadyExistsException =>
           logger.logDebug(s"Subscription already exists: $subscription")
-          Future {
-            client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
-          }
+          client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
+          ()
 
         case ex =>
-          Future {
-            client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
-          }.flatMap(_ => Future.failed(ex))
+          client.tap(_.shutdown()).awaitTermination(_awaitTermination, TimeUnit.SECONDS)
+          throw ex
       }
     }
 
@@ -109,9 +106,19 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit decoder: Decoder[T]): Future[Unit] =
     _subscribers
-      .get()
-      .get(subscription)
-      .map { subscriber =>
+      .getOrElseUpdate(
+        subscription,
+        createSubscriptionAndSubscriber(
+          credentials,
+          project,
+          subscription,
+          topic,
+          enableExactlyOnceDelivery,
+          enableMessageOrdering,
+          hostOpt,
+        )(fn),
+      )
+      .pipe { subscriber =>
         if (!subscriber.isRunning)
           Future(subscriber.startAsync().awaitRunning())
             .map { _ =>
@@ -127,68 +134,56 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
         else
           Future.successful(())
       }
-      .getOrElse {
-        for {
-          _ <-
-            createSubscription(
-              credentials,
-              project,
-              subscription,
-              topic,
-              enableExactlyOnceDelivery,
-              enableMessageOrdering,
-              hostOpt,
-            )
-          _ =
-            _subscribers.getAndUpdate { innerSubscribers =>
-              innerSubscribers
-                .get(subscription)
-                .fold {
-                  logger.logInfo(s"Creating subscriber: $subscription")
-                  val _subscriber =
-                    subscriber[T](
-                      credentials,
-                      project,
-                      subscription,
-                      topic,
-                      enableExactlyOnceDelivery,
-                      enableMessageOrdering,
-                      hostOpt,
-                    )(fn)
-                  innerSubscribers.tap(_.update(subscription, _subscriber))
-                }(_ => innerSubscribers)
-            }
-        } yield subscribe(
-          credentials,
-          project,
-          subscription,
-          topic,
-          enableExactlyOnceDelivery,
-          enableMessageOrdering,
-          hostOpt,
-        )(fn)
-      }
 
-  override def close(): Unit =
-    _subscribers.getAndUpdate { subscribers =>
-      logger.logInfo("Shutting down all subscribers...")
-      subscribers.foreach {
-        case (_, subscriber) =>
-          subscriber.stopAsync().awaitTerminated()
-      }
-      mutable.Map()
+  override def close(): Unit = {
+    logger.logInfo("Shutting down all subscribers...")
+    _subscribers.foreach {
+      case (subscription, subscriber) =>
+        subscriber.stopAsync().awaitTerminated()
+        _subscribers.remove(subscription)
     }
+  }
 
   private def closeSubscriber(subscription: String): Unit =
-    _subscribers.getAndUpdate { subscribers =>
-      subscribers
-        .get(subscription)
-        .fold(subscribers) { subscriber =>
-          logger.logInfo(s"Shutting down subscriber: $subscription")
-          subscriber.stopAsync().awaitTerminated()
-          subscribers.tap(_.remove(subscription))
-        }
-    }
+    _subscribers
+      .get(subscription)
+      .foreach { subscriber =>
+        logger.logInfo(s"Shutting down subscriber: $subscription")
+        subscriber.stopAsync().awaitTerminated()
+        _subscribers.remove(subscription)
+      }
+
+  private def createSubscriptionAndSubscriber[T](
+    credentials: Credentials,
+    project: String,
+    subscription: String,
+    topic: String,
+    enableExactlyOnceDelivery: Boolean,
+    enableMessageOrdering: Boolean,
+    hostOpt: Option[String],
+  )(
+    fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
+  )(implicit decoder: Decoder[T]) = {
+    createSubscription(
+      credentials,
+      project,
+      subscription,
+      topic,
+      enableExactlyOnceDelivery,
+      enableMessageOrdering,
+      hostOpt,
+    )
+    logger.logInfo(s"Creating subscriber: $subscription")
+    subscriber[T](
+      credentials,
+      project,
+      subscription,
+      topic,
+      enableExactlyOnceDelivery,
+      enableMessageOrdering,
+      hostOpt,
+    )(fn)
+  }
 
   private def subscriber[T](
     credentials: Credentials,

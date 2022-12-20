@@ -16,10 +16,10 @@ import io.circe.syntax._
 import io.grpc.ManagedChannelBuilder
 
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
-import scala.collection.mutable
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ ExecutionContextExecutor, Future }
+import scala.util.Try
 import scala.util.chaining._
 
 abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
@@ -31,34 +31,31 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
 
   private val _ackDeadline = 10 // seconds
 
-  private val _publishers: AtomicReference[mutable.Map[Topic, com.google.cloud.pubsub.v1.Publisher]] =
-    new AtomicReference(mutable.Map())
+  private val _publishers: scala.collection.concurrent.Map[Topic, com.google.cloud.pubsub.v1.Publisher] = TrieMap.empty
 
   def createTopic(
     credentials: Credentials,
     project: String,
     topic: String,
     hostOpt: Option[String],
-  ): Future[Unit] =
+  ): Unit =
     _createTopicAdminClient(FixedCredentialsProvider.create(credentials), hostOpt).pipe { client =>
-      Future {
+      Try {
         client
           .tap(_.createTopic(TopicName.ofProjectTopicName(project, topic).toString))
           .tap(_.shutdown())
           .awaitTermination(_ackDeadline, TimeUnit.SECONDS)
         logger.logInfo(s"Created topic: $topic")
         ()
-      }.recoverWith {
+      }.recover {
         case _: AlreadyExistsException =>
           logger.logDebug(s"Topic already exists: $topic")
-          Future {
-            client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-          }
+          client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          ()
 
         case ex =>
-          Future {
-            client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-          }.flatMap(_ => Future.failed(ex))
+          client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          throw ex
       }
     }
 
@@ -69,9 +66,8 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
     hostOpt: Option[String] = None,
   )(implicit encoder: Encoder[T]): Future[Unit] =
     _publishers
-      .get()
-      .get(env.topic)
-      .map { publisher =>
+      .getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
+      .pipe { publisher =>
         publisher
           .publish {
             PubsubMessage
@@ -109,46 +105,35 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
               Future.failed(ex)
           }
       }
-      .getOrElse {
-        for {
-          _ <- createTopic(credentials, project, env.topic, hostOpt)
-          _ =
-            _publishers.getAndUpdate { _publishers =>
-              _publishers
-                .get(env.topic)
-                .fold {
-                  logger.logInfo(s"Creating publisher: ${env.topic}")
-                  _publishers.tap { _publishers =>
-                    _publishers.update(
-                      env.topic,
-                      publisher(credentials, project, env.topic, env.orderingKey.isDefined, hostOpt),
-                    )
-                  }
-                }(_ => _publishers)
-            }
-        } yield publish(credentials, project, env, hostOpt)
-      }
 
-  override def close(): Unit =
-    _publishers.getAndUpdate { publishers =>
-      logger.logInfo("Shutting down all publishers...")
-      publishers.foreach {
-        case (_, publisher) =>
-          publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-      }
-      mutable.Map()
+  override def close(): Unit = {
+    logger.logInfo("Shutting down all publishers...")
+    _publishers.foreach {
+      case (topic, publisher) =>
+        publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+        _publishers.remove(topic)
     }
+  }
 
   private def closePublisher(topic: Topic): Unit =
-    _publishers.getAndUpdate { publishers =>
-      publishers
-        .get(topic)
-        .fold(publishers) { publisher =>
-          logger.logInfo(s"Shutting down publisher: $topic")
-          publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-          publishers.tap(_.remove(topic))
-        }
-    }
+    _publishers
+      .get(topic)
+      .foreach { publisher =>
+        logger.logInfo(s"Shutting down publisher: $topic")
+        publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+        _publishers.remove(topic)
+      }
+
+  private def createTopicAndPublisher[T](
+    credentials: Credentials,
+    project: String,
+    env: Envelope[T],
+    hostOpt: Option[String],
+  ): com.google.cloud.pubsub.v1.Publisher = {
+    createTopic(credentials, project, env.topic, hostOpt)
+    logger.logInfo(s"Creating publisher: ${env.topic}")
+    publisher(credentials, project, env.topic, env.orderingKey.isDefined, hostOpt)
+  }
 
   private def publisher(
     credentials: Credentials,
