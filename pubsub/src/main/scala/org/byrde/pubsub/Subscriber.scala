@@ -241,7 +241,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
           case Some(host) =>
             builder
               .setChannelProvider {
-                FixedTransportChannelProvider.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build())
+                FixedTransportChannelProvider
+                  .create(GrpcTransportChannel.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build()))
               }
               .setCredentialsProvider(NoCredentialsProvider.create())
         }
