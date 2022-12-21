@@ -26,7 +26,6 @@ import scala.util.chaining._
 abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
   extends JavaFutureSupport
     with AdminClient
-    with MutexSupport
     with AutoCloseable {
 
   private type Topic = String
@@ -119,13 +118,10 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
               Future.failed(ex)
           }
 
-      case None if !_locked =>
-        mutex {
+      case None =>
+        synchronized {
           _publishers.getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
         }
-        publish(credentials, project, env, hostOpt)
-
-      case _ =>
         publish(credentials, project, env, hostOpt)
     }
 

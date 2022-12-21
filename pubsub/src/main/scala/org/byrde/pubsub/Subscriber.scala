@@ -26,7 +26,6 @@ import scala.util.chaining._
 
 abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
   extends AdminClient
-    with MutexSupport
     with AutoCloseable {
 
   private type Subscription = String
@@ -134,8 +133,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
         else
           Future.successful(())
 
-      case None if !_locked =>
-        mutex {
+      case None =>
+        synchronized {
           _subscribers.getOrElseUpdate(
             subscription,
             createSubscriptionAndSubscriber(
@@ -149,11 +148,6 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
             )(fn),
           )
         }
-        subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
-          fn,
-        )
-
-      case None =>
         subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
           fn,
         )
