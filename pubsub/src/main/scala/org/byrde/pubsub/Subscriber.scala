@@ -35,6 +35,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
   private val _subscribers: scala.collection.concurrent.Map[Subscription, com.google.cloud.pubsub.v1.Subscriber] =
     TrieMap.empty
 
+  @volatile private var _locked: Boolean = false
+
   def createSubscription(
     credentials: Credentials,
     project: String,
@@ -106,51 +108,65 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit decoder: Decoder[T]): Future[Unit] =
     _subscribers
-      .getOrElseUpdate(
-        subscription,
-        createSubscriptionAndSubscriber(
-          credentials,
-          project,
-          subscription,
-          topic,
-          enableExactlyOnceDelivery,
-          enableMessageOrdering,
-          hostOpt,
-        )(fn),
-      )
-      .pipe { subscriber =>
-        if (!subscriber.isRunning)
-          Future(subscriber.startAsync().awaitRunning())
-            .map { _ =>
-              logger.logDebug(s"Subscriber started successfully!")
-              _subscribers
-                .get(subscription)
-                .foreach {
-                  case innerSubscriber if innerSubscriber == subscriber =>
-                    ()
+      .get(subscription)
+      .pipe {
+        case Some(subscriber) =>
+          if (!subscriber.isRunning)
+            Future(subscriber.startAsync().awaitRunning())
+              .map { _ =>
+                logger.logDebug(s"Subscriber started successfully!")
+                _subscribers
+                  .get(subscription)
+                  .foreach {
+                    case innerSubscriber if innerSubscriber == subscriber =>
+                      ()
 
-                  case innerSubscriber =>
-                    logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
-                    innerSubscriber.stopAsync().awaitTerminated()
-                    ()
-                }
-            }
-            .recoverWith {
-              case ex =>
-                logger.logError("Failed to start the subscriber!", ex)
-                closeSubscriber(subscription)
-                Future.failed(ex)
-            }
-        else
-          Future.successful(())
+                    case innerSubscriber =>
+                      logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
+                      innerSubscriber.stopAsync().awaitTerminated()
+                      ()
+                  }
+              }
+              .recoverWith {
+                case ex =>
+                  logger.logError("Failed to start the subscriber!", ex)
+                  closeSubscriber(subscription)
+                  Future.failed(ex)
+              }
+          else
+            Future.successful(())
+
+        case None if !_locked =>
+          _locked = true
+          _subscribers.getOrElseUpdate(
+            subscription,
+            createSubscriptionAndSubscriber(
+              credentials,
+              project,
+              subscription,
+              topic,
+              enableExactlyOnceDelivery,
+              enableMessageOrdering,
+              hostOpt,
+            )(fn),
+          )
+          _locked = false
+          subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
+            fn,
+          )
+
+        case None =>
+          subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
+            fn,
+          )
       }
 
   override def close(): Unit = {
     logger.logInfo("Shutting down all subscribers...")
     _subscribers.foreach {
       case (subscription, subscriber) =>
-        subscriber.stopAsync().awaitTerminated()
         _subscribers.remove(subscription)
+        subscriber.stopAsync().awaitTerminated()
     }
   }
 
@@ -159,8 +175,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .get(subscription)
       .foreach { subscriber =>
         logger.logInfo(s"Shutting down subscriber: $subscription")
-        subscriber.stopAsync().awaitTerminated()
         _subscribers.remove(subscription)
+        subscriber.stopAsync().awaitTerminated()
       }
 
   private def createSubscriptionAndSubscriber[T](
@@ -223,9 +239,10 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
             }
 
           case Some(host) =>
-            val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
             builder
-              .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
+              .setChannelProvider {
+                FixedTransportChannelProvider.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build())
+              }
               .setCredentialsProvider(NoCredentialsProvider.create())
         }
       }

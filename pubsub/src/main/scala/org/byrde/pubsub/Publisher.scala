@@ -33,6 +33,8 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
 
   private val _publishers: scala.collection.concurrent.Map[Topic, com.google.cloud.pubsub.v1.Publisher] = TrieMap.empty
 
+  @volatile private var _locked: Boolean = false
+
   def createTopic(
     credentials: Credentials,
     project: String,
@@ -51,10 +53,12 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
         case _: AlreadyExistsException =>
           logger.logDebug(s"Topic already exists: $topic")
           client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          client.close()
           ()
 
         case ex =>
           client.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+          client.close()
           throw ex
       }
     }
@@ -66,62 +70,72 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
     hostOpt: Option[String] = None,
   )(implicit encoder: Encoder[T]): Future[Unit] =
     _publishers
-      .getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
-      .pipe { publisher =>
-        publisher
-          .publish {
-            PubsubMessage
-              .newBuilder
-              .setMessageId(env.id)
-              .setData(ByteString.copyFromUtf8(env.asJson.toString))
-              .pipe(builder => env.correlationId.fold(builder)(builder.putAttributes("correlationId", _)))
-              .pipe(builder => env.orderingKey.fold(builder)(builder.setOrderingKey))
-              .build
-          }
-          .asScala
-          .map { _ =>
-            logger.logDebug(
-              s"Message published successfully!",
-              Log(
-                "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
-                "topic" -> env.topic,
-                "id" -> env.id,
-              ).!++("payload" -> env.msg.asJson.noSpaces),
-            )
-            _publishers
-              .get(env.topic)
-              .foreach {
-                case innerPublisher if innerPublisher == publisher =>
-                  ()
-
-                case innerPublisher =>
-                  logger.logWarning(s"Multiple instances of the same publisher type detected! (${env.topic})")
-                  innerPublisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
-                  ()
-              }
-          }
-          .recoverWith {
-            case ex =>
-              logger.logError(
-                s"Failed to publish message!",
-                ex,
+      .get(env.topic)
+      .pipe {
+        case Some(publisher) =>
+          publisher
+            .publish {
+              PubsubMessage
+                .newBuilder
+                .setMessageId(env.id)
+                .setData(ByteString.copyFromUtf8(env.asJson.toString))
+                .pipe(builder => env.correlationId.fold(builder)(builder.putAttributes("correlationId", _)))
+                .pipe(builder => env.orderingKey.fold(builder)(builder.setOrderingKey))
+                .build
+            }
+            .asScala
+            .map { _ =>
+              logger.logDebug(
+                s"Message published successfully!",
                 Log(
                   "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
                   "topic" -> env.topic,
                   "id" -> env.id,
                 ).!++("payload" -> env.msg.asJson.noSpaces),
               )
-              closePublisher(env.topic)
-              Future.failed(ex)
-          }
+              _publishers
+                .get(env.topic)
+                .foreach {
+                  case innerPublisher if innerPublisher == publisher =>
+                    ()
+
+                  case innerPublisher =>
+                    logger.logWarning(s"Multiple instances of the same publisher type detected! (${env.topic})")
+                    innerPublisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
+                    ()
+                }
+            }
+            .recoverWith {
+              case ex =>
+                logger.logError(
+                  s"Failed to publish message!",
+                  ex,
+                  Log(
+                    "correlation_id" -> env.correlationId.getOrElse("No Correlation Id!"),
+                    "topic" -> env.topic,
+                    "id" -> env.id,
+                  ).!++("payload" -> env.msg.asJson.noSpaces),
+                )
+                closePublisher(env.topic)
+                Future.failed(ex)
+            }
+
+        case None if !_locked =>
+          _locked = true
+          _publishers.getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
+          _locked = false
+          publish(credentials, project, env, hostOpt)
+
+        case _ =>
+          publish(credentials, project, env, hostOpt)
       }
 
   override def close(): Unit = {
     logger.logInfo("Shutting down all publishers...")
     _publishers.foreach {
       case (topic, publisher) =>
-        publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
         _publishers.remove(topic)
+        publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
     }
   }
 
@@ -130,8 +144,8 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .get(topic)
       .foreach { publisher =>
         logger.logInfo(s"Shutting down publisher: $topic")
-        publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
         _publishers.remove(topic)
+        publisher.tap(_.shutdown()).awaitTermination(_ackDeadline, TimeUnit.SECONDS)
       }
 
   private def createTopicAndPublisher[T](
@@ -162,19 +176,22 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
       .setEnableMessageOrdering(enableMessageOrdering)
       .tap { builder =>
         hostOpt match {
-          case Some(host) =>
-            val channel = ManagedChannelBuilder.forTarget(host).usePlaintext.build()
-            builder
-              .setChannelProvider(FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)))
-              .setCredentialsProvider(NoCredentialsProvider.create())
-
           case None =>
             builder.setCredentialsProvider {
               new CredentialsProvider {
                 override def getCredentials: Credentials = credentials
               }
             }
+
+          case Some(host) =>
+            builder
+              .setChannelProvider {
+                FixedTransportChannelProvider
+                  .create(GrpcTransportChannel.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build()))
+              }
+              .setCredentialsProvider(NoCredentialsProvider.create())
         }
       }
       .build()
+
 }
