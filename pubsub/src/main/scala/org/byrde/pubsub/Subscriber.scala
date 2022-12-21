@@ -134,7 +134,7 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
         else
           Future.successful(())
 
-      case None if !_locked.get() =>
+      case None if !_locked =>
         mutex {
           _subscribers.getOrElseUpdate(
             subscription,

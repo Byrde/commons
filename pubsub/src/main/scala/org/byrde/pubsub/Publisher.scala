@@ -119,7 +119,7 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
               Future.failed(ex)
           }
 
-      case None if !_locked.get() =>
+      case None if !_locked =>
         mutex {
           _publishers.getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
         }

@@ -1,18 +1,16 @@
 package org.byrde.pubsub
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import scala.util.Try
 
 trait MutexSupport {
-  protected val _locked: AtomicBoolean = new AtomicBoolean(false)
+  @volatile protected var _locked = false
 
   protected def mutex[T](fn: =>T): Either[MutexState.Locked.type, Try[T]] =
     synchronized {
-      if (!_locked.get()) {
-        _locked.set(true)
+      if (!_locked) {
+        _locked = true
         val result = Try(fn)
-        _locked.set(false)
+        _locked = false
         Right(result)
       } else Left(MutexState.Locked)
     }
