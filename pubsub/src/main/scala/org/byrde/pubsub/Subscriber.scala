@@ -18,7 +18,7 @@ import io.grpc.ManagedChannelBuilder
 
 import java.util.concurrent.TimeUnit
 
-import scala.annotation.unused
+import scala.annotation.{ tailrec, unused }
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.{ ExecutionContextExecutor, Future }
 import scala.util._
@@ -96,7 +96,8 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
       }
     }
 
-  def subscribe[T](
+  @tailrec
+  final def subscribe[T](
     credentials: Credentials,
     project: String,
     subscription: String,
@@ -107,59 +108,57 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit decoder: Decoder[T]): Future[Unit] =
-    _subscribers
-      .get(subscription)
-      .pipe {
-        case Some(subscriber) =>
-          if (!subscriber.isRunning)
-            Future(subscriber.startAsync().awaitRunning())
-              .map { _ =>
-                logger.logDebug(s"Subscriber started successfully!")
-                _subscribers
-                  .get(subscription)
-                  .foreach {
-                    case innerSubscriber if innerSubscriber == subscriber =>
-                      ()
+    _subscribers.get(subscription) match {
+      case Some(subscriber) =>
+        if (!subscriber.isRunning)
+          Future(subscriber.startAsync().awaitRunning())
+            .map { _ =>
+              logger.logDebug(s"Subscriber started successfully!")
+              _subscribers
+                .get(subscription)
+                .foreach {
+                  case innerSubscriber if innerSubscriber == subscriber =>
+                    ()
 
-                    case innerSubscriber =>
-                      logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
-                      innerSubscriber.stopAsync().awaitTerminated()
-                      ()
-                  }
-              }
-              .recoverWith {
-                case ex =>
-                  logger.logError("Failed to start the subscriber!", ex)
-                  closeSubscriber(subscription)
-                  Future.failed(ex)
-              }
-          else
-            Future.successful(())
+                  case innerSubscriber =>
+                    logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
+                    innerSubscriber.stopAsync().awaitTerminated()
+                    ()
+                }
+            }
+            .recoverWith {
+              case ex =>
+                logger.logError("Failed to start the subscriber!", ex)
+                closeSubscriber(subscription)
+                Future.failed(ex)
+            }
+        else
+          Future.successful(())
 
-        case None if !_locked =>
-          _locked = true
-          _subscribers.getOrElseUpdate(
+      case None if !_locked =>
+        _locked = true
+        _subscribers.getOrElseUpdate(
+          subscription,
+          createSubscriptionAndSubscriber(
+            credentials,
+            project,
             subscription,
-            createSubscriptionAndSubscriber(
-              credentials,
-              project,
-              subscription,
-              topic,
-              enableExactlyOnceDelivery,
-              enableMessageOrdering,
-              hostOpt,
-            )(fn),
-          )
-          _locked = false
-          subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
-            fn,
-          )
+            topic,
+            enableExactlyOnceDelivery,
+            enableMessageOrdering,
+            hostOpt,
+          )(fn),
+        )
+        _locked = false
+        subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
+          fn,
+        )
 
-        case None =>
-          subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
-            fn,
-          )
-      }
+      case None =>
+        subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
+          fn,
+        )
+    }
 
   override def close(): Unit = {
     logger.logInfo("Shutting down all subscribers...")
