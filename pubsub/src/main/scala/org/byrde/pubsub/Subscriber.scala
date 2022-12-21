@@ -26,6 +26,7 @@ import scala.util.chaining._
 
 abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
   extends AdminClient
+    with MutexSupport
     with AutoCloseable {
 
   private type Subscription = String
@@ -34,8 +35,6 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
 
   private val _subscribers: scala.collection.concurrent.Map[Subscription, com.google.cloud.pubsub.v1.Subscriber] =
     TrieMap.empty
-
-  @volatile private var _locked: Boolean = false
 
   def createSubscription(
     credentials: Credentials,
@@ -135,21 +134,21 @@ abstract class Subscriber(logger: Logger)(implicit ec: ExecutionContextExecutor)
         else
           Future.successful(())
 
-      case None if !_locked =>
-        _locked = true
-        _subscribers.getOrElseUpdate(
-          subscription,
-          createSubscriptionAndSubscriber(
-            credentials,
-            project,
+      case None if !_locked.get() =>
+        mutex {
+          _subscribers.getOrElseUpdate(
             subscription,
-            topic,
-            enableExactlyOnceDelivery,
-            enableMessageOrdering,
-            hostOpt,
-          )(fn),
-        )
-        _locked = false
+            createSubscriptionAndSubscriber(
+              credentials,
+              project,
+              subscription,
+              topic,
+              enableExactlyOnceDelivery,
+              enableMessageOrdering,
+              hostOpt,
+            )(fn),
+          )
+        }
         subscribe(credentials, project, subscription, topic, enableExactlyOnceDelivery, enableMessageOrdering, hostOpt)(
           fn,
         )

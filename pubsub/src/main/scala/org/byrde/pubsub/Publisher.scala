@@ -26,6 +26,7 @@ import scala.util.chaining._
 abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
   extends JavaFutureSupport
     with AdminClient
+    with MutexSupport
     with AutoCloseable {
 
   private type Topic = String
@@ -33,8 +34,6 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
   private val _ackDeadline = 10 // seconds
 
   private val _publishers: scala.collection.concurrent.Map[Topic, com.google.cloud.pubsub.v1.Publisher] = TrieMap.empty
-
-  @volatile private var _locked: Boolean = false
 
   def createTopic(
     credentials: Credentials,
@@ -120,10 +119,10 @@ abstract class Publisher(logger: Logger)(implicit ec: ExecutionContextExecutor)
               Future.failed(ex)
           }
 
-      case None if !_locked =>
-        _locked = true
-        _publishers.getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
-        _locked = false
+      case None if !_locked.get() =>
+        mutex {
+          _publishers.getOrElseUpdate(env.topic, createTopicAndPublisher(credentials, project, env, hostOpt))
+        }
         publish(credentials, project, env, hostOpt)
 
       case _ =>
