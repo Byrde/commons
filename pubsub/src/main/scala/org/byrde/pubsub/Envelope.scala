@@ -8,4 +8,5 @@ case class Envelope[T](
   id: String = UUID.randomUUID.toString,
   correlationId: Option[String] = Option.empty,
   orderingKey: Option[String] = Option.empty,
+  metadata: Map[String, String] = Map.empty,
 )
