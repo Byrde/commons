@@ -1,6 +1,6 @@
 package org.byrde.client.redis
 
-import org.byrde.support.EitherSupport
+import org.byrde.commons.EitherSupport
 
 import io.circe.parser._
 import io.circe.syntax._

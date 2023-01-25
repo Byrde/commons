@@ -1,7 +1,7 @@
 package org.byrde.pubsub
 
+import org.byrde.commons.JavaFutureSupport
 import org.byrde.logging.{ Log, Logger }
-import org.byrde.support.JavaFutureSupport
 
 import com.google.api.gax.core.{ CredentialsProvider, FixedCredentialsProvider, NoCredentialsProvider }
 import com.google.api.gax.grpc.GrpcTransportChannel

@@ -2,7 +2,7 @@ val RootSettings =
   Seq(
     name := Option(System.getProperty("name")).getOrElse("commons"),
     publish := {},
-    publishLocal := {}
+    publishLocal := {},
   )
 
 val CommonsSettings =
@@ -16,14 +16,17 @@ val CommonsSettings =
       Seq(
         Resolver.sonatypeRepo("releases"),
         Resolver.bintrayRepo("hseeberger", "maven"),
-        Resolver.jcenterRepo
+        Resolver.jcenterRepo,
       ),
     javacOptions ++=
       Seq(
-        "-source", "1.8",
-        "-target", "1.8",
+        "-source",
+        "1.8",
+        "-target",
+        "1.8",
         "-Xlint:unchecked",
-        "-encoding", "UTF-8"
+        "-encoding",
+        "UTF-8",
       ),
     scalacOptions ++=
       Seq(
@@ -33,7 +36,8 @@ val CommonsSettings =
         "-Ywarn-dead-code",
         "-language:_",
         "-target:jvm-1.8",
-        "-encoding", "UTF-8",
+        "-encoding",
+        "UTF-8",
         "-Wconf:cat=lint-byname-implicit:silent",
         "-Ymacro-annotations",
         "-Xfatal-warnings",
@@ -49,7 +53,7 @@ val CommonsSettings =
         "Implementation-Title" -> name.value,
         "Implementation-Version" -> version.value,
         "Implementation-Vendor-Id" -> organization.value,
-        "Implementation-Vendor" -> organization.value
+        "Implementation-Vendor" -> organization.value,
       ),
     credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     pomIncludeRepository := (_ => false),
@@ -62,76 +66,42 @@ val CommonsSettings =
         "mallaire77",
         "Martin Allaire",
         "martin@byrde.io",
-        new URL("http://linkedin.com/allama")
-      )
+        new URL("http://linkedin.com/allama"),
+      ),
   )
 
-val `jwt` =
-  project.settings(CommonsSettings)
+val slick = project.settings(CommonsSettings)
 
-val slick =
-  project.settings(CommonsSettings)
+val logging = project.settings(CommonsSettings)
 
-val uri =
-  project.settings(CommonsSettings)
+val `scala-logging` = project.dependsOn(logging).settings(CommonsSettings)
 
-val logging =
-  project.settings(CommonsSettings)
+val commons = project.settings(CommonsSettings)
 
-val `scala-logging` =
-  project
-    .dependsOn(logging)
-    .settings(CommonsSettings)
-
-val support =
-  project
-    .dependsOn(uri)
-    .settings(CommonsSettings)
-
-val pubsub  =
+val pubsub =
   project
     .dependsOn(
       logging,
-      support
+      commons,
     )
     .settings(CommonsSettings)
 
-val smtp =
-  project
-    .dependsOn(support)
-    .settings(CommonsSettings)
+val smtp = project.dependsOn(commons).settings(CommonsSettings)
 
-val `redis-client` =
-  project
-    .dependsOn(support)
-    .settings(CommonsSettings)
+val `redis-client` = project.dependsOn(commons).settings(CommonsSettings)
 
-val `jedis-client` =
-  project
-    .dependsOn(`redis-client`)
-    .settings(CommonsSettings)
-
-val `http` =
-  project
-    .dependsOn(
-      logging,
-      support
-    )
-    .settings(CommonsSettings)
+val `jedis-client` = project.dependsOn(`redis-client`).settings(CommonsSettings)
 
 val root =
-  Project("commons", file("."))
+  Project("root", file("."))
     .settings(RootSettings)
     .aggregate(
-      `http`,
       pubsub,
       smtp,
-      `jwt`,
       logging,
       `scala-logging`,
       `redis-client`,
       `jedis-client`,
       slick,
-      uri,
-      support,
+      commons,
     )

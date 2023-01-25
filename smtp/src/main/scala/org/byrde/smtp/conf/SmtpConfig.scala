@@ -1,7 +1,7 @@
 package org.byrde.smtp.conf
 
+import org.byrde.commons.types.Email
 import org.byrde.smtp.SmtpConnectionType
-import org.byrde.support.types.Email
 
 import com.typesafe.config.Config
 
