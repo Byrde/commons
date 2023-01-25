@@ -1,7 +1,5 @@
 package org.byrde
 
-import org.byrde.commons.types.jwt.JwtSupport
-
 import scala.concurrent.Future
 import scala.util.Try
 

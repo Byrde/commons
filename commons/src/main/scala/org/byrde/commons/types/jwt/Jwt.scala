@@ -8,21 +8,15 @@ import io.circe.{ Decoder, DecodingFailure, ParsingFailure }
 
 import scala.annotation.nowarn
 
-import pdi.jwt.exceptions.{
-  JwtExpirationException,
-  JwtLengthException,
-  JwtNotBeforeException,
-  JwtSignatureFormatException,
-  JwtValidationException,
-}
+import pdi.jwt.exceptions._
 import pdi.jwt.{ JwtCirce, JwtClaim }
 
 case class Jwt(token: String) {
   def validate[T](
-    token: String,
+    config: JwtConfig,
     subject: Option[String] = Option.empty,
     audience: Option[Set[String]] = Option.empty,
-  )(implicit decoder: Decoder[T], config: JwtConfig): Either[JwtValidationError, T] =
+  )(implicit decoder: Decoder[T]): Either[JwtValidationError, T] =
     JwtCirce
       .decode(
         token,
@@ -30,7 +24,7 @@ case class Jwt(token: String) {
         Seq(config.encryptionAlgorithm),
       )
       .toEither
-      .flatMap(validateJwtClaim(subject, audience))
+      .flatMap(validateJwtClaim(config, subject, audience))
       .map(_.content)
       .flatMap(parse)
       .flatMap(_.as[T])
@@ -62,9 +56,10 @@ case class Jwt(token: String) {
       }
 
   private def validateJwtClaim(
+    config: JwtConfig,
     @nowarn subject: Option[String] = Option.empty,
     @nowarn audience: Option[Set[String]] = Option.empty,
-  )(jwtClaim: JwtClaim)(implicit config: JwtConfig): Either[Throwable, JwtClaim] = {
+  )(jwtClaim: JwtClaim): Either[Throwable, JwtClaim] = {
     val isValid =
       jwtClaim.issuer.fold(false)(_ == config.issuer) &&
         subject.fold(true)(sub => jwtClaim.subject.fold(false)(_ == sub)) &&

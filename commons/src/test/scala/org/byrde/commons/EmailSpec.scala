@@ -1,4 +1,4 @@
-package org.byrde.support
+package org.byrde.commons
 
 import org.byrde.commons.types.Email
 

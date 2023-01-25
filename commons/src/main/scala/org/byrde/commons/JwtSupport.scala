@@ -1,4 +1,4 @@
-package org.byrde.commons.types.jwt
+package org.byrde.commons
 
 import org.byrde.commons.types.jwt.conf.JwtConfig
 
@@ -12,9 +12,10 @@ import pdi.jwt.{ JwtCirce, JwtClaim }
 trait JwtSupport {
   implicit class Any2Jwt[T](value: T) {
     def toJwt(
+      config: JwtConfig,
       subject: Option[String] = Option.empty,
       audience: Option[Set[String]] = Option.empty,
-    )(implicit encoder: Encoder[T], config: JwtConfig): String =
+    )(implicit encoder: Encoder[T]): String =
       JwtCirce.encode(
         JwtClaim(
           content = value.asJson.noSpaces,
