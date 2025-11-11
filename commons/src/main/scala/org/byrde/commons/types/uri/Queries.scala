@@ -30,7 +30,7 @@ object Queries {
 
   def apply(query: (String, String)): Queries = Queries(Set(query))
 
-  def fromString(value: String): Queries = fromURL(new URL(context, value))
+  def fromString(value: String): Queries = fromURL(context.toURI.resolve(value).toURL)
 
   def fromURL: URL => Queries = {
     case url if Option(url.getQuery).nonEmpty =>

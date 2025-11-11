@@ -1,6 +1,6 @@
 package org.byrde.commons.types.uri
 
-import java.net.{ MalformedURLException, URL }
+import java.net.{ MalformedURLException, URI, URL }
 
 import scala.util.control.NonFatal
 
@@ -31,7 +31,7 @@ object Url {
 
   def handleMissingProtocol(value: String, secure: Boolean): URL =
     try
-      new URL(value)
+      URI.create(value).toURL
     catch {
       case NonFatal(ex)
         if value.nonEmpty && ex.isInstanceOf[MalformedURLException] && ex.getMessage.startsWith("no protocol") =>
@@ -41,6 +41,6 @@ object Url {
           else
             Protocol.http
 
-        new URL(protocol.toString + value)
+        URI.create(protocol.toString + value).toURL
     }
 }
