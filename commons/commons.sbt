@@ -1,6 +1,6 @@
 name := """commons"""
 
-description := "Core utilities and type definitions for Scala projects."
+description := "Core utilities and type definitions for Scala projects. https://github.com/Byrde/commons/tree/main/commons"
 
 homepage := Some(url("https://github.com/Byrde/commons/tree/main/commons"))
 
