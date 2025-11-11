@@ -11,13 +11,23 @@ jobs:
   build-test-publish:
     name: Build, Test, and Publish
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           fetch-tags: true
+
+      - name: Semantic Release
+        id: release
+        uses: Byrde/github-reusable-workflows/actions/semantic-release@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          should-create-release: true
         
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -38,13 +48,6 @@ jobs:
       - name: Format
         run: sbt scalafmtCheckAll
         continue-on-error: true
-
-      - name: Semantic Release
-        id: release
-        uses: Byrde/github-reusable-workflows/actions/semantic-release@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          should-create-release: true
 
       - name: Setup GitHub Packages credentials
         run: |

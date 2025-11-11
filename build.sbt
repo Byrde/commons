@@ -12,12 +12,6 @@ val CommonsSettings =
     scalaVersion := "2.13.17",
     scalaModuleInfo ~=
       (_.map(_.withOverrideScalaVersion(true))),
-    resolvers ++=
-      Seq(
-        Resolver.sonatypeRepo("releases"),
-        Resolver.bintrayRepo("hseeberger", "maven"),
-        Resolver.jcenterRepo,
-      ),
     javacOptions ++=
       Seq(
         "-source",
