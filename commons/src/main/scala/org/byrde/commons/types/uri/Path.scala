@@ -1,6 +1,6 @@
 package org.byrde.commons.types.uri
 
-import java.net.{URI, URL}
+import java.net.{ URI, URL }
 
 case class Path(path: Seq[String], queries: Queries = Queries.empty) {
   def / (newPath: String): Path = copy(path = path :+ newPath)
