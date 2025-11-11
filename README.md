@@ -1,4 +1,4 @@
-# Commons ![Commons CI/CD](https://github.com/Byrde/commons/workflows/Commons%20CI/CD/badge.svg?branch=master)
+# Commons
 
 Useful Scala libraries for generic use cases.
 

@@ -72,8 +72,6 @@ val CommonsSettings =
 
 val logging = project.settings(CommonsSettings)
 
-val `scala-logging` = project.dependsOn(logging).settings(CommonsSettings)
-
 val commons = project.settings(CommonsSettings)
 
 val pubsub =
@@ -88,8 +86,6 @@ val smtp = project.dependsOn(commons).settings(CommonsSettings)
 
 val `redis-client` = project.dependsOn(commons).settings(CommonsSettings)
 
-val `jedis-client` = project.dependsOn(`redis-client`).settings(CommonsSettings)
-
 val root =
   Project("root", file("."))
     .settings(RootSettings)
@@ -97,8 +93,6 @@ val root =
       pubsub,
       smtp,
       logging,
-      `scala-logging`,
       `redis-client`,
-      `jedis-client`,
       commons,
     )

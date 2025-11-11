@@ -1,9 +1,32 @@
 package org.byrde.pubsub
 
-class PubSubError(throwable: Throwable) extends Throwable(throwable)
+/** Base trait for Pub/Sub errors.
+  */
+sealed trait PubSubError
 
 object PubSubError {
-  case class DecodingError(message: String)(failure: io.circe.Error) extends PubSubError(failure)
 
-  case object NoMessage extends PubSubError(new Exception("No Message!"))
+  /** Error during message encoding/decoding.
+    */
+  case class DecodingError(message: String, failure: io.circe.Error) extends PubSubError
+
+  /** Error during message publishing.
+    */
+  case class PublishError(message: String, cause: Throwable) extends PubSubError
+
+  /** Error during subscription operations.
+    */
+  case class SubscriptionError(message: String, cause: Throwable) extends PubSubError
+
+  /** No message available.
+    */
+  case object NoMessage extends PubSubError
+
+  /** Topic or subscription already exists.
+    */
+  case class AlreadyExists(resource: String) extends PubSubError
+
+  /** Generic operation error.
+    */
+  case class OperationError(message: String, cause: Throwable) extends PubSubError
 }

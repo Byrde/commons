@@ -1,6 +1,6 @@
 package org.byrde.commons.types.uri
 
-import java.net.URL
+import java.net.{URI, URL}
 
 case class Path(path: Seq[String], queries: Queries = Queries.empty) {
   def / (newPath: String): Path = copy(path = path :+ newPath)
@@ -17,7 +17,7 @@ case class Path(path: Seq[String], queries: Queries = Queries.empty) {
 }
 
 object Path {
-  val context: URL = new URL("http", "example.com", "")
+  val context: URL = URI.create("http://example.com").toURL
 
   def empty(queries: Queries = Queries.empty): Path = Path(Nil, queries)
 
@@ -27,7 +27,7 @@ object Path {
     if (value.isEmpty)
       Path.empty()
     else
-      fromURL(new URL(context, value))
+      fromURL(context.toURI.resolve(value).toURL)
 
   def fromURL: URL => Path = {
     case url if Option(url.getPath).nonEmpty && url.getPath.head == '/' =>

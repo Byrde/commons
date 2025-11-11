@@ -1,55 +1,76 @@
 # Redis Client
 
-Abstraction for a Redis Client.
+Type-safe Redis client abstraction with Jedis implementation.
 
-## How to install
+## Installation
 
-* add to your dependencies library dependencies:
-```libraryDependencies += "org.byrde" %% "redis-client" % "VERSION"```
-
-## Quickstart
-This library defines a common interface for implementing a redis client.
-Compatible implementations:
-- [jedis-client](https://github.com/Byrde/commons/tree/master/jedis-client)
-
-#### Usage
 ```scala
-class MyService() extends RedisService {
+resolvers += "GitHub Package Registry" at "https://maven.pkg.github.com/Byrde/commons"
 
-  def keys(pattern: String): Future[Either[RedisClientError, Set[String]]] = ???
+libraryDependencies += "org.byrde" %% "redis-client" % "VERSION"
+```
 
-  def get(key: Key): Future[Either[RedisClientError, Option[String]]] = ???
+## Usage
 
-  def set(key: Key, value: String, expiration: Duration = Duration.Inf): Future[Either[RedisClientError, Unit]] = ???
+```scala
+import org.byrde.client.redis._
+import org.byrde.client.redis.jedis._
+import io.circe.generic.auto._
+import scala.concurrent.duration._
 
-  def del(key: Key): Future[Either[RedisClientError, Long]] = ???
+// Configure Redis client
+val config = JedisConfig(
+  host = "localhost",
+  port = 6379,
+  password = None,
+  database = 0
+)
 
-  def ttl(key: Key): Future[Either[RedisClientError, Long]] = ???
+val client: RedisClient = new JedisClient(config)
 
+// Type-safe operations with automatic serialization
+case class User(id: String, name: String, email: String)
+
+// Store a value with TTL
+client.set(
+  key = "user:123",
+  value = User("123", "John Doe", "john@example.com"),
+  expiration = 1.hour
+) match {
+  case Right(_) => println("User stored")
+  case Left(error) => println(s"Error: $error")
 }
 
-class MyClient(env: MyService) extends RedisClient[MyService] {
-
-  def executor: RedisExecutor.Service[MyService] = ???
-
+// Retrieve a value
+client.get[User]("user:123") match {
+  case Right(Some(redisObject)) =>
+    println(s"User: ${redisObject.value}")
+    println(s"TTL: ${redisObject.ttl}")
+  case Right(None) => println("User not found")
+  case Left(error) => println(s"Error: $error")
 }
 
-val service = new MyService()
+// Remove a value
+client.remove("user:123")
 
-val client = new MyClient()
+// Use custom namespacing
+client.set(
+  key = "123",
+  value = user,
+  withNamespace = key => s"users::$key"
+)
+
+// Low-level RedisService for string operations
+val service: RedisService = new JedisService(config)
+
+service.get("raw:key") match {
+  case Right(Some(value)) => println(value)
+  case Right(None) => println("Key not found")
+  case Left(error) => println(s"Error: $error")
+}
+
+// Use in-memory implementation for testing
+val testClient = new InMemoryRedisClient()
+val testService = new InMemoryRedisService()
 ```
 
-#### Get
-```
-client.get[String]("example")
-```
-
-#### Set
-```
-client.set[String]("example", "my-value")
-```
-
-#### Remove
-```
-client.remove("example")
-```
