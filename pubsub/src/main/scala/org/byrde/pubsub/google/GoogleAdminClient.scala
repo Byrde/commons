@@ -64,8 +64,9 @@ trait GoogleAdminClient {
 
   private def transportChannel(hostOpt: Option[String]): Option[TransportChannelProvider] =
     hostOpt.map { pubsubHost =>
-      if (channel != null) FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
-      else {
+      if (channel != null) {
+        FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
+      } else {
         channel = ManagedChannelBuilder.forTarget(pubsubHost).usePlaintext().build()
         FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel))
       }

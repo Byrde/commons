@@ -184,32 +184,27 @@ class GooglePubSubPublisher(
     topic: String,
     enableMessageOrdering: Boolean,
     hostOpt: Option[String],
-  ): com.google.cloud.pubsub.v1.Publisher =
-    com
-      .google
-      .cloud
-      .pubsub
-      .v1
-      .Publisher
-      .newBuilder(TopicName.ofProjectTopicName(project, topic).toString)
+  ): com.google.cloud.pubsub.v1.Publisher = {
+    val builder = com.google.cloud.pubsub.v1.Publisher.newBuilder(TopicName.ofProjectTopicName(project, topic).toString)
       .setEnableMessageOrdering(enableMessageOrdering)
-      .tap { builder =>
-        hostOpt match {
-          case None =>
-            builder.setCredentialsProvider {
-              new CredentialsProvider {
-                override def getCredentials: Credentials = credentials
-              }
-            }
 
-          case Some(host) =>
-            builder
-              .setChannelProvider {
-                FixedTransportChannelProvider
-                  .create(GrpcTransportChannel.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build()))
-              }
-              .setCredentialsProvider(NoCredentialsProvider.create())
+    hostOpt match {
+      case None =>
+        builder.setCredentialsProvider {
+          new CredentialsProvider {
+            override def getCredentials: Credentials = credentials
+          }
         }
-      }
-      .build()
+
+      case Some(host) =>
+        builder
+          .setChannelProvider {
+            FixedTransportChannelProvider
+              .create(GrpcTransportChannel.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build()))
+          }
+          .setCredentialsProvider(NoCredentialsProvider.create())
+    }
+
+    builder.build()
+  }
 }

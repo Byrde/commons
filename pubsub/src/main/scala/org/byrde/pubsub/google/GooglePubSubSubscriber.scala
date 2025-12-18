@@ -85,31 +85,28 @@ class GooglePubSubSubscriber(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
   )(implicit decoder: Decoder[T]): Future[Unit] =
     _subscribers.get(subscription) match {
-      case Some(subscriber) =>
-        if (!subscriber.isRunning)
-          Future(subscriber.startAsync().awaitRunning())
-            .map { _ =>
-              logger.logDebug(s"Subscriber started successfully!")
-              _subscribers
-                .get(subscription)
-                .foreach {
-                  case innerSubscriber if innerSubscriber == subscriber =>
-                    ()
+      case Some(subscriber) if !subscriber.isRunning =>
+        Future(subscriber.startAsync().awaitRunning())
+          .map { _ =>
+            logger.logDebug(s"Subscriber started successfully!")
+            _subscribers
+              .get(subscription)
+              .foreach {
+                case innerSubscriber if innerSubscriber == subscriber =>
+                  ()
 
-                  case innerSubscriber =>
-                    logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
-                    innerSubscriber.stopAsync().awaitTerminated()
-                    ()
-                }
-            }
-            .recoverWith {
-              case ex =>
-                logger.logError("Failed to start the subscriber!", ex)
-                closeSubscriber(subscription)
-                Future.failed(ex)
-            }
-        else
-          Future.successful(())
+                case innerSubscriber =>
+                  logger.logWarning(s"Multiple instances of the same subscriber type detected! ($subscription)")
+                  innerSubscriber.stopAsync().awaitTerminated()
+                  ()
+              }
+          }
+          .recoverWith {
+            case ex =>
+              logger.logError("Failed to start the subscriber!", ex)
+              closeSubscriber(subscription)
+              Future.failed(ex)
+          }
 
       case None =>
         synchronized {
@@ -135,6 +132,9 @@ class GooglePubSubSubscriber(
           enableMessageOrdering,
           hostOpt,
         )(fn)
+
+      case _ =>
+        Future.successful(())
     }
 
   override def close(): Unit = {
@@ -200,12 +200,7 @@ class GooglePubSubSubscriber(
       Try {
         client
           .tap(_.createSubscription {
-            com
-              .google
-              .pubsub
-              .v1
-              .Subscription
-              .newBuilder()
+            com.google.pubsub.v1.Subscription.newBuilder()
               .setName(SubscriptionName.of(project, subscription).toString)
               .setTopic(TopicName.ofProjectTopicName(project, topic).toString)
               .setAckDeadlineSeconds(10)
@@ -214,14 +209,10 @@ class GooglePubSubSubscriber(
               .setEnableExactlyOnceDelivery(enableExactlyOnceDelivery)
               .setEnableMessageOrdering(enableMessageOrdering)
               .setRetryPolicy {
-                com
-                  .google
-                  .pubsub
-                  .v1
-                  .RetryPolicy
-                  .newBuilder()
+                com.google.pubsub.v1.RetryPolicy.newBuilder()
                   .setMinimumBackoff(Duration.newBuilder().setSeconds(1).build())
                   .setMaximumBackoff(Duration.newBuilder().setSeconds(600).build())
+                  .build()
               }
               .build()
           })
@@ -251,51 +242,45 @@ class GooglePubSubSubscriber(
     hostOpt: Option[String],
   )(
     fn: Envelope[T] => Future[Either[Nack.type, Ack.type]],
-  )(implicit decoder: Decoder[T]): com.google.cloud.pubsub.v1.Subscriber =
-    com
-      .google
-      .cloud
-      .pubsub
-      .v1
-      .Subscriber
-      .newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
-      .tap { builder =>
-        hostOpt match {
-          case None =>
-            builder.setCredentialsProvider {
-              new CredentialsProvider {
-                override def getCredentials: Credentials = credentials
-              }
-            }
+  )(implicit decoder: Decoder[T]): com.google.cloud.pubsub.v1.Subscriber = {
+    val builder = com.google.cloud.pubsub.v1.Subscriber.newBuilder(SubscriptionName.of(project, subscription).toString, receiver(subscription, topic, fn))
 
-          case Some(host) =>
-            builder
-              .setChannelProvider {
-                FixedTransportChannelProvider
-                  .create(GrpcTransportChannel.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build()))
-              }
-              .setCredentialsProvider(NoCredentialsProvider.create())
+    hostOpt match {
+      case None =>
+        builder.setCredentialsProvider {
+          new CredentialsProvider {
+            override def getCredentials: Credentials = credentials
+          }
         }
-      }
-      .build()
-      .tap { subscriber =>
-        subscriber.addListener(
-          TerminalFailureApiServiceListener(
-            subscription,
-            () =>
-              subscribeInternal(
-                credentials,
-                project,
-                subscription,
-                topic,
-                enableExactlyOnceDelivery,
-                enableMessageOrdering,
-                hostOpt,
-              )(fn),
-          ),
-          ec,
-        )
-      }
+
+      case Some(host) =>
+        builder
+          .setChannelProvider {
+            FixedTransportChannelProvider
+              .create(GrpcTransportChannel.create(ManagedChannelBuilder.forTarget(host).usePlaintext.build()))
+          }
+          .setCredentialsProvider(NoCredentialsProvider.create())
+    }
+
+    builder.build().tap { subscriber =>
+      subscriber.addListener(
+        TerminalFailureApiServiceListener(
+          subscription,
+          () =>
+            subscribeInternal(
+              credentials,
+              project,
+              subscription,
+              topic,
+              enableExactlyOnceDelivery,
+              enableMessageOrdering,
+              hostOpt,
+            )(fn),
+        ),
+        ec,
+      )
+    }
+  }
 
   private def receiver[T](
     subscription: String,
